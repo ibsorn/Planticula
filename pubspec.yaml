@@ -1,0 +1,90 @@
+name: planticula
+description: App de cultivo de plantas con Flutter + Supabase
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Supabase
+  supabase_flutter: ^2.3.4
+
+  # State Management
+  flutter_bloc: ^8.1.3
+  bloc: ^8.1.2
+
+  # Navigation
+  go_router: ^13.0.1
+
+  # Dependency Injection
+  get_it: ^7.6.4
+  injectable: ^2.3.2
+
+  # Functional Programming
+  dartz: ^0.10.1
+
+  # Equatable
+  equatable: ^2.0.5
+
+  # Environment
+  flutter_dotenv: ^5.1.0
+
+  # Images
+  cached_network_image: ^3.3.1
+  image_picker: ^1.0.7
+
+  # Shared Preferences
+  shared_preferences: ^2.2.2
+
+  # Forms
+  flutter_form_builder: ^9.1.1
+  form_builder_validators: ^9.1.0
+
+  # UI
+  flutter_svg: ^2.0.9
+  shimmer: ^3.0.0
+
+  # Location (para clima local)
+  geolocator: ^10.1.0
+
+  # Notifications
+  flutter_local_notifications: ^16.3.2
+
+  # Utils
+  intl: ^0.18.1
+  logger: ^2.0.2+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  build_runner: ^2.4.7
+  injectable_generator: ^2.4.1
+  bloc_test: ^9.1.5
+  mocktail: ^1.0.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - .env
+    - assets/images/
+    - assets/icons/
+    - assets/fonts/
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700

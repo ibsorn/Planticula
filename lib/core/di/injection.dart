@@ -1,0 +1,81 @@
+import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:planticula/core/network/supabase_client.dart';
+import 'package:planticula/core/theme/theme_cubit.dart';
+import 'package:planticula/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:planticula/features/auth/domain/repositories/auth_repository.dart';
+import 'package:planticula/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:planticula/features/plants/data/datasources/plant_remote_datasource.dart';
+import 'package:planticula/features/plants/data/datasources/plant_remote_datasource_impl.dart';
+import 'package:planticula/features/plants/data/repositories/plants_repository_impl.dart';
+import 'package:planticula/features/plants/domain/repositories/plants_repository.dart';
+import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
+import 'package:planticula/features/soil_analysis/data/datasources/soil_analysis_remote_datasource.dart';
+import 'package:planticula/features/soil_analysis/data/datasources/soil_analysis_remote_datasource_impl.dart';
+import 'package:planticula/features/soil_analysis/data/repositories/soil_analysis_repository_impl.dart';
+import 'package:planticula/features/soil_analysis/domain/repositories/soil_analysis_repository.dart';
+import 'package:planticula/features/soil_analysis/presentation/bloc/soil_analysis_bloc.dart';
+import 'package:planticula/features/pest_alerts/data/datasources/pest_alert_remote_datasource.dart';
+import 'package:planticula/features/pest_alerts/data/datasources/pest_alert_remote_datasource_impl.dart';
+import 'package:planticula/features/pest_alerts/data/repositories/pest_alert_repository_impl.dart';
+import 'package:planticula/features/pest_alerts/domain/repositories/pest_alert_repository.dart';
+import 'package:planticula/features/pest_alerts/presentation/bloc/pest_alerts_bloc.dart';
+
+final GetIt sl = GetIt.instance;
+
+Future<void> initDependencies() async {
+  // External dependencies
+  final prefs = await SharedPreferences.getInstance();
+  sl.registerSingleton<SharedPreferences>(prefs);
+
+  // Supabase (initialized in main)
+  sl.registerSingleton<SupabaseClient>(SupabaseClient.instance);
+
+  // Theme
+  sl.registerFactory<ThemeCubit>(() => ThemeCubit(sl()));
+
+  // Auth
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(sl()),
+  );
+  sl.registerFactory<AuthBloc>(() => AuthBloc(sl()));
+
+  // Plants - Data Layer
+  sl.registerLazySingleton<PlantRemoteDataSource>(
+    () => PlantRemoteDataSourceImpl(sl()),
+  );
+
+  // Plants - Repository Layer
+  sl.registerLazySingleton<PlantsRepository>(
+    () => PlantsRepositoryImpl(sl()),
+  );
+
+  // Plants - Presentation Layer
+  sl.registerFactory<PlantsBloc>(() => PlantsBloc(sl()));
+
+  // Soil Analysis - Data Layer
+  sl.registerLazySingleton<SoilAnalysisRemoteDataSource>(
+    () => SoilAnalysisRemoteDataSourceImpl(sl()),
+  );
+
+  // Soil Analysis - Repository Layer
+  sl.registerLazySingleton<SoilAnalysisRepository>(
+    () => SoilAnalysisRepositoryImpl(sl()),
+  );
+
+  // Soil Analysis - Presentation Layer
+  sl.registerFactory<SoilAnalysisBloc>(() => SoilAnalysisBloc(sl()));
+
+  // Pest Alerts - Data Layer
+  sl.registerLazySingleton<PestAlertRemoteDataSource>(
+    () => PestAlertRemoteDataSourceImpl(sl()),
+  );
+
+  // Pest Alerts - Repository Layer
+  sl.registerLazySingleton<PestAlertRepository>(
+    () => PestAlertRepositoryImpl(sl()),
+  );
+
+  // Pest Alerts - Presentation Layer
+  sl.registerFactory<PestAlertsBloc>(() => PestAlertsBloc(sl()));
+}
