@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:planticula/core/constants/app_constants.dart';
 import 'package:planticula/core/di/injection.dart' as di;
 import 'package:planticula/core/network/supabase_client.dart';
 import 'package:planticula/core/navigation/app_router.dart';
-import 'package:planticula/core/navigation/main_scaffold.dart';
 import 'package:planticula/core/theme/app_theme.dart';
 import 'package:planticula/core/theme/theme_cubit.dart';
 import 'package:planticula/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
 import 'package:planticula/features/soil_analysis/presentation/bloc/soil_analysis_bloc.dart';
 import 'package:planticula/features/pest_alerts/presentation/bloc/pest_alerts_bloc.dart';
+import 'package:planticula/features/marketplace/presentation/bloc/marketplace_bloc.dart';
+
+export 'core/navigation/main_scaffold.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +26,7 @@ void main() async {
   String? supabaseError;
 
   try {
-    await SupabaseClient.instance.initialize();
+    await AppSupabaseClient.instance.initialize();
     supabaseInitialized = true;
   } on SupabaseConfigException catch (e) {
     supabaseError = e.message;
@@ -112,6 +114,9 @@ class MyApp extends StatelessWidget {
         BlocProvider<PestAlertsBloc>(
           create: (context) => di.sl<PestAlertsBloc>(),
         ),
+        BlocProvider<MarketplaceBloc>(
+          create: (context) => di.sl<MarketplaceBloc>(),
+        ),
       ],
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
@@ -129,7 +134,9 @@ class MyApp extends StatelessWidget {
                 themeMode: themeState.themeMode,
                 routerConfig: router,
                 localizationsDelegates: const [
-                  // Add your localization delegates here
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
                 ],
                 supportedLocales: const [
                   Locale('es', 'ES'),
@@ -143,6 +150,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// Re-export MainScaffold for use in app_router.dart
-export 'core/navigation/main_scaffold.dart';

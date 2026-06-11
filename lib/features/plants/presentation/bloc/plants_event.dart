@@ -28,21 +28,31 @@ class PlantCreateRequested extends PlantsEvent {
   final String name;
   final String? scientificName;
   final String? speciesId;
+  final String? speciesCategory;
   final String? imageUrl;
   final String? location;
   final String? notes;
   final int? wateringFrequency;
   final DateTime? acquiredDate;
+  final String? environment;
+  final String? growthStage;
+  final double? latitude;
+  final double? longitude;
 
   const PlantCreateRequested({
     required this.name,
     this.scientificName,
     this.speciesId,
+    this.speciesCategory,
     this.imageUrl,
     this.location,
     this.notes,
     this.wateringFrequency,
     this.acquiredDate,
+    this.environment,
+    this.growthStage,
+    this.latitude,
+    this.longitude,
   });
 
   @override
@@ -50,11 +60,16 @@ class PlantCreateRequested extends PlantsEvent {
         name,
         scientificName,
         speciesId,
+        speciesCategory,
         imageUrl,
         location,
         notes,
         wateringFrequency,
         acquiredDate,
+        environment,
+        growthStage,
+        latitude,
+        longitude,
       ];
 }
 

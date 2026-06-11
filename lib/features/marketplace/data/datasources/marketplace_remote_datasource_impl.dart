@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/core/network/supabase_client.dart';
 import 'package:planticula/core/utils/logger.dart';
@@ -7,10 +8,9 @@ import 'package:planticula/features/marketplace/data/models/marketplace_listing_
 
 /// Implementación de MarketplaceRemoteDataSource usando Supabase
 class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
-  final SupabaseClient _client;
-  final Logger _logger;
+  final AppSupabaseClient _client;
 
-  MarketplaceRemoteDataSourceImpl(this._client) : _logger = Logger();
+  MarketplaceRemoteDataSourceImpl(this._client);
 
   String get _table => 'marketplace_listings';
   String get _bucket => 'marketplace-photos';
@@ -21,7 +21,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   @override
   Future<Result<MarketplaceListingModel>> createListing(CreateListingRequest request) async {
     try {
-      _logger.d('📤 Creando anuncio: ${request.title}');
+      Logger.d('📤 Creando anuncio: ${request.title}');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -50,10 +50,10 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
           .single();
 
       final listing = MarketplaceListingModel.fromJson(response);
-      _logger.i('✅ Anuncio creado: ${listing.id}');
+      Logger.i('✅ Anuncio creado: ${listing.id}');
       return Success(listing);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error creando anuncio', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error creando anuncio', error: e, stackTrace: stackTrace);
       return Failure('Error al crear anuncio: ${e.toString()}');
     }
   }
@@ -61,7 +61,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   @override
   Future<Result<MarketplaceListingModel>> getListingById(String id) async {
     try {
-      _logger.d('📥 Obteniendo anuncio: $id');
+      Logger.d('📥 Obteniendo anuncio: $id');
 
       final response = await _client
           .from(_table)
@@ -86,7 +86,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
 
       return Success(listing);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error obteniendo anuncio $id', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error obteniendo anuncio $id', error: e, stackTrace: stackTrace);
       return Failure('Error al cargar anuncio: ${e.toString()}');
     }
   }
@@ -105,7 +105,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
     int offset = 0,
   }) async {
     try {
-      _logger.d('📍 Buscando anuncios cercanos en ${radiusKm}km');
+      Logger.d('📍 Buscando anuncios cercanos en ${radiusKm}km');
 
       final params = {
         'p_latitude': latitude,
@@ -126,19 +126,17 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
           .map((json) => MarketplaceListingModel.fromJson(json))
           .toList();
 
-      _logger.i('✅ Encontrados ${listings.length} anuncios cercanos');
+      Logger.i('✅ Encontrados ${listings.length} anuncios cercanos');
       return Success(listings);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error buscando anuncios cercanos', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error buscando anuncios cercanos', error: e, stackTrace: stackTrace);
 
       // Fallback simple
       try {
         var query = _client
             .from(_table)
             .select()
-            .eq('status', 'active')
-            .order('created_at', ascending: false)
-            .limit(limit);
+            .eq('status', 'active');
 
         if (categories != null && categories.isNotEmpty) {
           query = query.inFilter('category', categories);
@@ -150,7 +148,9 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
           query = query.lte('price', maxPrice);
         }
 
-        final response = await query;
+        final response = await query
+            .order('created_at', ascending: false)
+            .limit(limit);
         final listings = (response as List)
             .map((json) => MarketplaceListingModel.fromJson({...json, 'distance_km': null}))
             .toList();
@@ -168,7 +168,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
     int offset = 0,
   }) async {
     try {
-      _logger.d('📥 Obteniendo mis anuncios');
+      Logger.d('📥 Obteniendo mis anuncios');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -185,10 +185,10 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
           .map((json) => MarketplaceListingModel.fromJson(json))
           .toList();
 
-      _logger.i('✅ Cargados ${listings.length} anuncios propios');
+      Logger.i('✅ Cargados ${listings.length} anuncios propios');
       return Success(listings);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error obteniendo mis anuncios', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error obteniendo mis anuncios', error: e, stackTrace: stackTrace);
       return Failure('Error al cargar mis anuncios: ${e.toString()}');
     }
   }
@@ -196,7 +196,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   @override
   Future<Result<List<MarketplaceListingModel>>> getFavoriteListings() async {
     try {
-      _logger.d('📥 Obteniendo favoritos');
+      Logger.d('📥 Obteniendo favoritos');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -217,7 +217,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
 
       return Success(listings);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error obteniendo favoritos', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error obteniendo favoritos', error: e, stackTrace: stackTrace);
       return Failure('Error al cargar favoritos: ${e.toString()}');
     }
   }
@@ -225,7 +225,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   @override
   Future<Result<MarketplaceListingModel>> updateListing(MarketplaceListingModel listing) async {
     try {
-      _logger.d('📤 Actualizando anuncio: ${listing.id}');
+      Logger.d('📤 Actualizando anuncio: ${listing.id}');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -246,10 +246,10 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
           .single();
 
       final updated = MarketplaceListingModel.fromJson(response);
-      _logger.i('✅ Anuncio actualizado');
+      Logger.i('✅ Anuncio actualizado');
       return Success(updated);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error actualizando anuncio', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error actualizando anuncio', error: e, stackTrace: stackTrace);
       return Failure('Error al actualizar anuncio: ${e.toString()}');
     }
   }
@@ -257,7 +257,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   @override
   Future<Result<MarketplaceListingModel>> updateListingStatus(String id, String status) async {
     try {
-      _logger.d('📤 Cambiando estado de $id a $status');
+      Logger.d('📤 Cambiando estado de $id a $status');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -275,10 +275,10 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
           .single();
 
       final updated = MarketplaceListingModel.fromJson(response);
-      _logger.i('✅ Estado actualizado a $status');
+      Logger.i('✅ Estado actualizado a $status');
       return Success(updated);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error cambiando estado', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error cambiando estado', error: e, stackTrace: stackTrace);
       return Failure('Error al actualizar estado: ${e.toString()}');
     }
   }
@@ -286,7 +286,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   @override
   Future<Result<void>> deleteListing(String id) async {
     try {
-      _logger.d('🗑️ Eliminando anuncio: $id');
+      Logger.d('🗑️ Eliminando anuncio: $id');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -313,10 +313,10 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
         }
       }
 
-      _logger.i('✅ Anuncio eliminado');
+      Logger.i('✅ Anuncio eliminado');
       return const Success(null);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error eliminando anuncio', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error eliminando anuncio', error: e, stackTrace: stackTrace);
       return Failure('Error al eliminar anuncio: ${e.toString()}');
     }
   }
@@ -324,7 +324,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   @override
   Future<Result<List<String>>> uploadPhotos(List<Uint8List> imageBytesList) async {
     try {
-      _logger.d('📤 Subiendo ${imageBytesList.length} fotos');
+      Logger.d('📤 Subiendo ${imageBytesList.length} fotos');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -341,7 +341,6 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
               imageBytesList[i],
               fileOptions: const FileOptions(
                 contentType: 'image/jpeg',
-                upsert: false,
               ),
             );
 
@@ -349,10 +348,10 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
         urls.add(url);
       }
 
-      _logger.i('✅ ${urls.length} fotos subidas');
+      Logger.i('✅ ${urls.length} fotos subidas');
       return Success(urls);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error subiendo fotos', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error subiendo fotos', error: e, stackTrace: stackTrace);
       return Failure('Error al subir fotos: ${e.toString()}');
     }
   }
@@ -360,7 +359,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   @override
   Future<Result<void>> deletePhotos(List<String> filePaths) async {
     try {
-      _logger.d('🗑️ Eliminando ${filePaths.length} fotos');
+      Logger.d('🗑️ Eliminando ${filePaths.length} fotos');
       await _client.storage.from(_bucket).remove(filePaths);
       return const Success(null);
     } catch (e) {
@@ -382,7 +381,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   @override
   Future<Result<bool>> toggleFavorite(String listingId) async {
     try {
-      _logger.d('❤️ Toggle favorito: $listingId');
+      Logger.d('❤️ Toggle favorito: $listingId');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -394,10 +393,10 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
       });
 
       final isNowFavorited = result as bool;
-      _logger.i('✅ Favorito: $isNowFavorited');
+      Logger.i('✅ Favorito: $isNowFavorited');
       return Success(isNowFavorited);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error toggle favorito', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error toggle favorito', error: e, stackTrace: stackTrace);
       return Failure('Error: ${e.toString()}');
     }
   }
@@ -418,7 +417,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
       final response = await _client.rpc('get_marketplace_statistics', params: params);
       return Success(response as Map<String, dynamic>);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error estadísticas', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error estadísticas', error: e, stackTrace: stackTrace);
       return Failure('Error al cargar estadísticas: ${e.toString()}');
     }
   }

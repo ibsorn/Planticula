@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/core/network/supabase_client.dart';
 import 'package:planticula/core/utils/logger.dart';
@@ -7,10 +8,9 @@ import 'package:planticula/features/pest_alerts/data/models/pest_alert_model.dar
 
 /// Implementación de PestAlertRemoteDataSource usando Supabase
 class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
-  final SupabaseClient _client;
-  final Logger _logger;
+  final AppSupabaseClient _client;
 
-  PestAlertRemoteDataSourceImpl(this._client) : _logger = Logger();
+  PestAlertRemoteDataSourceImpl(this._client);
 
   String get _table => 'pest_alerts';
   String get _bucket => 'pest-photos';
@@ -31,7 +31,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
   @override
   Future<Result<PestAlertModel>> createAlert(CreatePestAlertRequest request) async {
     try {
-      _logger.d('📤 Creando alerta de plaga');
+      Logger.d('📤 Creando alerta de plaga');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -46,10 +46,10 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
           .single();
 
       final alert = PestAlertModel.fromJson(response);
-      _logger.i('✅ Alerta creada: ${alert.id}');
+      Logger.i('✅ Alerta creada: ${alert.id}');
       return Success(alert);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error creando alerta', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error creando alerta', error: e, stackTrace: stackTrace);
       return Failure('Error al crear alerta: ${e.toString()}');
     }
   }
@@ -57,7 +57,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
   @override
   Future<Result<PestAlertModel>> getAlertById(String id) async {
     try {
-      _logger.d('📥 Obteniendo alerta: $id');
+      Logger.d('📥 Obteniendo alerta: $id');
 
       final response = await _client
           .from(_table)
@@ -71,7 +71,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
       final alert = PestAlertModel.fromJson(response);
       return Success(alert);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error obteniendo alerta $id', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error obteniendo alerta $id', error: e, stackTrace: stackTrace);
       return Failure('Error al cargar alerta: ${e.toString()}');
     }
   }
@@ -89,7 +89,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
     int offset = 0,
   }) async {
     try {
-      _logger.d('📍 Buscando alertas cercanas a ($latitude, $longitude) en ${radiusKm}km');
+      Logger.d('📍 Buscando alertas cercanas a ($latitude, $longitude) en ${radiusKm}km');
 
       // Usar la función RPC que calcula distancia con Haversine
       final params = {
@@ -110,22 +110,20 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
           .map((json) => PestAlertModel.fromJson(json))
           .toList();
 
-      _logger.i('✅ Encontradas ${alerts.length} alertas cercanas');
+      Logger.i('✅ Encontradas ${alerts.length} alertas cercanas');
       return Success(alerts);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error buscando alertas cercanas', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error buscando alertas cercanas', error: e, stackTrace: stackTrace);
 
       // Fallback: query simple sin ordenamiento por distancia
       try {
-        _logger.w('⚠️ Intentando query fallback sin función RPC');
+        Logger.w('⚠️ Intentando query fallback sin función RPC');
 
         var query = _client
             .from(_table)
-            .select()
-            .order('reported_at', ascending: false)
-            .limit(limit);
+            .select();
 
-        // Filtros básicos
+        // Filtros básicos (must come before order/limit)
         if (!includeResolved) {
           query = query.eq('is_resolved', false);
         }
@@ -143,7 +141,9 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
           query = query.inFilter('severity', severities);
         }
 
-        final response = await query;
+        final response = await query
+            .order('reported_at', ascending: false)
+            .limit(limit);
         final alerts = (response as List)
             .map((json) => PestAlertModel.fromJson({...json, 'distance_km': null}))
             .toList();
@@ -161,7 +161,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
     int offset = 0,
   }) async {
     try {
-      _logger.d('📥 Obteniendo mis alertas');
+      Logger.d('📥 Obteniendo mis alertas');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -178,10 +178,10 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
           .map((json) => PestAlertModel.fromJson(json))
           .toList();
 
-      _logger.i('✅ Cargadas ${alerts.length} alertas propias');
+      Logger.i('✅ Cargadas ${alerts.length} alertas propias');
       return Success(alerts);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error obteniendo mis alertas', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error obteniendo mis alertas', error: e, stackTrace: stackTrace);
       return Failure('Error al cargar mis alertas: ${e.toString()}');
     }
   }
@@ -189,7 +189,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
   @override
   Future<Result<PestAlertModel>> updateAlert(PestAlertModel alert) async {
     try {
-      _logger.d('📤 Actualizando alerta: ${alert.id}');
+      Logger.d('📤 Actualizando alerta: ${alert.id}');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -210,10 +210,10 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
           .single();
 
       final updated = PestAlertModel.fromJson(response);
-      _logger.i('✅ Alerta actualizada: ${updated.id}');
+      Logger.i('✅ Alerta actualizada: ${updated.id}');
       return Success(updated);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error actualizando alerta ${alert.id}', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error actualizando alerta ${alert.id}', error: e, stackTrace: stackTrace);
       return Failure('Error al actualizar alerta: ${e.toString()}');
     }
   }
@@ -221,7 +221,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
   @override
   Future<Result<PestAlertModel>> markAsResolved(String id) async {
     try {
-      _logger.d('✅ Marcando alerta como resuelta: $id');
+      Logger.d('✅ Marcando alerta como resuelta: $id');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -241,10 +241,10 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
           .single();
 
       final alert = PestAlertModel.fromJson(response);
-      _logger.i('✅ Alerta marcada como resuelta: $id');
+      Logger.i('✅ Alerta marcada como resuelta: $id');
       return Success(alert);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error marcando alerta como resuelta $id', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error marcando alerta como resuelta $id', error: e, stackTrace: stackTrace);
       return Failure('Error al marcar alerta como resuelta: ${e.toString()}');
     }
   }
@@ -252,7 +252,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
   @override
   Future<Result<void>> deleteAlert(String id) async {
     try {
-      _logger.d('🗑️ Eliminando alerta: $id');
+      Logger.d('🗑️ Eliminando alerta: $id');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -276,10 +276,10 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
           .eq('id', id)
           .eq('user_id', _userId!);
 
-      _logger.i('✅ Alerta eliminada: $id');
+      Logger.i('✅ Alerta eliminada: $id');
       return const Success(null);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error eliminando alerta $id', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error eliminando alerta $id', error: e, stackTrace: stackTrace);
       return Failure('Error al eliminar alerta: ${e.toString()}');
     }
   }
@@ -287,7 +287,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
   @override
   Future<Result<String>> uploadPhoto(Uint8List imageBytes, String fileName) async {
     try {
-      _logger.d('📤 Subiendo foto de plaga: $fileName');
+      Logger.d('📤 Subiendo foto de plaga: $fileName');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -300,15 +300,14 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
             imageBytes,
             fileOptions: const FileOptions(
               contentType: 'image/jpeg',
-              upsert: false,
             ),
           );
 
       final photoUrl = _client.storage.from(_bucket).getPublicUrl(path);
-      _logger.i('✅ Foto subida: $photoUrl');
+      Logger.i('✅ Foto subida: $photoUrl');
       return Success(photoUrl);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error subiendo foto', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error subiendo foto', error: e, stackTrace: stackTrace);
       return Failure('Error al subir foto: ${e.toString()}');
     }
   }
@@ -316,13 +315,13 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
   @override
   Future<Result<void>> deletePhoto(String filePath) async {
     try {
-      _logger.d('🗑️ Eliminando foto: $filePath');
+      Logger.d('🗑️ Eliminando foto: $filePath');
 
       await _client.storage.from(_bucket).remove([filePath]);
-      _logger.i('✅ Foto eliminada: $filePath');
+      Logger.i('✅ Foto eliminada: $filePath');
       return const Success(null);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error eliminando foto $filePath', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error eliminando foto $filePath', error: e, stackTrace: stackTrace);
       return const Success(null); // No bloquear operación principal
     }
   }
@@ -330,7 +329,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
   @override
   Future<Result<void>> confirmAlert(String alertId) async {
     try {
-      _logger.d('👍 Confirmando alerta: $alertId');
+      Logger.d('👍 Confirmando alerta: $alertId');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -351,10 +350,10 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
         'confirmed_at': DateTime.now().toIso8601String(),
       });
 
-      _logger.i('✅ Alerta confirmada por usuario: $_userId');
+      Logger.i('✅ Alerta confirmada por usuario: $_userId');
       return const Success(null);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error confirmando alerta $alertId', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error confirmando alerta $alertId', error: e, stackTrace: stackTrace);
       return Failure('Error al confirmar alerta: ${e.toString()}');
     }
   }
@@ -367,7 +366,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
     int? daysLimit,
   }) async {
     try {
-      _logger.d('📊 Obteniendo estadísticas de área');
+      Logger.d('📊 Obteniendo estadísticas de área');
 
       final params = {
         'p_latitude': latitude,
@@ -378,10 +377,10 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
 
       final response = await _client.rpc('get_pest_alerts_statistics', params: params);
 
-      _logger.i('✅ Estadísticas obtenidas');
+      Logger.i('✅ Estadísticas obtenidas');
       return Success(response as Map<String, dynamic>);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error obteniendo estadísticas', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error obteniendo estadísticas', error: e, stackTrace: stackTrace);
       return Failure('Error al cargar estadísticas: ${e.toString()}');
     }
   }
@@ -398,7 +397,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
       }
       return null;
     } catch (e) {
-      _logger.w('No se pudo extraer path de URL: $url');
+      Logger.w('No se pudo extraer path de URL: $url');
       return null;
     }
   }

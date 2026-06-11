@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.dart';
 import 'package:planticula/features/soil_analysis/presentation/bloc/soil_analysis_bloc.dart';
 import 'package:planticula/features/soil_analysis/presentation/screens/analysis_detail_screen.dart';
@@ -70,7 +69,6 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
 
     context.read<SoilAnalysisBloc>().add(SoilAnalysisUploadRequested(
           plantId: widget.plantId,
-          triggerAnalysis: false, // El usuario puede solicitar análisis después
         ));
   }
 
@@ -181,7 +179,7 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
             Icon(
               Icons.science_outlined,
               size: 80,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -193,7 +191,7 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
               'Toma una foto del sustrato de tu planta para analizarlo',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
             ),
             const SizedBox(height: 24),
@@ -242,7 +240,7 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
             color: Theme.of(context).colorScheme.surface,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 4,
                 offset: const Offset(0, -2),
               ),
@@ -328,7 +326,7 @@ class _AnalysisCard extends StatelessWidget {
                       child: Icon(
                         Icons.broken_image,
                         size: 48,
-                        color: colorScheme.onPrimaryContainer.withOpacity(0.5),
+                        color: colorScheme.onPrimaryContainer.withValues(alpha: 0.5),
                       ),
                     ),
                   ),
@@ -361,7 +359,7 @@ class _AnalysisCard extends StatelessWidget {
                       Text(
                         _formatDate(analysis.createdAt),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface.withOpacity(0.6),
+                              color: colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                       ),
                     ],
@@ -408,7 +406,7 @@ class _AnalysisCard extends StatelessWidget {
                         Text(
                           'Esperando análisis...',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: colorScheme.onSurface.withOpacity(0.6),
+                                color: colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                         ),
                       ],
@@ -472,7 +470,7 @@ class _AnalysisCard extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
           ),
           const SizedBox(width: 4),
@@ -521,7 +519,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.9),
+        color: color.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

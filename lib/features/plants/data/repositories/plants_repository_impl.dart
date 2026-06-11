@@ -27,21 +27,31 @@ class PlantsRepositoryImpl implements PlantsRepository {
     required String name,
     String? scientificName,
     String? speciesId,
+    String? speciesCategory,
     String? imageUrl,
     String? location,
     String? notes,
     int? wateringFrequency,
     DateTime? acquiredDate,
+    String? environment,
+    String? growthStage,
+    double? latitude,
+    double? longitude,
   }) async {
     final plantModel = PlantModel.create(
       name: name,
       scientificName: scientificName,
       speciesId: speciesId,
+      speciesCategory: speciesCategory,
       imageUrl: imageUrl,
       location: location,
       notes: notes,
       wateringFrequency: wateringFrequency,
       acquiredDate: acquiredDate,
+      environment: environment,
+      growthStage: growthStage,
+      latitude: latitude,
+      longitude: longitude,
     );
 
     return await _dataSource.createPlant(plantModel);

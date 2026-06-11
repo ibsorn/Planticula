@@ -4,10 +4,10 @@ import 'package:planticula/core/network/supabase_client.dart';
 import 'package:planticula/features/auth/data/models/user_model.dart';
 import 'package:planticula/features/auth/domain/entities/user.dart';
 import 'package:planticula/features/auth/domain/repositories/auth_repository.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase show AuthException, AuthState;
 
 class AuthRepositoryImpl implements AuthRepository {
-  final SupabaseClient _supabaseClient;
+  final AppSupabaseClient _supabaseClient;
 
   AuthRepositoryImpl(this._supabaseClient);
 
@@ -37,7 +37,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final user = UserModel.fromSupabase(response.user!);
       return Success(user);
-    } on AuthException catch (e) {
+    } on supabase.AuthException catch (e) {
       return Failure(e.message, code: e.statusCode?.toString());
     } catch (e) {
       return Failure('Unexpected error: ${e.toString()}');
@@ -63,7 +63,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final user = UserModel.fromSupabase(response.user!);
       return Success(user);
-    } on AuthException catch (e) {
+    } on supabase.AuthException catch (e) {
       return Failure(e.message, code: e.statusCode?.toString());
     } catch (e) {
       return Failure('Unexpected error: ${e.toString()}');
@@ -75,7 +75,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _supabaseClient.signOut();
       return const Success(null);
-    } on AuthException catch (e) {
+    } on supabase.AuthException catch (e) {
       return Failure(e.message, code: e.statusCode?.toString());
     } catch (e) {
       return Failure('Unexpected error: ${e.toString()}');
@@ -84,7 +84,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<User?> get onAuthStateChanged {
-    return _supabaseClient.onAuthStateChange.map((event) {
+    return _supabaseClient.onAuthStateChange.map((supabase.AuthState event) {
       final supabaseUser = event.session?.user;
       return supabaseUser != null
           ? UserModel.fromSupabase(supabaseUser)
@@ -97,7 +97,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _supabaseClient.auth.resetPasswordForEmail(email);
       return const Success(null);
-    } on AuthException catch (e) {
+    } on supabase.AuthException catch (e) {
       return Failure(e.message, code: e.statusCode?.toString());
     } catch (e) {
       return Failure('Unexpected error: ${e.toString()}');

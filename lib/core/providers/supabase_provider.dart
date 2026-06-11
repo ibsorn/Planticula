@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:planticula/core/network/supabase_client.dart';
 
 /// Provider that manages Supabase connection state
 /// Use this to access Supabase services and listen to connection changes
 class SupabaseProvider extends InheritedWidget {
-  final SupabaseClient client;
+  final AppSupabaseClient client;
   final bool isInitialized;
   final String? error;
 
@@ -55,12 +54,12 @@ class SupabaseInitializer extends StatefulWidget {
 class _SupabaseInitializerState extends State<SupabaseInitializer> {
   bool _isInitialized = false;
   String? _error;
-  late final SupabaseClient _client;
+  late final AppSupabaseClient _client;
 
   @override
   void initState() {
     super.initState();
-    _client = SupabaseClient.instance;
+    _client = AppSupabaseClient.instance;
     _initializeSupabase();
   }
 
@@ -116,10 +115,10 @@ class _SupabaseInitializerState extends State<SupabaseInitializer> {
 
 /// Extension to easily access Supabase from BuildContext
 extension SupabaseContextExtension on BuildContext {
-  SupabaseClient get supabase {
+  AppSupabaseClient get supabase {
     final provider = SupabaseProvider.maybeOf(this);
     if (provider == null) {
-      return SupabaseClient.instance;
+      return AppSupabaseClient.instance;
     }
     return provider.client;
   }

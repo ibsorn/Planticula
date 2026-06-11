@@ -24,6 +24,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignInRequested>(_onSignInRequested);
     on<AuthSignUpRequested>(_onSignUpRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
+    on<AuthResetPasswordRequested>(_onResetPasswordRequested);
     on<AuthUserChanged>(_onUserChanged);
 
     _init();
@@ -57,7 +58,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignInRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
+    emit(state.copyWith(status: AuthStatus.loading));
 
     final result = await _signInUseCase(
       email: event.email,
@@ -84,7 +85,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignUpRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
+    emit(state.copyWith(status: AuthStatus.loading));
 
     final result = await _signUpUseCase(
       email: event.email,
@@ -119,6 +120,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.when(
       success: (_) {
         emit(const AuthState(status: AuthStatus.unauthenticated));
+      },
+      failure: (message, code, error) {
+        emit(state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: message,
+        ));
+      },
+    );
+  }
+
+  Future<void> _onResetPasswordRequested(
+    AuthResetPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.copyWith(status: AuthStatus.loading));
+
+    final result = await _authRepository.resetPassword(event.email);
+
+    result.when(
+      success: (_) {
+        emit(state.copyWith(
+          status: AuthStatus.unauthenticated,
+          successMessage: 'Se ha enviado un correo para restablecer tu contrasena',
+        ));
       },
       failure: (message, code, error) {
         emit(state.copyWith(

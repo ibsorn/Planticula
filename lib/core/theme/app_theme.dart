@@ -42,15 +42,9 @@ class AppTheme {
       brightness: Brightness.light,
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
-        onPrimary: onPrimary,
         secondary: secondaryColor,
-        onSecondary: onSecondary,
-        surface: surfaceLight,
         onSurface: onSurfaceLight,
-        background: backgroundLight,
-        onBackground: onBackgroundLight,
         error: error,
-        onError: onPrimary,
       ),
       scaffoldBackgroundColor: backgroundLight,
       appBarTheme: const AppBarTheme(
@@ -60,7 +54,7 @@ class AppTheme {
         foregroundColor: textPrimaryLight,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -133,15 +127,8 @@ class AppTheme {
       brightness: Brightness.dark,
       colorScheme: const ColorScheme.dark(
         primary: primaryLight,
-        onPrimary: onPrimary,
         secondary: secondaryLight,
-        onSecondary: onSecondary,
-        surface: surfaceDark,
-        onSurface: onSurfaceDark,
-        background: backgroundDark,
-        onBackground: onBackgroundDark,
         error: error,
-        onError: onPrimary,
       ),
       scaffoldBackgroundColor: backgroundDark,
       appBarTheme: const AppBarTheme(
@@ -151,7 +138,7 @@ class AppTheme {
         foregroundColor: textPrimaryDark,
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         color: surfaceDark,
         shape: RoundedRectangleBorder(

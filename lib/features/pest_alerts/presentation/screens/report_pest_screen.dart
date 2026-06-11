@@ -61,8 +61,12 @@ class _ReportPestScreenState extends State<ReportPestScreen> {
 
       // Obtener posición
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
+
+      if (!mounted) return;
 
       setState(() {
         _latitude = position.latitude;
@@ -322,7 +326,6 @@ class _ReportPestScreenState extends State<ReportPestScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outline,
-                  style: BorderStyle.solid,
                 ),
               ),
               child: Column(
@@ -378,7 +381,6 @@ class _ReportPestScreenState extends State<ReportPestScreen> {
   Widget _buildSeveritySelector() {
     return Column(
       children: Severity.values.map((severity) {
-        final isSelected = _selectedSeverity == severity;
         return RadioListTile<Severity>(
           title: Row(
             children: [
@@ -399,7 +401,9 @@ class _ReportPestScreenState extends State<ReportPestScreen> {
             style: Theme.of(context).textTheme.bodySmall,
           ),
           value: severity,
+          // ignore: deprecated_member_use
           groupValue: _selectedSeverity,
+          // ignore: deprecated_member_use
           onChanged: (value) {
             if (value != null) {
               setState(() => _selectedSeverity = value);
@@ -515,8 +519,8 @@ class _ReportPestScreenState extends State<ReportPestScreen> {
         children: [
           const Icon(Icons.location_off),
           const SizedBox(width: 12),
-          Expanded(
-            child: const Text('Ubicación no disponible'),
+          const Expanded(
+            child: Text('Ubicación no disponible'),
           ),
           ElevatedButton(
             onPressed: _getCurrentLocation,

@@ -39,7 +39,6 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
   ) async {
     emit(state.copyWith(
       nearbyStatus: MarketplaceStatus.loading,
-      errorMessage: null,
     ));
 
     if (state.userLatitude == null || state.userLongitude == null) {
@@ -84,7 +83,6 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
   ) async {
     emit(state.copyWith(
       myListingsStatus: MarketplaceStatus.loading,
-      errorMessage: null,
     ));
 
     final result = await _repository.getMyListings(limit: 50);
@@ -111,7 +109,6 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
   ) async {
     emit(state.copyWith(
       favoritesStatus: MarketplaceStatus.loading,
-      errorMessage: null,
     ));
 
     final result = await _repository.getFavoriteListings();
@@ -234,7 +231,6 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
   ) async {
     emit(state.copyWith(
       submissionStatus: SubmissionStatus.submitting,
-      errorMessage: null,
     ));
 
     final result = await _repository.createListing(
@@ -254,7 +250,6 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
       success: (listing) {
         emit(state.copyWith(
           submissionStatus: SubmissionStatus.success,
-          selectedPhotos: null,
           photoStatus: PhotoStatus.initial,
           myListings: [listing, ...state.myListings],
           lastCreatedListing: listing,
@@ -428,7 +423,6 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     Emitter<MarketplaceState> emit,
   ) {
     emit(state.copyWith(
-      errorMessage: null,
       submissionStatus: SubmissionStatus.initial,
       actionStatus: ActionStatus.initial,
     ));

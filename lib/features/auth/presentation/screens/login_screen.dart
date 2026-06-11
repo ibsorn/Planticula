@@ -39,6 +39,68 @@ class _LoginScreenState extends State<LoginScreen> {
     context.push(AppConstants.routeRegister);
   }
 
+  void _showForgotPasswordDialog(BuildContext context) {
+    final resetEmailController = TextEditingController(
+      text: _emailController.text.trim(),
+    );
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Restablecer contrasena'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Introduce tu email y te enviaremos un enlace para restablecer tu contrasena.',
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: resetEmailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email_outlined),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'El email es requerido';
+                  }
+                  if (!value.contains('@')) {
+                    return 'Email no valido';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                context.read<AuthBloc>().add(
+                      AuthResetPasswordRequested(
+                        email: resetEmailController.text.trim(),
+                      ),
+                    );
+                Navigator.of(dialogContext).pop();
+              }
+            },
+            child: const Text('Enviar'),
+          ),
+        ],
+      ),
+    ).then((_) => resetEmailController.dispose());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,17 +114,26 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
           }
+          if (state.successMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.successMessage!),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
         },
         builder: (context, state) {
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                     // Logo
                     Icon(
                       Icons.local_florist,
@@ -83,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'Tu asistente de cultivo inteligente',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                     ),
                     const SizedBox(height: 48),
@@ -138,9 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {
-                          // TODO: Implement forgot password
-                        },
+                        onPressed: () => _showForgotPasswordDialog(context),
                         child: const Text('¿Olvidaste tu contraseña?'),
                       ),
                     ),
@@ -168,7 +237,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

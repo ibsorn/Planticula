@@ -115,7 +115,6 @@ class SoilAnalysisModel extends domain.SoilAnalysis {
       plantId: plantId,
       imageUrl: imageUrl,
       thumbnailUrl: thumbnailUrl,
-      status: domain.AnalysisStatus.pending,
       createdAt: DateTime.now(),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:planticula/core/data/species/plant_species.dart';
 
 /// Entidad Plant - Representa una planta del usuario
 ///
@@ -6,27 +7,36 @@ import 'package:equatable/equatable.dart';
 /// - id: UUID generado por Supabase
 /// - name: Nombre personalizado de la planta
 /// - scientificName: Nombre científico (opcional)
-/// - speciesId: Referencia a tabla de especies (opcional)
+/// - speciesId: ID de la especie (local_ o api_)
 /// - imageUrl: URL de la imagen en Storage (opcional)
 /// - location: Ubicación en casa (ej: "Sala", "Terraza")
 /// - notes: Notas adicionales
-/// - wateringFrequency: Días entre riegos (null = sin recordatorio)
+/// - wateringFrequency: Días entre riegos (calculado automaticamente)
 /// - lastWatered: Última fecha de riego
 /// - nextWatering: Próxima fecha calculada
 /// - acquiredDate: Fecha de adquisición
+/// - environment: Interior o exterior
+/// - growthStage: Fase de crecimiento actual
+/// - speciesCategory: Categoría de la especie (indoor, outdoor, succulent, cannabis)
+/// - latitude/longitude: Ubicación GPS del usuario
 /// - createdAt/updatedAt: Timestamps automáticos
 class Plant extends Equatable {
   final String id;
   final String name;
   final String? scientificName;
   final String? speciesId;
+  final String? speciesCategory; // Cached from species: indoor, outdoor, succulent, cannabis
   final String? imageUrl;
   final String? location;
   final String? notes;
-  final int? wateringFrequency; // Días entre riegos
+  final int? wateringFrequency; // Días entre riegos (auto-calculado)
   final DateTime? lastWatered;
-  final DateTime? nextWatering; // Calculado: lastWatered + wateringFrequency
+  final DateTime? nextWatering;
   final DateTime? acquiredDate;
+  final String? environment; // 'indoor' or 'outdoor'
+  final String? growthStage; // 'seedling', 'juvenile', 'adult'
+  final double? latitude;
+  final double? longitude;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -35,6 +45,7 @@ class Plant extends Equatable {
     required this.name,
     this.scientificName,
     this.speciesId,
+    this.speciesCategory,
     this.imageUrl,
     this.location,
     this.notes,
@@ -42,6 +53,10 @@ class Plant extends Equatable {
     this.lastWatered,
     this.nextWatering,
     this.acquiredDate,
+    this.environment,
+    this.growthStage,
+    this.latitude,
+    this.longitude,
     this.createdAt,
     this.updatedAt,
   });
@@ -52,6 +67,7 @@ class Plant extends Equatable {
     String? name,
     String? scientificName,
     String? speciesId,
+    String? speciesCategory,
     String? imageUrl,
     String? location,
     String? notes,
@@ -59,6 +75,10 @@ class Plant extends Equatable {
     DateTime? lastWatered,
     DateTime? nextWatering,
     DateTime? acquiredDate,
+    String? environment,
+    String? growthStage,
+    double? latitude,
+    double? longitude,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -67,6 +87,7 @@ class Plant extends Equatable {
       name: name ?? this.name,
       scientificName: scientificName ?? this.scientificName,
       speciesId: speciesId ?? this.speciesId,
+      speciesCategory: speciesCategory ?? this.speciesCategory,
       imageUrl: imageUrl ?? this.imageUrl,
       location: location ?? this.location,
       notes: notes ?? this.notes,
@@ -74,6 +95,10 @@ class Plant extends Equatable {
       lastWatered: lastWatered ?? this.lastWatered,
       nextWatering: nextWatering ?? this.nextWatering,
       acquiredDate: acquiredDate ?? this.acquiredDate,
+      environment: environment ?? this.environment,
+      growthStage: growthStage ?? this.growthStage,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -95,12 +120,23 @@ class Plant extends Equatable {
   /// Indica si tiene configurado recordatorio de riego
   bool get hasWateringReminder => wateringFrequency != null && wateringFrequency! > 0;
 
+  /// Parsed environment enum
+  PlantEnvironment get plantEnvironment =>
+      environment == 'outdoor' ? PlantEnvironment.outdoor : PlantEnvironment.indoor;
+
+  /// Parsed growth stage enum
+  GrowthStage get plantGrowthStage => GrowthStage.fromString(growthStage ?? 'adult');
+
+  /// Whether plant is outdoors
+  bool get isOutdoor => environment == 'outdoor';
+
   @override
   List<Object?> get props => [
         id,
         name,
         scientificName,
         speciesId,
+        speciesCategory,
         imageUrl,
         location,
         notes,
@@ -108,6 +144,10 @@ class Plant extends Equatable {
         lastWatered,
         nextWatering,
         acquiredDate,
+        environment,
+        growthStage,
+        latitude,
+        longitude,
         createdAt,
         updatedAt,
       ];

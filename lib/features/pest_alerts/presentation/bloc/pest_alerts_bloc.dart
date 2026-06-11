@@ -37,7 +37,6 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
   ) async {
     emit(state.copyWith(
       nearbyStatus: PestAlertsStatus.loading,
-      errorMessage: null,
     ));
 
     // Si no tenemos ubicación del usuario, no podemos cargar alertas cercanas
@@ -84,7 +83,6 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
   ) async {
     emit(state.copyWith(
       myAlertsStatus: PestAlertsStatus.loading,
-      errorMessage: null,
     ));
 
     final result = await _repository.getMyAlerts(limit: 50);
@@ -185,7 +183,6 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     Emitter<PestAlertsState> emit,
   ) {
     emit(state.copyWith(
-      selectedPhotoBytes: null,
       photoSelectionStatus: PhotoSelectionStatus.initial,
     ));
   }
@@ -196,7 +193,6 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
   ) async {
     emit(state.copyWith(
       submissionStatus: SubmissionStatus.submitting,
-      errorMessage: null,
     ));
 
     final result = await _repository.reportPest(
@@ -215,7 +211,6 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
       success: (alert) {
         emit(state.copyWith(
           submissionStatus: SubmissionStatus.success,
-          selectedPhotoBytes: null,
           photoSelectionStatus: PhotoSelectionStatus.initial,
           myAlerts: [alert, ...state.myAlerts],
           lastCreatedAlert: alert,
@@ -371,7 +366,6 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     Emitter<PestAlertsState> emit,
   ) {
     emit(state.copyWith(
-      errorMessage: null,
       submissionStatus: SubmissionStatus.initial,
       actionStatus: ActionStatus.initial,
     ));

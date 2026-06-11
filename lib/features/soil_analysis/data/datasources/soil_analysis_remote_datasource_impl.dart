@@ -1,18 +1,16 @@
 import 'dart:typed_data';
+import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/core/network/supabase_client.dart';
 import 'package:planticula/core/utils/logger.dart';
 import 'package:planticula/features/soil_analysis/data/datasources/soil_analysis_remote_datasource.dart';
 import 'package:planticula/features/soil_analysis/data/models/soil_analysis_model.dart';
-import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.dart'
-    as domain;
 
 /// Implementación de SoilAnalysisRemoteDataSource usando Supabase
 class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
-  final SupabaseClient _client;
-  final Logger _logger;
+  final AppSupabaseClient _client;
 
-  SoilAnalysisRemoteDataSourceImpl(this._client) : _logger = Logger();
+  SoilAnalysisRemoteDataSourceImpl(this._client);
 
   String get _table => 'soil_analyses';
   String get _bucket => 'soil-images';
@@ -32,7 +30,7 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
   @override
   Future<Result<List<SoilAnalysisModel>>> getAnalyses() async {
     try {
-      _logger.d('📥 Fetching soil analyses for user: $_userId');
+      Logger.d('📥 Fetching soil analyses for user: $_userId');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -48,10 +46,10 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
           .map((json) => SoilAnalysisModel.fromJson(json))
           .toList();
 
-      _logger.i('✅ Fetched ${analyses.length} soil analyses');
+      Logger.i('✅ Fetched ${analyses.length} soil analyses');
       return Success(analyses);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error fetching soil analyses',
+      Logger.e('❌ Error fetching soil analyses',
           error: e, stackTrace: stackTrace);
       return Failure('Error al cargar análisis: ${e.toString()}');
     }
@@ -60,7 +58,7 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
   @override
   Future<Result<SoilAnalysisModel>> getAnalysisById(String id) async {
     try {
-      _logger.d('📥 Fetching soil analysis: $id');
+      Logger.d('📥 Fetching soil analysis: $id');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -74,10 +72,10 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
           .single();
 
       final analysis = SoilAnalysisModel.fromJson(response);
-      _logger.i('✅ Fetched soil analysis: ${analysis.id}');
+      Logger.i('✅ Fetched soil analysis: ${analysis.id}');
       return Success(analysis);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error fetching soil analysis $id',
+      Logger.e('❌ Error fetching soil analysis $id',
           error: e, stackTrace: stackTrace);
       return Failure('Error al cargar análisis: ${e.toString()}');
     }
@@ -87,7 +85,7 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
   Future<Result<List<SoilAnalysisModel>>> getAnalysesByPlant(
       String plantId) async {
     try {
-      _logger.d('📥 Fetching soil analyses for plant: $plantId');
+      Logger.d('📥 Fetching soil analyses for plant: $plantId');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -104,10 +102,10 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
           .map((json) => SoilAnalysisModel.fromJson(json))
           .toList();
 
-      _logger.i('✅ Fetched ${analyses.length} analyses for plant $plantId');
+      Logger.i('✅ Fetched ${analyses.length} analyses for plant $plantId');
       return Success(analyses);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error fetching analyses for plant $plantId',
+      Logger.e('❌ Error fetching analyses for plant $plantId',
           error: e, stackTrace: stackTrace);
       return Failure('Error al cargar análisis: ${e.toString()}');
     }
@@ -117,7 +115,7 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
   Future<Result<SoilAnalysisModel>> createAnalysis(
       SoilAnalysisModel analysis) async {
     try {
-      _logger.d('📤 Creating soil analysis record');
+      Logger.d('📤 Creating soil analysis record');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -139,11 +137,11 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
           .single();
 
       final createdAnalysis = SoilAnalysisModel.fromJson(response);
-      _logger.i(
+      Logger.i(
           '✅ Created soil analysis: ${createdAnalysis.id} (${createdAnalysis.imageUrl})');
       return Success(createdAnalysis);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error creating soil analysis', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error creating soil analysis', error: e, stackTrace: stackTrace);
       return Failure('Error al crear análisis: ${e.toString()}');
     }
   }
@@ -152,7 +150,7 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
   Future<Result<SoilAnalysisModel>> updateAnalysis(
       SoilAnalysisModel analysis) async {
     try {
-      _logger.d('📤 Updating soil analysis: ${analysis.id}');
+      Logger.d('📤 Updating soil analysis: ${analysis.id}');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -172,10 +170,10 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
           .single();
 
       final updatedAnalysis = SoilAnalysisModel.fromJson(response);
-      _logger.i('✅ Updated soil analysis: ${updatedAnalysis.id}');
+      Logger.i('✅ Updated soil analysis: ${updatedAnalysis.id}');
       return Success(updatedAnalysis);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error updating soil analysis ${analysis.id}',
+      Logger.e('❌ Error updating soil analysis ${analysis.id}',
           error: e, stackTrace: stackTrace);
       return Failure('Error al actualizar análisis: ${e.toString()}');
     }
@@ -184,7 +182,7 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
   @override
   Future<Result<void>> deleteAnalysis(String id) async {
     try {
-      _logger.d('🗑️ Deleting soil analysis: $id');
+      Logger.d('🗑️ Deleting soil analysis: $id');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -214,10 +212,10 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
           .eq('id', id)
           .eq('user_id', _userId!);
 
-      _logger.i('✅ Deleted soil analysis: $id');
+      Logger.i('✅ Deleted soil analysis: $id');
       return const Success(null);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error deleting soil analysis $id',
+      Logger.e('❌ Error deleting soil analysis $id',
           error: e, stackTrace: stackTrace);
       return Failure('Error al eliminar análisis: ${e.toString()}');
     }
@@ -230,7 +228,7 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
     String? plantId,
   }) async {
     try {
-      _logger.d('📤 Uploading image to Storage: $fileName');
+      Logger.d('📤 Uploading image to Storage: $fileName');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -244,17 +242,16 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
             imageBytes,
             fileOptions: const FileOptions(
               contentType: 'image/jpeg',
-              upsert: false,
             ),
           );
 
       // Obtener URL pública
       final imageUrl = _client.storage.from(_bucket).getPublicUrl(path);
 
-      _logger.i('✅ Image uploaded: $imageUrl');
+      Logger.i('✅ Image uploaded: $imageUrl');
       return Success(imageUrl);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error uploading image', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error uploading image', error: e, stackTrace: stackTrace);
       return Failure('Error al subir imagen: ${e.toString()}');
     }
   }
@@ -262,14 +259,14 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
   @override
   Future<Result<void>> deleteImage(String filePath) async {
     try {
-      _logger.d('🗑️ Deleting image from Storage: $filePath');
+      Logger.d('🗑️ Deleting image from Storage: $filePath');
 
       await _client.storage.from(_bucket).remove([filePath]);
 
-      _logger.i('✅ Deleted image: $filePath');
+      Logger.i('✅ Deleted image: $filePath');
       return const Success(null);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error deleting image $filePath',
+      Logger.e('❌ Error deleting image $filePath',
           error: e, stackTrace: stackTrace);
       // No retornamos error para no bloquear la eliminación del registro
       return const Success(null);
@@ -279,7 +276,7 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
   @override
   Future<Result<SoilAnalysisModel>> analyzeImage(String analysisId) async {
     try {
-      _logger.d('🔬 Invoking Edge Function for analysis: $analysisId');
+      Logger.d('🔬 Invoking Edge Function for analysis: $analysisId');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -298,12 +295,12 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
         body: {'analysis_id': analysisId},
       );
 
-      _logger.d('Edge Function response: ${response.data}');
+      Logger.d('Edge Function response: ${response.data}');
 
       // Obtener el análisis actualizado
       return await getAnalysisById(analysisId);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error invoking Edge Function for analysis $analysisId',
+      Logger.e('❌ Error invoking Edge Function for analysis $analysisId',
           error: e, stackTrace: stackTrace);
 
       // Marcar como error
@@ -334,7 +331,7 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
       }
       return null;
     } catch (e) {
-      _logger.w('Could not extract path from URL: $url');
+      Logger.w('Could not extract path from URL: $url');
       return null;
     }
   }

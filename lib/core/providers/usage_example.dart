@@ -1,11 +1,11 @@
-/// ===========================================================================
-/// EJEMPLOS DE USO DE SUPABASE EN LA APP
-/// ===========================================================================
-///
-/// Este archivo muestra cómo usar el cliente de Supabase en diferentes
-/// escenarios de la aplicación.
-///
-/// No es necesario importar este archivo - es solo documentación.
+// ===========================================================================
+// EJEMPLOS DE USO DE SUPABASE EN LA APP
+// ===========================================================================
+//
+// Este archivo muestra cómo usar el cliente de Supabase en diferentes
+// escenarios de la aplicación.
+//
+// No es necesario importar este archivo - es solo documentación.
 
 /*
 

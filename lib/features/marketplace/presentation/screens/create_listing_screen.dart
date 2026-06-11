@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -64,7 +63,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       }
 
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
       );
 
       setState(() {
@@ -73,6 +72,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         _isGettingLocation = false;
       });
 
+      if (!mounted) return;
       context.read<MarketplaceBloc>().add(MarketplaceUpdateUserLocation(
         latitude: position.latitude,
         longitude: position.longitude,
@@ -377,7 +377,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: Theme.of(context).colorScheme.outline,
-                            style: BorderStyle.solid,
                           ),
                         ),
                         child: const Icon(Icons.add_a_photo, size: 32),
@@ -431,7 +430,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outline,
-                  style: BorderStyle.solid,
                 ),
               ),
               child: Column(
@@ -443,7 +441,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(height: 8),
-                  Text('Añadir fotos'),
+                  const Text('Añadir fotos'),
                   Text(
                     'Máximo 5 fotos recomendado',
                     style: Theme.of(context).textTheme.bodySmall,
@@ -478,12 +476,13 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   Widget _buildTypeSelector() {
     return Column(
       children: ListingType.values.map((type) {
-        final isSelected = _selectedType == type;
         return RadioListTile<ListingType>(
           title: Text(type.displayName),
           subtitle: Text(type.description),
           value: type,
+          // ignore: deprecated_member_use
           groupValue: _selectedType,
+          // ignore: deprecated_member_use
           onChanged: (value) {
             if (value != null) {
               setState(() => _selectedType = value);

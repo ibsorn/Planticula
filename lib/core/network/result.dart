@@ -3,31 +3,6 @@ import 'package:equatable/equatable.dart';
 abstract class Result<T> extends Equatable {
   const Result();
 
-  @override
-  List<Object?> get props => [];
-}
-
-class Success<T> extends Result<T> {
-  final T data;
-
-  const Success(this.data);
-
-  @override
-  List<Object?> get props => [data];
-}
-
-class Failure<T> extends Result<T> {
-  final String message;
-  final String? code;
-  final dynamic error;
-
-  const Failure(this.message, {this.code, this.error});
-
-  @override
-  List<Object?> get props => [message, code, error];
-}
-
-extension ResultExtension<T> on Result<T> {
   bool get isSuccess => this is Success<T>;
   bool get isFailure => this is Failure<T>;
 
@@ -46,4 +21,28 @@ extension ResultExtension<T> on Result<T> {
       return failure(f.message, f.code, f.error);
     }
   }
+
+  @override
+  List<Object?> get props => [];
+}
+
+class Success<T> extends Result<T> {
+  @override
+  final T data;
+
+  const Success(this.data);
+
+  @override
+  List<Object?> get props => [data];
+}
+
+class Failure<T> extends Result<T> {
+  final String message;
+  final String? code;
+  final dynamic error;
+
+  const Failure(this.message, {this.code, this.error});
+
+  @override
+  List<Object?> get props => [message, code, error];
 }

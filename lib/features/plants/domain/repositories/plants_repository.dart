@@ -15,11 +15,16 @@ abstract class PlantsRepository {
     required String name,
     String? scientificName,
     String? speciesId,
+    String? speciesCategory,
     String? imageUrl,
     String? location,
     String? notes,
     int? wateringFrequency,
     DateTime? acquiredDate,
+    String? environment,
+    String? growthStage,
+    double? latitude,
+    double? longitude,
   });
 
   /// Actualiza una planta existente

@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart' show Icons, IconData;
+import 'package:flutter/material.dart' show Icons;
 
 /// Entidad MarketplaceListing - Representa un anuncio en el marketplace
 ///

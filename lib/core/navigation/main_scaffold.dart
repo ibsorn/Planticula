@@ -24,7 +24,7 @@ class MainScaffold extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.local_florist_outlined),
             selectedIcon: Icon(Icons.local_florist),
-            label: 'Mis Plantas',
+            label: 'Plantas',
           ),
           NavigationDestination(
             icon: Icon(Icons.warning_amber_outlined),
@@ -32,9 +32,14 @@ class MainScaffold extends StatelessWidget {
             label: 'Alertas',
           ),
           NavigationDestination(
+            icon: Icon(Icons.store_outlined),
+            selectedIcon: Icon(Icons.store),
+            label: 'Mercado',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.menu_book_outlined),
             selectedIcon: Icon(Icons.menu_book),
-            label: 'Guías',
+            label: 'Guias',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
@@ -49,8 +54,10 @@ class MainScaffold extends StatelessWidget {
   int _getSelectedIndex(String route) {
     if (route.startsWith(AppConstants.routePlants)) return 0;
     if (route.startsWith(AppConstants.routePestAlerts)) return 1;
-    if (route.startsWith('/guides')) return 2;
-    if (route.startsWith(AppConstants.routeProfile)) return 3;
+    if (route.startsWith(AppConstants.routeMarketplace)) return 2;
+    if (route.startsWith('/guides')) return 3;
+    if (route.startsWith(AppConstants.routeProfile)) return 4;
+    if (route.startsWith('/soil-analysis')) return 4; // Profile area
     return 0;
   }
 
@@ -63,22 +70,14 @@ class MainScaffold extends StatelessWidget {
         context.go(AppConstants.routePestAlerts);
         break;
       case 2:
-        // context.go('/guides');
-        _showNotImplemented(context, 'Guías');
+        context.go(AppConstants.routeMarketplace);
         break;
       case 3:
-        // context.go(AppConstants.routeProfile);
-        _showNotImplemented(context, 'Perfil');
+        context.go('/guides');
+        break;
+      case 4:
+        context.go(AppConstants.routeProfile);
         break;
     }
-  }
-
-  void _showNotImplemented(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature - Disponible en próxima versión'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 }

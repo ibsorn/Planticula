@@ -28,7 +28,7 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
     SoilAnalysisLoadRequested event,
     Emitter<SoilAnalysisState> emit,
   ) async {
-    emit(state.copyWith(status: SoilAnalysisStatus.loading, errorMessage: null));
+    emit(state.copyWith(status: SoilAnalysisStatus.loading));
 
     final result = await _repository.getAnalyses();
 
@@ -54,7 +54,7 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
     SoilAnalysisLoadByPlantRequested event,
     Emitter<SoilAnalysisState> emit,
   ) async {
-    emit(state.copyWith(status: SoilAnalysisStatus.loading, errorMessage: null));
+    emit(state.copyWith(status: SoilAnalysisStatus.loading));
 
     final result = await _repository.getAnalysesByPlant(event.plantId);
 
@@ -83,7 +83,6 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
     try {
       emit(state.copyWith(
         imageSelectionStatus: ImageSelectionStatus.picking,
-        errorMessage: null,
       ));
 
       final pickedFile = await _imagePicker.pickImage(
@@ -120,7 +119,6 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
     try {
       emit(state.copyWith(
         imageSelectionStatus: ImageSelectionStatus.picking,
-        errorMessage: null,
       ));
 
       final pickedFile = await _imagePicker.pickImage(
@@ -163,7 +161,6 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
 
     emit(state.copyWith(
       operationStatus: OperationStatus.uploading,
-      errorMessage: null,
     ));
 
     final result = await _repository.createAnalysis(
@@ -182,9 +179,6 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
           operationStatus: event.triggerAnalysis
               ? OperationStatus.analyzing
               : OperationStatus.success,
-          selectedImageBytes: null,
-          selectedImageName: null,
-          imageSelectionStatus: ImageSelectionStatus.initial,
           lastCreatedAnalysis: analysis,
         ));
 
@@ -208,7 +202,6 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
   ) async {
     emit(state.copyWith(
       operationStatus: OperationStatus.analyzing,
-      errorMessage: null,
     ));
 
     final result = await _repository.requestAnalysis(event.analysisId);
@@ -251,7 +244,6 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
   ) async {
     emit(state.copyWith(
       operationStatus: OperationStatus.deleting,
-      errorMessage: null,
     ));
 
     final result = await _repository.deleteAnalysis(event.id);
@@ -290,9 +282,6 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
     SoilAnalysisClearError event,
     Emitter<SoilAnalysisState> emit,
   ) {
-    emit(state.copyWith(
-      errorMessage: null,
-      operationStatus: OperationStatus.initial,
-    ));
+    emit(state.copyWith());
   }
 }

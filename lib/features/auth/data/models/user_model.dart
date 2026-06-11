@@ -17,9 +17,7 @@ class UserModel extends domain.User {
       email: user.email!,
       displayName: user.userMetadata?['display_name'] as String?,
       photoUrl: user.userMetadata?['avatar_url'] as String?,
-      createdAt: user.createdAt != null
-          ? DateTime.parse(user.createdAt!)
-          : null,
+      createdAt: DateTime.parse(user.createdAt),
       updatedAt: user.updatedAt != null
           ? DateTime.parse(user.updatedAt!)
           : null,

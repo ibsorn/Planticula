@@ -3,12 +3,7 @@ import 'package:logger/logger.dart' as external_logger;
 class Logger {
   static final external_logger.Logger _logger = external_logger.Logger(
     printer: external_logger.PrettyPrinter(
-      methodCount: 2,
-      errorMethodCount: 8,
-      lineLength: 120,
-      colors: true,
-      printEmojis: true,
-      printTime: true,
+      dateTimeFormat: external_logger.DateTimeFormat.onlyTimeAndSinceStart,
     ),
   );
 

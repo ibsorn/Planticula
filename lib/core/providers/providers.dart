@@ -1,5 +1,3 @@
-library providers;
-
 // Export all providers for easy import
 export 'supabase_provider.dart';
 

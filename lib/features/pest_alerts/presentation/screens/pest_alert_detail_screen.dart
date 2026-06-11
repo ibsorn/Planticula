@@ -106,7 +106,7 @@ class PestAlertDetailScreen extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.green.shade700),
+                          const Icon(Icons.check_circle, color: Colors.green),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
@@ -181,10 +181,10 @@ class PestAlertDetailScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.bug_report,
               size: 80,
-              color: Colors.grey.shade400,
+              color: Colors.grey,
             ),
             const SizedBox(height: 16),
             Text(
@@ -218,13 +218,13 @@ class PestAlertDetailScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary),
+                Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary, semanticLabel: title),
                 const SizedBox(width: 4),
                 Text(
                   title,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],

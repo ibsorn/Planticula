@@ -16,15 +16,15 @@ dependencies:
   supabase_flutter: ^2.3.4
 
   # State Management
-  flutter_bloc: ^8.1.3
-  bloc: ^8.1.2
+  flutter_bloc: ^9.1.1
+  bloc: ^9.2.1
 
   # Navigation
-  go_router: ^13.0.1
+  go_router: ^17.3.0
 
   # Dependency Injection
-  get_it: ^7.6.4
-  injectable: ^2.3.2
+  get_it: ^9.2.1
+  injectable: ^3.0.0
 
   # Functional Programming
   dartz: ^0.10.1
@@ -33,7 +33,7 @@ dependencies:
   equatable: ^2.0.5
 
   # Environment
-  flutter_dotenv: ^5.1.0
+  flutter_dotenv: ^6.0.1
 
   # Images
   cached_network_image: ^3.3.1
@@ -43,31 +43,40 @@ dependencies:
   shared_preferences: ^2.2.2
 
   # Forms
-  flutter_form_builder: ^9.1.1
-  form_builder_validators: ^9.1.0
+  flutter_form_builder: ^10.3.0+2
+  form_builder_validators: ^11.3.0
 
   # UI
   flutter_svg: ^2.0.9
   shimmer: ^3.0.0
 
   # Location (para clima local)
-  geolocator: ^10.1.0
+  geolocator: ^14.0.2
 
   # Notifications
-  flutter_local_notifications: ^16.3.2
+  flutter_local_notifications: ^22.0.0
 
   # Utils
-  intl: ^0.18.1
+  intl: ^0.20.2
   logger: ^2.0.2+1
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^6.0.0
   build_runner: ^2.4.7
-  injectable_generator: ^2.4.1
-  bloc_test: ^9.1.5
+  injectable_generator: ^3.0.2
+  bloc_test: ^10.0.0
   mocktail: ^1.0.1
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  adaptive_icon_background: "#2E7D32"
+  adaptive_icon_foreground: "assets/icons/app_icon.png"
 
 flutter:
   uses-material-design: true

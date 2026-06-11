@@ -17,7 +17,6 @@ class _MarketplaceListScreenState extends State<MarketplaceListScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   final _searchController = TextEditingController();
-  bool _isLocationLoaded = false;
 
   @override
   void initState() {
@@ -64,9 +63,7 @@ class _MarketplaceListScreenState extends State<MarketplaceListScreen>
     } catch (_) {
       // Continuar sin ubicación
     } finally {
-      if (mounted) {
-        setState(() => _isLocationLoaded = true);
-      }
+      // location load complete
     }
   }
 
@@ -129,7 +126,7 @@ class _MarketplaceListScreenState extends State<MarketplaceListScreen>
                         onPressed: () {
                           _searchController.clear();
                           context.read<MarketplaceBloc>().add(
-                            MarketplaceSearchQueryChanged(''),
+                            const MarketplaceSearchQueryChanged(''),
                           );
                         },
                       )
@@ -183,7 +180,7 @@ class _NearbyTab extends StatelessWidget {
         }
 
         if (state.isNearbyEmpty) {
-          return _EmptyMessage(
+          return const _EmptyMessage(
             icon: Icons.storefront,
             title: 'No hay anuncios cercanos',
             subtitle: 'Sé el primero en publicar en tu zona',
@@ -265,7 +262,7 @@ class _FavoritesTab extends StatelessWidget {
         }
 
         if (state.favoritesStatus == MarketplaceStatus.empty) {
-          return _EmptyMessage(
+          return const _EmptyMessage(
             icon: Icons.favorite_border,
             title: 'Sin favoritos',
             subtitle: 'Guarda los anuncios que te interesen',
@@ -306,7 +303,7 @@ class _ListingCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          context.push('/marketplace/${listing.id}');
+          context.push('/listing/${listing.id}');
         },
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,7 +322,7 @@ class _ListingCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Color(listing.typeColor).withOpacity(0.2),
+                        color: Color(listing.typeColor).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -366,14 +363,14 @@ class _ListingCard extends StatelessWidget {
                         Icon(
                           Icons.category,
                           size: 14,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           listing.category.displayName,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                         const Spacer(),
@@ -437,7 +434,7 @@ class _MyListingCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          context.push('/marketplace/${listing.id}');
+          context.push('/listing/${listing.id}');
         },
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -624,7 +621,7 @@ class _ListingImage extends StatelessWidget {
       child: Icon(
         icon,
         size: 40,
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
       ),
     );
   }
@@ -800,14 +797,14 @@ class _EmptyMessage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+            Icon(icon, size: 64, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
             Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
             ),
             if (action != null) ...[
               const SizedBox(height: 24),
@@ -865,7 +862,7 @@ class _LocationRequiredMessage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.location_off, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+            Icon(Icons.location_off, size: 64, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
             const Text('Ubicación requerida'),
             const SizedBox(height: 8),

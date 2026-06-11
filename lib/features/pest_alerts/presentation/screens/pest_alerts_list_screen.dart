@@ -52,19 +52,22 @@ class _PestAlertsListScreenState extends State<PestAlertsListScreen>
         permission = await Geolocator.requestPermission();
       }
 
-      if (permission == LocationPermission.authorized ||
-          permission == LocationPermission.authorizedAlways) {
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
         final position = await Geolocator.getCurrentPosition();
+        if (!mounted) return;
         context.read<PestAlertsBloc>().add(PestAlertsUpdateUserLocation(
           latitude: position.latitude,
           longitude: position.longitude,
         ));
       } else {
         // Sin permiso, intentar cargar sin ubicación precisa
+        if (!mounted) return;
         context.read<PestAlertsBloc>().add(PestAlertsLoadNearby());
       }
     } catch (e) {
       // Cargar de todos modos
+      if (!mounted) return;
       context.read<PestAlertsBloc>().add(PestAlertsLoadNearby());
     } finally {
       setState(() => _isGettingLocation = false);
@@ -349,7 +352,7 @@ class PestAlertCard extends StatelessWidget {
                 Container(
                   height: 160,
                   width: double.infinity,
-                  color: Color(alert.severity.colorValue).withOpacity(0.1),
+                  color: Color(alert.severity.colorValue).withValues(alpha: 0.1),
                   child: alert.photoUrl != null
                       ? Image.network(
                           alert.photoUrl!,
@@ -440,7 +443,7 @@ class PestAlertCard extends StatelessWidget {
                   Text(
                     alert.locationDisplay,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withOpacity(0.6),
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                   ),
                   const SizedBox(height: 8),
@@ -454,7 +457,7 @@ class PestAlertCard extends StatelessWidget {
                       ),
                       if (alert.isResolved) ...[
                         const SizedBox(width: 12),
-                        Icon(Icons.check_circle, size: 14, color: Colors.green),
+                        const Icon(Icons.check_circle, size: 14, color: Colors.green),
                         const SizedBox(width: 4),
                         const Text(
                           'Resuelta',
@@ -516,13 +519,13 @@ class PestAlertCard extends StatelessWidget {
           Icon(
             Icons.bug_report,
             size: 48,
-            color: Color(alert.severity.colorValue).withOpacity(0.5),
+            color: Color(alert.severity.colorValue).withValues(alpha: 0.5),
           ),
           const SizedBox(height: 8),
           Text(
             'Sin foto',
             style: TextStyle(
-              color: Color(alert.severity.colorValue).withOpacity(0.7),
+              color: Color(alert.severity.colorValue).withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -703,7 +706,7 @@ class _PestAlertsFiltersSheetState extends State<PestAlertsFiltersSheet> {
                         return FilterChip(
                           label: Text(severity.displayName),
                           selected: isSelected,
-                          selectedColor: Color(severity.colorValue).withOpacity(0.2),
+                          selectedColor: Color(severity.colorValue).withValues(alpha: 0.2),
                           checkmarkColor: Color(severity.colorValue),
                           onSelected: (selected) {
                             setState(() {

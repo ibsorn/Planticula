@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:logger/logger.dart';
+import 'package:logger/logger.dart' as log;
 
 /// Exception for missing Supabase configuration
 class SupabaseConfigException implements Exception {
@@ -14,16 +14,16 @@ class SupabaseConfigException implements Exception {
 
 /// Centralized Supabase client with singleton pattern
 /// NO hardcoded credentials - all loaded from environment variables
-class SupabaseClient {
-  static SupabaseClient? _instance;
+class AppSupabaseClient {
+  static AppSupabaseClient? _instance;
   Supabase? _supabase;
-  final Logger _logger = Logger();
+  final log.Logger _logger = log.Logger();
   bool _isInitialized = false;
 
-  SupabaseClient._();
+  AppSupabaseClient._();
 
-  static SupabaseClient get instance {
-    _instance ??= SupabaseClient._();
+  static AppSupabaseClient get instance {
+    _instance ??= AppSupabaseClient._();
     return _instance!;
   }
 
@@ -47,6 +47,10 @@ class SupabaseClient {
   FunctionsClient get functions => _requireSupabase.client.functions;
   RealtimeClient get realtime => _requireSupabase.client.realtime;
 
+  /// Call a Supabase RPC function
+  PostgrestFilterBuilder rpc(String fn, {Map<String, dynamic>? params}) =>
+      _requireSupabase.client.rpc(fn, params: params);
+
   /// Initialize Supabase with environment variables from .env file
   /// Call this in main() before runApp()
   ///
@@ -63,7 +67,7 @@ class SupabaseClient {
 
     try {
       // Load environment variables
-      await dotenv.load(fileName: '.env');
+      await dotenv.load();
 
       final url = dotenv.env['SUPABASE_URL'];
       final anonKey = dotenv.env['SUPABASE_ANON_KEY'];
@@ -91,22 +95,18 @@ class SupabaseClient {
 
       _supabase = await Supabase.initialize(
         url: url,
-        anonKey: anonKey,
+        publishableKey: anonKey,
         debug: kDebugMode,
-        // Enable persistence for offline support
-        authOptions: const FlutterAuthClientOptions(
-          authFlowType: AuthFlowType.pkce,
-        ),
       );
 
       _isInitialized = true;
-      _logger.i('✅ Supabase initialized successfully');
+      _logger.i('Supabase initialized successfully');
       _logger.i('   Project URL: $url');
     } on SupabaseConfigException {
       rethrow;
     } catch (e, stackTrace) {
       _logger.e(
-        '❌ Failed to initialize Supabase',
+        'Failed to initialize Supabase',
         error: e,
         stackTrace: stackTrace,
       );
@@ -128,22 +128,12 @@ class SupabaseClient {
   Session? get currentSession => auth.currentSession;
 
   /// Listen to auth state changes
-  Stream<supabase.AuthState> get onAuthStateChange => auth.onAuthStateChange;
+  Stream<AuthState> get onAuthStateChange => auth.onAuthStateChange;
 
   // ============== Edge Functions ==============
 
   /// Invoke an Edge Function
-  /// This is the preferred way to access external services
-  /// to keep secrets server-side
-  ///
-  /// Example:
-  /// ```dart
-  /// final response = await supabaseClient.invokeEdgeFunction(
-  ///   functionName: 'analyze-soil',
-  ///   body: {'image_url': imageUrl},
-  /// );
-  /// ```
-  Future<FunctionResponse<T>> invokeEdgeFunction<T>({
+  Future<FunctionResponse> invokeEdgeFunction({
     required String functionName,
     Map<String, dynamic>? body,
     Map<String, String>? headers,
@@ -154,11 +144,11 @@ class SupabaseClient {
         body: body,
         headers: headers,
       );
-      _logger.d('✅ Edge Function $functionName invoked successfully');
-      return response as FunctionResponse<T>;
+      _logger.d('Edge Function $functionName invoked successfully');
+      return response;
     } catch (e, stackTrace) {
       _logger.e(
-        '❌ Edge Function $functionName failed',
+        'Edge Function $functionName failed',
         error: e,
         stackTrace: stackTrace,
       );
@@ -171,13 +161,13 @@ class SupabaseClient {
   /// Sign out user and clear session
   Future<void> signOut() async {
     await auth.signOut();
-    _logger.i('👋 User signed out');
+    _logger.i('User signed out');
   }
 
   /// Refresh the current session
   Future<void> refreshSession() async {
     await auth.refreshSession();
-    _logger.d('🔄 Session refreshed');
+    _logger.d('Session refreshed');
   }
 
   /// Get the current JWT token (useful for Edge Functions)
@@ -188,9 +178,9 @@ class SupabaseClient {
     _supabase?.dispose();
     _supabase = null;
     _isInitialized = false;
-    _logger.w('🗑️ Supabase client disposed');
+    _logger.w('Supabase client disposed');
   }
 }
 
 /// Global accessor for convenience
-SupabaseClient get supabaseClient => SupabaseClient.instance;
+AppSupabaseClient get supabaseClient => AppSupabaseClient.instance;

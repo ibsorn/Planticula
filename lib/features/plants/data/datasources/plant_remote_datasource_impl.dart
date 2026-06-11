@@ -6,10 +6,9 @@ import 'package:planticula/features/plants/data/models/plant_model.dart';
 
 /// Implementación de PlantRemoteDataSource usando Supabase
 class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
-  final SupabaseClient _client;
-  final Logger _logger;
+  final AppSupabaseClient _client;
 
-  PlantRemoteDataSourceImpl(this._client) : _logger = Logger();
+  PlantRemoteDataSourceImpl(this._client);
 
   String get _table => 'plants';
 
@@ -18,7 +17,7 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
   @override
   Future<Result<List<PlantModel>>> getPlants() async {
     try {
-      _logger.d('📥 Fetching plants for user: $_userId');
+      Logger.d('📥 Fetching plants for user: $_userId');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -34,10 +33,10 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
           .map((json) => PlantModel.fromJson(json))
           .toList();
 
-      _logger.i('✅ Fetched ${plants.length} plants');
+      Logger.i('✅ Fetched ${plants.length} plants');
       return Success(plants);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error fetching plants', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error fetching plants', error: e, stackTrace: stackTrace);
       return Failure('Error al cargar plantas: ${e.toString()}');
     }
   }
@@ -45,7 +44,7 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
   @override
   Future<Result<PlantModel>> getPlantById(String id) async {
     try {
-      _logger.d('📥 Fetching plant: $id');
+      Logger.d('📥 Fetching plant: $id');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -59,10 +58,10 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
           .single();
 
       final plant = PlantModel.fromJson(response);
-      _logger.i('✅ Fetched plant: ${plant.name}');
+      Logger.i('✅ Fetched plant: ${plant.name}');
       return Success(plant);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error fetching plant $id', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error fetching plant $id', error: e, stackTrace: stackTrace);
       return Failure('Error al cargar planta: ${e.toString()}');
     }
   }
@@ -70,7 +69,7 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
   @override
   Future<Result<PlantModel>> createPlant(PlantModel plant) async {
     try {
-      _logger.d('📤 Creating plant: ${plant.name}');
+      Logger.d('📤 Creating plant: ${plant.name}');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -101,10 +100,10 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
           .single();
 
       final createdPlant = PlantModel.fromJson(response);
-      _logger.i('✅ Created plant: ${createdPlant.name} (${createdPlant.id})');
+      Logger.i('✅ Created plant: ${createdPlant.name} (${createdPlant.id})');
       return Success(createdPlant);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error creating plant', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error creating plant', error: e, stackTrace: stackTrace);
       return Failure('Error al crear planta: ${e.toString()}');
     }
   }
@@ -112,7 +111,7 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
   @override
   Future<Result<PlantModel>> updatePlant(PlantModel plant) async {
     try {
-      _logger.d('📤 Updating plant: ${plant.id}');
+      Logger.d('📤 Updating plant: ${plant.id}');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -145,10 +144,10 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
           .single();
 
       final updatedPlant = PlantModel.fromJson(response);
-      _logger.i('✅ Updated plant: ${updatedPlant.name}');
+      Logger.i('✅ Updated plant: ${updatedPlant.name}');
       return Success(updatedPlant);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error updating plant ${plant.id}',
+      Logger.e('❌ Error updating plant ${plant.id}',
           error: e, stackTrace: stackTrace);
       return Failure('Error al actualizar planta: ${e.toString()}');
     }
@@ -157,7 +156,7 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
   @override
   Future<Result<void>> deletePlant(String id) async {
     try {
-      _logger.d('🗑️ Deleting plant: $id');
+      Logger.d('🗑️ Deleting plant: $id');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -169,10 +168,10 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
           .eq('id', id)
           .eq('user_id', _userId!);
 
-      _logger.i('✅ Deleted plant: $id');
+      Logger.i('✅ Deleted plant: $id');
       return const Success(null);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error deleting plant $id', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error deleting plant $id', error: e, stackTrace: stackTrace);
       return Failure('Error al eliminar planta: ${e.toString()}');
     }
   }
@@ -180,7 +179,7 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
   @override
   Future<Result<List<PlantModel>>> searchPlants(String query) async {
     try {
-      _logger.d('🔍 Searching plants: "$query"');
+      Logger.d('🔍 Searching plants: "$query"');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
@@ -197,10 +196,10 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
           .map((json) => PlantModel.fromJson(json))
           .toList();
 
-      _logger.i('✅ Found ${plants.length} plants matching "$query"');
+      Logger.i('✅ Found ${plants.length} plants matching "$query"');
       return Success(plants);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error searching plants', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error searching plants', error: e, stackTrace: stackTrace);
       return Failure('Error al buscar plantas: ${e.toString()}');
     }
   }
@@ -208,7 +207,7 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
   @override
   Future<Result<PlantModel>> waterPlant(String id) async {
     try {
-      _logger.d('💧 Watering plant: $id');
+      Logger.d('💧 Watering plant: $id');
 
       // Obtener la planta actual
       final plantResult = await getPlantById(id);
@@ -219,7 +218,7 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
       final plant = (plantResult as Success<PlantModel>).data;
 
       if (plant.wateringFrequency == null || plant.wateringFrequency! <= 0) {
-        return Failure('La planta no tiene configurada frecuencia de riego');
+        return const Failure('La planta no tiene configurada frecuencia de riego');
       }
 
       final now = DateTime.now();
@@ -240,10 +239,10 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
           .single();
 
       final updatedPlant = PlantModel.fromJson(response);
-      _logger.i('✅ Watered plant: ${updatedPlant.name}. Next: $nextWatering');
+      Logger.i('✅ Watered plant: ${updatedPlant.name}. Next: $nextWatering');
       return Success(updatedPlant);
     } catch (e, stackTrace) {
-      _logger.e('❌ Error watering plant $id', error: e, stackTrace: stackTrace);
+      Logger.e('❌ Error watering plant $id', error: e, stackTrace: stackTrace);
       return Failure('Error al registrar riego: ${e.toString()}');
     }
   }

@@ -20,6 +20,11 @@ import 'package:planticula/features/pest_alerts/data/datasources/pest_alert_remo
 import 'package:planticula/features/pest_alerts/data/repositories/pest_alert_repository_impl.dart';
 import 'package:planticula/features/pest_alerts/domain/repositories/pest_alert_repository.dart';
 import 'package:planticula/features/pest_alerts/presentation/bloc/pest_alerts_bloc.dart';
+import 'package:planticula/features/marketplace/data/datasources/marketplace_remote_datasource.dart';
+import 'package:planticula/features/marketplace/data/datasources/marketplace_remote_datasource_impl.dart';
+import 'package:planticula/features/marketplace/data/repositories/marketplace_repository_impl.dart';
+import 'package:planticula/features/marketplace/domain/repositories/marketplace_repository.dart';
+import 'package:planticula/features/marketplace/presentation/bloc/marketplace_bloc.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -29,7 +34,7 @@ Future<void> initDependencies() async {
   sl.registerSingleton<SharedPreferences>(prefs);
 
   // Supabase (initialized in main)
-  sl.registerSingleton<SupabaseClient>(SupabaseClient.instance);
+  sl.registerSingleton<AppSupabaseClient>(AppSupabaseClient.instance);
 
   // Theme
   sl.registerFactory<ThemeCubit>(() => ThemeCubit(sl()));
@@ -78,4 +83,17 @@ Future<void> initDependencies() async {
 
   // Pest Alerts - Presentation Layer
   sl.registerFactory<PestAlertsBloc>(() => PestAlertsBloc(sl()));
+
+  // Marketplace - Data Layer
+  sl.registerLazySingleton<MarketplaceRemoteDataSource>(
+    () => MarketplaceRemoteDataSourceImpl(sl()),
+  );
+
+  // Marketplace - Repository Layer
+  sl.registerLazySingleton<MarketplaceRepository>(
+    () => MarketplaceRepositoryImpl(sl()),
+  );
+
+  // Marketplace - Presentation Layer
+  sl.registerFactory<MarketplaceBloc>(() => MarketplaceBloc(sl()));
 }

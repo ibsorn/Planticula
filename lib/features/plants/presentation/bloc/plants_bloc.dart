@@ -25,7 +25,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     PlantsLoadRequested event,
     Emitter<PlantsState> emit,
   ) async {
-    emit(state.copyWith(status: PlantsStatus.loading, errorMessage: null));
+    emit(state.copyWith(status: PlantsStatus.loading));
 
     final result = await _repository.getPlants();
 
@@ -49,7 +49,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     PlantsLoadNeedingWaterRequested event,
     Emitter<PlantsState> emit,
   ) async {
-    emit(state.copyWith(status: PlantsStatus.loading, errorMessage: null));
+    emit(state.copyWith(status: PlantsStatus.loading));
 
     final result = await _repository.getPlantsNeedingWater();
 
@@ -78,7 +78,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
       return;
     }
 
-    emit(state.copyWith(status: PlantsStatus.loading, errorMessage: null));
+    emit(state.copyWith(status: PlantsStatus.loading));
 
     final result = await _repository.searchPlants(event.query);
 
@@ -104,18 +104,22 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
   ) async {
     emit(state.copyWith(
       operationStatus: PlantsOperationStatus.loading,
-      errorMessage: null,
     ));
 
     final result = await _repository.createPlant(
       name: event.name,
       scientificName: event.scientificName,
       speciesId: event.speciesId,
+      speciesCategory: event.speciesCategory,
       imageUrl: event.imageUrl,
       location: event.location,
       notes: event.notes,
       wateringFrequency: event.wateringFrequency,
       acquiredDate: event.acquiredDate,
+      environment: event.environment,
+      growthStage: event.growthStage,
+      latitude: event.latitude,
+      longitude: event.longitude,
     );
 
     result.when(
@@ -142,7 +146,6 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
   ) async {
     emit(state.copyWith(
       operationStatus: PlantsOperationStatus.loading,
-      errorMessage: null,
     ));
 
     final result = await _repository.updatePlant(event.plant);
@@ -173,7 +176,6 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
   ) async {
     emit(state.copyWith(
       operationStatus: PlantsOperationStatus.loading,
-      errorMessage: null,
     ));
 
     final result = await _repository.deletePlant(event.id);
@@ -203,7 +205,6 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
   ) async {
     emit(state.copyWith(
       operationStatus: PlantsOperationStatus.loading,
-      errorMessage: null,
     ));
 
     final result = await _repository.waterPlant(event.id);
@@ -243,9 +244,6 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     PlantsClearError event,
     Emitter<PlantsState> emit,
   ) {
-    emit(state.copyWith(
-      errorMessage: null,
-      operationStatus: PlantsOperationStatus.initial,
-    ));
+    emit(const PlantsState());
   }
 }

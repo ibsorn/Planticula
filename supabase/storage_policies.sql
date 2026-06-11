@@ -1,108 +1,119 @@
--- ============================================================================
--- POLÍTICAS DE STORAGE PARA IMÁGENES DE PLANTAS
--- ============================================================================
--- Ejecutar después de crear el bucket "plant-images" en Storage
--- ============================================================================
+-- ===== PLANTICULA: STORAGE POLICIES =====
+-- Ejecutar DESPUES de crear los buckets en Storage
+-- Buckets requeridos: plant-images, soil-images, pest-photos, marketplace-photos
 
 -- ============================================================================
--- 1. CREAR EL BUCKET (hacerlo desde UI o API)
--- ============================================================================
--- En Supabase Dashboard → Storage → New bucket:
--- Name: plant-images
--- Public bucket: TRUE (para que las URLs sean accesibles sin token)
--- File size limit: 5242880 (5MB)
--- Allowed MIME types: image/png, image/jpeg, image/jpg
-
--- ============================================================================
--- 2. POLÍTICAS DE ACCESO
+-- BUCKET: plant-images
 -- ============================================================================
 
--- POLÍTICA: Permitir lectura pública de imágenes
--- Cualquiera puede ver las imágenes (requerido para mostrar en app)
-DROP POLICY IF EXISTS "Public read access to plant images" ON storage.objects;
-CREATE POLICY "Public read access to plant images" ON storage.objects
-    FOR SELECT
-    USING (bucket_id = 'plant-images');
+DROP POLICY IF EXISTS "Public read plant images" ON storage.objects;
+CREATE POLICY "Public read plant images" ON storage.objects
+    FOR SELECT USING (bucket_id = 'plant-images');
 
--- POLÍTICA: Usuarios autenticados pueden subir imágenes
--- Solo usuarios logueados, archivos válidos, máximo 5MB
-DROP POLICY IF EXISTS "Authenticated users can upload images" ON storage.objects;
-CREATE POLICY "Authenticated users can upload images" ON storage.objects
-    FOR INSERT
-    WITH CHECK (
-        bucket_id = 'plant-images' AND
-        auth.role() = 'authenticated' AND
-        (
-            storage.extension(name) = 'jpg' OR
-            storage.extension(name) = 'jpeg' OR
-            storage.extension(name) = 'png'
-        ) AND
-        storage.fossa(name) < 5242880  -- 5MB en bytes
+DROP POLICY IF EXISTS "Auth users upload plant images" ON storage.objects;
+CREATE POLICY "Auth users upload plant images" ON storage.objects
+    FOR INSERT WITH CHECK (
+        bucket_id = 'plant-images'
+        AND auth.role() = 'authenticated'
     );
 
--- POLÍTICA: Usuarios pueden actualizar sus propias imágenes
--- Organización por user_id en la ruta: plant-images/{user_id}/{plant_id}.jpg
-DROP POLICY IF EXISTS "Users can update their own images" ON storage.objects;
-CREATE POLICY "Users can update their own images" ON storage.objects
-    FOR UPDATE
-    USING (
-        bucket_id = 'plant-images' AND
-        auth.uid()::text = (storage.foldername(name))[1]
-    )
-    WITH CHECK (
-        bucket_id = 'plant-images' AND
-        auth.uid()::text = (storage.foldername(name))[1]
+DROP POLICY IF EXISTS "Users update own plant images" ON storage.objects;
+CREATE POLICY "Users update own plant images" ON storage.objects
+    FOR UPDATE USING (
+        bucket_id = 'plant-images'
+        AND auth.uid()::text = (storage.foldername(name))[1]
     );
 
--- POLÍTICA: Usuarios pueden eliminar sus propias imágenes
-DROP POLICY IF EXISTS "Users can delete their own images" ON storage.objects;
-CREATE POLICY "Users can delete their own images" ON storage.objects
-    FOR DELETE
-    USING (
-        bucket_id = 'plant-images' AND
-        auth.uid()::text = (storage.foldername(name))[1]
+DROP POLICY IF EXISTS "Users delete own plant images" ON storage.objects;
+CREATE POLICY "Users delete own plant images" ON storage.objects
+    FOR DELETE USING (
+        bucket_id = 'plant-images'
+        AND auth.uid()::text = (storage.foldername(name))[1]
     );
 
 -- ============================================================================
--- 3. FUNCIÓN AUXILIAR PARA SUBIR IMÁGENES
+-- BUCKET: soil-images
 -- ============================================================================
 
--- Función para generar la ruta de almacenamiento
-CREATE OR REPLACE FUNCTION storage_plant_image_path(
-    p_user_id UUID,
-    p_plant_id UUID,
-    p_extension TEXT DEFAULT 'jpg'
-) RETURNS TEXT AS $$
-BEGIN
-    RETURN p_user_id::text || '/' || p_plant_id::text || '.' || p_extension;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+DROP POLICY IF EXISTS "Public read soil images" ON storage.objects;
+CREATE POLICY "Public read soil images" ON storage.objects
+    FOR SELECT USING (bucket_id = 'soil-images');
+
+DROP POLICY IF EXISTS "Auth users upload soil images" ON storage.objects;
+CREATE POLICY "Auth users upload soil images" ON storage.objects
+    FOR INSERT WITH CHECK (
+        bucket_id = 'soil-images'
+        AND auth.role() = 'authenticated'
+    );
+
+DROP POLICY IF EXISTS "Users update own soil images" ON storage.objects;
+CREATE POLICY "Users update own soil images" ON storage.objects
+    FOR UPDATE USING (
+        bucket_id = 'soil-images'
+        AND auth.uid()::text = (storage.foldername(name))[1]
+    );
+
+DROP POLICY IF EXISTS "Users delete own soil images" ON storage.objects;
+CREATE POLICY "Users delete own soil images" ON storage.objects
+    FOR DELETE USING (
+        bucket_id = 'soil-images'
+        AND auth.uid()::text = (storage.foldername(name))[1]
+    );
 
 -- ============================================================================
--- 4. EJEMPLO DE USO DESDE FLUTTER
+-- BUCKET: pest-photos
 -- ============================================================================
 
-/*
+DROP POLICY IF EXISTS "Public read pest photos" ON storage.objects;
+CREATE POLICY "Public read pest photos" ON storage.objects
+    FOR SELECT USING (bucket_id = 'pest-photos');
 
-// Subir imagen
-final filePath = '$userId/$plantId.jpg';
-await supabase.storage
-    .from('plant-images')
-    .uploadBinary(filePath, imageBytes);
+DROP POLICY IF EXISTS "Auth users upload pest photos" ON storage.objects;
+CREATE POLICY "Auth users upload pest photos" ON storage.objects
+    FOR INSERT WITH CHECK (
+        bucket_id = 'pest-photos'
+        AND auth.role() = 'authenticated'
+    );
 
-// Obtener URL pública
-final imageUrl = supabase.storage
-    .from('plant-images')
-    .getPublicUrl(filePath);
+DROP POLICY IF EXISTS "Users update own pest photos" ON storage.objects;
+CREATE POLICY "Users update own pest photos" ON storage.objects
+    FOR UPDATE USING (
+        bucket_id = 'pest-photos'
+        AND auth.uid()::text = (storage.foldername(name))[1]
+    );
 
-// Guardar URL en la tabla plants
-await supabase.from('plants')
-    .update({'image_url': imageUrl})
-    .eq('id', plantId);
+DROP POLICY IF EXISTS "Users delete own pest photos" ON storage.objects;
+CREATE POLICY "Users delete own pest photos" ON storage.objects
+    FOR DELETE USING (
+        bucket_id = 'pest-photos'
+        AND auth.uid()::text = (storage.foldername(name))[1]
+    );
 
-// Eliminar imagen
-await supabase.storage
-    .from('plant-images')
-    .remove([filePath]);
+-- ============================================================================
+-- BUCKET: marketplace-photos
+-- ============================================================================
 
-*/
+DROP POLICY IF EXISTS "Public read marketplace photos" ON storage.objects;
+CREATE POLICY "Public read marketplace photos" ON storage.objects
+    FOR SELECT USING (bucket_id = 'marketplace-photos');
+
+DROP POLICY IF EXISTS "Auth users upload marketplace photos" ON storage.objects;
+CREATE POLICY "Auth users upload marketplace photos" ON storage.objects
+    FOR INSERT WITH CHECK (
+        bucket_id = 'marketplace-photos'
+        AND auth.role() = 'authenticated'
+    );
+
+DROP POLICY IF EXISTS "Users update own marketplace photos" ON storage.objects;
+CREATE POLICY "Users update own marketplace photos" ON storage.objects
+    FOR UPDATE USING (
+        bucket_id = 'marketplace-photos'
+        AND auth.uid()::text = (storage.foldername(name))[1]
+    );
+
+DROP POLICY IF EXISTS "Users delete own marketplace photos" ON storage.objects;
+CREATE POLICY "Users delete own marketplace photos" ON storage.objects
+    FOR DELETE USING (
+        bucket_id = 'marketplace-photos'
+        AND auth.uid()::text = (storage.foldername(name))[1]
+    );

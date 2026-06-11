@@ -88,7 +88,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.6),
+                                .withValues(alpha: 0.6),
                           ),
                     ),
                     const SizedBox(height: 32),
@@ -139,7 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           _obscurePassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                        ),
+                      ),
                         onPressed: () {
                           setState(() {
                             _obscurePassword = !_obscurePassword;
@@ -170,7 +170,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           _obscureConfirmPassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                        ),
+                      ),
                         onPressed: () {
                           setState(() {
                             _obscureConfirmPassword = !_obscureConfirmPassword;

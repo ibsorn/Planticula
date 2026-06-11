@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import 'package:planticula/core/constants/app_constants.dart';
 import 'package:planticula/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
@@ -35,9 +33,13 @@ class _PlantsScreenState extends State<PlantsScreen> {
   }
 
   void _onAddPlant() {
+    final bloc = context.read<PlantsBloc>();
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const CreatePlantScreen(),
+        builder: (_) => BlocProvider.value(
+          value: bloc,
+          child: const CreatePlantScreen(),
+        ),
       ),
     );
   }
@@ -180,7 +182,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
             Icon(
               Icons.local_florist,
               size: 80,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -192,7 +194,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
               '¡Añade tu primera planta para comenzar a cuidarla!',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
             ),
             const SizedBox(height: 24),
@@ -282,7 +284,7 @@ class _PlantCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: colorScheme.error.withOpacity(0.1),
+                              color: colorScheme.error.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -313,7 +315,7 @@ class _PlantCard extends StatelessWidget {
                         plant.scientificName!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               fontStyle: FontStyle.italic,
-                              color: colorScheme.onSurface.withOpacity(0.6),
+                              color: colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -326,7 +328,7 @@ class _PlantCard extends StatelessWidget {
                           Icon(
                             Icons.location_on_outlined,
                             size: 16,
-                            color: colorScheme.onSurface.withOpacity(0.5),
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                           const SizedBox(width: 4),
                           Expanded(
@@ -369,7 +371,7 @@ class _PlantCard extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               child: Icon(
                 Icons.chevron_right,
-                color: colorScheme.onSurface.withOpacity(0.3),
+                color: colorScheme.onSurface.withValues(alpha: 0.3),
               ),
             ),
           ],
@@ -384,7 +386,7 @@ class _PlantCard extends StatelessWidget {
       child: Icon(
         Icons.local_florist,
         size: 40,
-        color: colorScheme.onPrimaryContainer.withOpacity(0.5),
+        color: colorScheme.onPrimaryContainer.withValues(alpha: 0.5),
       ),
     );
   }
@@ -394,8 +396,8 @@ class _PlantCard extends StatelessWidget {
       return colorScheme.error;
     }
     final days = plant.daysUntilWatering;
-    if (days == null) return colorScheme.onSurface.withOpacity(0.5);
-    if (days <= 1) return colorScheme.warning;
+    if (days == null) return colorScheme.onSurface.withValues(alpha: 0.5);
+    if (days <= 1) return Colors.orange;
     return colorScheme.primary;
   }
 

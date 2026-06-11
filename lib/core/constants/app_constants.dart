@@ -14,6 +14,8 @@ class AppConstants {
   static const String routePestAlerts = '/pest-alerts';
   static const String routeReportPest = '/pest-alerts/report';
   static const String routePestAlertDetail = '/pest-alerts/:id';
+  static const String routeMarketplace = '/marketplace';
+  static const String routeCreateListing = '/marketplace/create';
 
   // Storage Keys
   static const String keyThemeMode = 'theme_mode';
