@@ -56,3 +56,9 @@ class AuthUserChanged extends AuthEvent {
   @override
   List<Object?> get props => [user];
 }
+
+/// Limpia el error activo para volver al estado unauthenticated.
+/// Se dispara cuando el usuario empieza a editar los campos tras un error.
+class AuthErrorCleared extends AuthEvent {
+  const AuthErrorCleared();
+}

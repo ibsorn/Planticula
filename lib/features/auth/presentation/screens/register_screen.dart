@@ -24,7 +24,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _acceptTerms = false;
 
   @override
+  void initState() {
+    super.initState();
+    // [FIX-8] Limpiar error cuando el usuario empieza a editar los campos
+    _nameController.addListener(_clearErrorOnEdit);
+    _emailController.addListener(_clearErrorOnEdit);
+    _passwordController.addListener(_clearErrorOnEdit);
+    _confirmPasswordController.addListener(_clearErrorOnEdit);
+  }
+
+  @override
   void dispose() {
+    _nameController.removeListener(_clearErrorOnEdit);
+    _emailController.removeListener(_clearErrorOnEdit);
+    _passwordController.removeListener(_clearErrorOnEdit);
+    _confirmPasswordController.removeListener(_clearErrorOnEdit);
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -32,12 +46,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  void _clearErrorOnEdit() {
+    final bloc = context.read<AuthBloc>();
+    if (bloc.state.hasError) {
+      bloc.add(const AuthErrorCleared());
+    }
+  }
+
   void _onRegister() {
     if (_formKey.currentState?.validate() ?? false) {
       if (!_acceptTerms) {
+        // [FIX-8] Snackbar consistente con los demás
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(AppStrings.registerTermsError),
+          SnackBar(
+            content: const Text(AppStrings.registerTermsError),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
           ),
         );
         return;
@@ -46,9 +71,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       context.read<AuthBloc>().add(AuthSignUpRequested(
             email: _emailController.text.trim(),
             password: _passwordController.text,
+            // [FIX-11] trim() evita que un nombre solo de espacios pase la validación
             displayName: _nameController.text.trim(),
           ));
     }
+  }
+
+  /// [FIX-2] Validación de email con regex estándar
+  static bool _isValidEmail(String email) {
+    return RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+        .hasMatch(email);
   }
 
   @override
@@ -58,14 +90,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
         title: const Text(AppStrings.registerTitle),
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
+        listenWhen: (previous, current) =>
+            previous.hasError != current.hasError ||
+            previous.isAuthenticated != current.isAuthenticated,
         listener: (context, state) {
-          if (state.hasError) {
+          if (state.hasError && state.errorMessage != null) {
+            // [FIX-8] Cerrar snackbar anterior antes de mostrar el nuevo
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? AppStrings.unknownError),
+                content: Text(state.errorMessage!),
                 backgroundColor: Theme.of(context).colorScheme.error,
+                behavior: SnackBarBehavior.floating,
+                action: SnackBarAction(
+                  label: AppStrings.close,
+                  textColor: Theme.of(context).colorScheme.onError,
+                  onPressed: () =>
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                ),
               ),
             );
+          }
+          // [FIX-9] Redirigir a home tras registro exitoso
+          // GoRouter's redirect lo gestiona automáticamente cuando
+          // isAuthenticated cambia, pero hacemos pop() explícito por si
+          // el router no redirige desde esta ruta hija.
+          if (state.isAuthenticated && context.canPop()) {
+            context.pop();
           }
         },
         builder: (context, state) {
@@ -93,33 +144,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Name field
+                    // Nombre
                     AppTextField(
                       controller: _nameController,
                       label: AppStrings.fieldName,
                       hint: AppStrings.fieldNameHint,
                       prefixIcon: Icons.person_outlined,
+                      textCapitalization: TextCapitalization.words,
                       validator: (value) {
-                        if (value?.isEmpty ?? true) {
+                        // [FIX-11] trim() para detectar nombres solo de espacios
+                        if (value == null || value.trim().isEmpty) {
                           return AppStrings.fieldNameRequired;
+                        }
+                        if (value.trim().length < 2) {
+                          return AppStrings.fieldNameTooShort;
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
 
-                    // Email field
+                    // Email
                     AppTextField(
                       controller: _emailController,
                       label: AppStrings.fieldEmail,
                       hint: AppStrings.fieldEmailHint,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
+                      autocorrect: false,
+                      enableSuggestions: false,
                       validator: (value) {
-                        if (value?.isEmpty ?? true) {
+                        if (value == null || value.trim().isEmpty) {
                           return AppStrings.fieldEmailRequired;
                         }
-                        if (!value!.contains('@')) {
+                        // [FIX-2] Validación con regex en lugar de solo '@'
+                        if (!_isValidEmail(value.trim())) {
                           return AppStrings.fieldEmailInvalid;
                         }
                         return null;
@@ -127,7 +186,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Password field
+                    // Contraseña
                     AppTextField(
                       controller: _passwordController,
                       label: AppStrings.fieldPassword,
@@ -139,7 +198,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           _obscurePassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                      ),
+                        ),
                         onPressed: () {
                           setState(() {
                             _obscurePassword = !_obscurePassword;
@@ -147,10 +206,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         },
                       ),
                       validator: (value) {
-                        if (value?.isEmpty ?? true) {
+                        if (value == null || value.isEmpty) {
                           return AppStrings.fieldPasswordRequired;
                         }
-                        if (value!.length < 6) {
+                        if (value.length < 6) {
                           return AppStrings.fieldPasswordMinLength;
                         }
                         return null;
@@ -158,7 +217,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Confirm password field
+                    // Confirmar contraseña
                     AppTextField(
                       controller: _confirmPasswordController,
                       label: AppStrings.fieldPasswordConfirm,
@@ -170,7 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           _obscureConfirmPassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                      ),
+                        ),
                         onPressed: () {
                           setState(() {
                             _obscureConfirmPassword = !_obscureConfirmPassword;
@@ -178,7 +237,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         },
                       ),
                       validator: (value) {
-                        if (value?.isEmpty ?? true) {
+                        if (value == null || value.isEmpty) {
                           return AppStrings.fieldPasswordConfirmError;
                         }
                         if (value != _passwordController.text) {
@@ -189,16 +248,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Terms checkbox
+                    // Términos y condiciones
                     Row(
                       children: [
                         Checkbox(
                           value: _acceptTerms,
-                          onChanged: (value) {
-                            setState(() {
-                              _acceptTerms = value ?? false;
-                            });
-                          },
+                          onChanged: state.isLoading
+                              ? null
+                              : (value) {
+                                  setState(() {
+                                    _acceptTerms = value ?? false;
+                                  });
+                                },
                         ),
                         Expanded(
                           child: Text(
@@ -210,24 +271,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Register button
+                    // Botón registro
                     AppButton(
                       text: AppStrings.registerButton,
-                      onPressed: _onRegister,
+                      onPressed: state.isLoading ? null : _onRegister,
                       isLoading: state.isLoading,
                     ),
                     const SizedBox(height: 16),
 
-                    // Login link
+                    // Link login
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          AppStrings.registerHasAccount,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
+                        const Text(AppStrings.registerHasAccount),
+                        const SizedBox(width: 4),
                         TextButton(
-                          onPressed: () => context.pop(),
+                          onPressed:
+                              state.isLoading ? null : () => context.pop(),
                           child: const Text(AppStrings.registerLoginLink),
                         ),
                       ],

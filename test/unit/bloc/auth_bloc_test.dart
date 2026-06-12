@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:planticula/core/constants/app_strings.dart';
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/features/auth/domain/entities/user.dart';
 import 'package:planticula/features/auth/domain/repositories/auth_repository.dart';
@@ -148,7 +149,7 @@ void main() {
               email: any(named: 'email'),
               password: any(named: 'password'),
               displayName: any(named: 'displayName'),
-            )).thenAnswer((_) async => const Failure('Email already in use'));
+            )).thenAnswer((_) async => const Failure('User already registered'));
       },
       build: () => AuthBloc(mockAuthRepository),
       // Skip the initial AuthCheckRequested from _init()
@@ -162,7 +163,7 @@ void main() {
         const AuthState(status: AuthStatus.loading),
         const AuthState(
           status: AuthStatus.error,
-          errorMessage: 'Email already in use',
+          errorMessage: AppStrings.authErrorEmailAlreadyInUse,
         ),
       ],
     );
@@ -229,7 +230,7 @@ void main() {
         const AuthState(status: AuthStatus.loading),
         const AuthState(
           status: AuthStatus.unauthenticated,
-          successMessage: 'Se ha enviado un correo para restablecer tu contrasena',
+          successMessage: AppStrings.resetPasswordEmailSent,
         ),
       ],
     );
@@ -239,7 +240,7 @@ void main() {
       setUp: () {
         when(() => mockAuthRepository.currentUser).thenReturn(null);
         when(() => mockAuthRepository.resetPassword(any()))
-            .thenAnswer((_) async => const Failure('User not found'));
+            .thenAnswer((_) async => const Failure('user not found', code: '404'));
       },
       build: () => AuthBloc(mockAuthRepository),
       // Skip the initial AuthCheckRequested from _init()
@@ -251,7 +252,7 @@ void main() {
         const AuthState(status: AuthStatus.loading),
         const AuthState(
           status: AuthStatus.error,
-          errorMessage: 'User not found',
+          errorMessage: AppStrings.authErrorUserNotFound,
         ),
       ],
     );

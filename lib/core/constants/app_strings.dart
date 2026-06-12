@@ -55,7 +55,6 @@ class AppStrings {
   static const String fieldEmailHint = 'tu@email.com';
   static const String fieldEmailRequired = 'El email es requerido';
   static const String fieldEmailInvalid = 'Email inválido';
-  static const String fieldEmailInvalidDialog = 'Email no valido';
   static const String fieldPassword = 'Contraseña';
   static const String fieldPasswordHint = '********';
   static const String fieldPasswordRequired = 'La contraseña es requerida';
@@ -66,10 +65,31 @@ class AppStrings {
   static const String fieldName = 'Nombre';
   static const String fieldNameHint = 'Tu nombre';
   static const String fieldNameRequired = 'El nombre es requerido';
+  static const String fieldNameTooShort = 'El nombre debe tener al menos 2 caracteres';
 
-  static const String forgotPasswordTitle = 'Restablecer contrasena';
+  static const String forgotPasswordTitle = 'Restablecer contraseña';
   static const String forgotPasswordBody =
-      'Introduce tu email y te enviaremos un enlace para restablecer tu contrasena.';
+      'Introduce tu email y te enviaremos un enlace para restablecer tu contraseña.';
+  static const String resetPasswordEmailSent =
+      'Se ha enviado un correo para restablecer tu contraseña. Revisa tu bandeja de entrada.';
+
+  // ── Auth errors (translated from Supabase English) ────────────────────────────
+  static const String authErrorInvalidCredentials =
+      'Email o contraseña incorrectos';
+  static const String authErrorEmailAlreadyInUse =
+      'Este email ya está registrado. ¿Quieres iniciar sesión?';
+  static const String authErrorEmailNotConfirmed =
+      'Debes confirmar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.';
+  static const String authErrorTooManyRequests =
+      'Demasiados intentos. Por favor espera unos minutos antes de volver a intentarlo.';
+  static const String authErrorNetwork =
+      'Sin conexión a internet. Comprueba tu red y vuelve a intentarlo.';
+  static const String authErrorWeakPassword =
+      'La contraseña es demasiado débil. Usa al menos 8 caracteres con letras y números.';
+  static const String authErrorUserNotFound =
+      'No existe ninguna cuenta con ese email.';
+  static const String authErrorSessionExpired =
+      'Tu sesión ha expirado. Por favor inicia sesión de nuevo.';
 
   // ── Plants ────────────────────────────────────────────────────────────────────
   static const String plantsTitle = 'Mis Plantas';
