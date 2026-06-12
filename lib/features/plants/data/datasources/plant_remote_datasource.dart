@@ -24,4 +24,7 @@ abstract class PlantRemoteDataSource {
 
   /// Marca una planta como regada (actualiza last_watered y next_watering)
   Future<Result<PlantModel>> waterPlant(String id);
+
+  /// Registra un trasplante (actualiza pot_size y last_transplanted)
+  Future<Result<PlantModel>> transplantPlant(String id, String newPotSize);
 }

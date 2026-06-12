@@ -23,6 +23,7 @@ abstract class PlantsRepository {
     DateTime? acquiredDate,
     String? environment,
     String? growthStage,
+    String? potSize,
     double? latitude,
     double? longitude,
   });
@@ -38,6 +39,9 @@ abstract class PlantsRepository {
 
   /// Marca una planta como regada y actualiza fechas
   Future<Result<Plant>> waterPlant(String id);
+
+  /// Registra un trasplante y actualiza el tamaño de maceta
+  Future<Result<Plant>> transplantPlant(String id, String newPotSize);
 
   /// Obtiene plantas que necesitan riego
   Future<Result<List<Plant>>> getPlantsNeedingWater();

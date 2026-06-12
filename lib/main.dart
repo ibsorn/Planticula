@@ -118,32 +118,43 @@ class MyApp extends StatelessWidget {
           create: (context) => di.sl<MarketplaceBloc>(),
         ),
       ],
-      child: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, authState) {
-          return BlocBuilder<ThemeCubit, ThemeState>(
-            builder: (context, themeState) {
-              final router = AppRouter.router(
-                isAuthenticated: authState.isAuthenticated,
-              );
+      child: _AppContent(),
+    );
+  }
+}
 
-              return MaterialApp.router(
-                title: AppConstants.appName,
-                debugShowCheckedModeBanner: false,
-                theme: AppTheme.lightTheme,
-                darkTheme: AppTheme.darkTheme,
-                themeMode: themeState.themeMode,
-                routerConfig: router,
-                localizationsDelegates: const [
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                ],
-                supportedLocales: const [
-                  Locale('es', 'ES'),
-                  Locale('en', 'US'),
-                ],
-              );
-            },
+/// Separated widget that listens to auth changes and updates the router's
+/// AuthNotifier without recreating the GoRouter instance.
+class _AppContent extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          previous.isAuthenticated != current.isAuthenticated,
+      listener: (context, state) {
+        // Update the router's auth notifier - this triggers GoRouter's
+        // refreshListenable which re-evaluates redirects without
+        // destroying the navigation stack.
+        AppRouter.authNotifier.isAuthenticated = state.isAuthenticated;
+      },
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        builder: (context, themeState) {
+          return MaterialApp.router(
+            title: AppConstants.appName,
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeState.themeMode,
+            routerConfig: AppRouter.router,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('es', 'ES'),
+              Locale('en', 'US'),
+            ],
           );
         },
       ),

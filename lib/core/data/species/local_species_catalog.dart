@@ -22,6 +22,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 18, wateringMultiplier: 0.85, description: 'Crecimiento activo, hojas sin agujeros'),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Hojas fenestradas, crecimiento estable'),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12, notes: 'Trasplanta cuando las raices salgan por el drenaje'),
+      ],
     ),
     PlantSpecies(
       id: 'local_pothos', commonName: 'Pothos', scientificName: 'Epipremnum aureum', category: 'indoor',
@@ -32,6 +37,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 2, wateringMultiplier: 0.75),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 8, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 4),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Trasplanta solo si las raices salen del drenaje'),
       ],
     ),
     PlantSpecies(
@@ -44,6 +54,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Prefiere macetas ajustadas, trasplanta cada 2-3 años'),
+      ],
     ),
     PlantSpecies(
       id: 'local_peace_lily', commonName: 'Espatifilo', scientificName: 'Spathiphyllum wallisii', category: 'indoor',
@@ -54,6 +69,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.7),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Trasplanta cada 18-24 meses, le gusta estar algo ajustada'),
       ],
     ),
     PlantSpecies(
@@ -66,6 +86,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 24, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 18, notes: 'Trasplanta cuando las raices ocupen toda la maceta'),
+      ],
     ),
     PlantSpecies(
       id: 'local_spider_plant', commonName: 'Cinta', scientificName: 'Chlorophytum comosum', category: 'indoor',
@@ -75,6 +100,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 2, wateringMultiplier: 0.75),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 6, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Las raices blancas visibles indican que necesita trasplante'),
       ],
     ),
     PlantSpecies(
@@ -87,6 +117,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Trasplanta solo si las raices sobresalen del drenaje'),
+      ],
     ),
     PlantSpecies(
       id: 'local_philodendron', commonName: 'Filodendro', scientificName: 'Philodendron hederaceum', category: 'indoor',
@@ -97,6 +132,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.75),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Trasplanta cuando las raices salgan por los agujeros'),
       ],
     ),
     PlantSpecies(
@@ -109,6 +149,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 18, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Ralentiza el crecimiento en macetas muy grandes'),
+      ],
     ),
     PlantSpecies(
       id: 'local_orchid', commonName: 'Orquidea', scientificName: 'Phalaenopsis spp.', category: 'indoor',
@@ -119,6 +164,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 12, wateringMultiplier: 0.8, description: 'Planta joven, raices en desarrollo'),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 24, wateringMultiplier: 0.9, description: 'Crece hojas, prepara floracion'),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Florece ciclicamente'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Trasplanta solo cuando las raices verdes sobresalgan'),
       ],
     ),
     PlantSpecies(
@@ -131,6 +181,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 24, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 18, notes: 'Trasplanta cada 1-2 años, crece mucho en maceta grande'),
+      ],
     ),
     PlantSpecies(
       id: 'local_rubber_plant', commonName: 'Arbol del caucho', scientificName: 'Ficus elastica', category: 'indoor',
@@ -141,6 +196,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 6, wateringMultiplier: 0.75),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 24, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 18, notes: 'Puede alcanzar gran tamano en maceta amplia'),
       ],
     ),
     PlantSpecies(
@@ -153,6 +213,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 8, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 4),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Divide los rizomas durante el trasplante para propagar'),
+      ],
     ),
     PlantSpecies(
       id: 'local_dracaena', commonName: 'Dracena', scientificName: 'Dracaena marginata', category: 'indoor',
@@ -163,6 +228,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 6, wateringMultiplier: 0.75),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 24, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 18, notes: 'Puede crecer hasta 3m con maceta suficientemente grande'),
       ],
     ),
     PlantSpecies(
@@ -175,6 +245,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12, notes: 'El color mejora con mas luz y maceta adecuada'),
+      ],
     ),
     PlantSpecies(
       id: 'local_pilea', commonName: 'Pilea', scientificName: 'Pilea peperomioides', category: 'indoor',
@@ -185,6 +260,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 2, wateringMultiplier: 0.75),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 6, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Prefiere macetas de ceramica con buen drenaje'),
       ],
     ),
     PlantSpecies(
@@ -197,6 +277,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 6, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Cambia el agua frecuentemente si esta en hidroponia'),
+      ],
     ),
     PlantSpecies(
       id: 'local_anthurium', commonName: 'Anturio', scientificName: 'Anthurium andraeanum', category: 'indoor',
@@ -208,6 +293,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Prefiere estar algo ajustado en la maceta para florecer'),
+      ],
     ),
     PlantSpecies(
       id: 'local_bonsai', commonName: 'Bonsai (Ficus)', scientificName: 'Ficus retusa', category: 'indoor',
@@ -218,6 +308,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 12, wateringMultiplier: 0.6, description: 'Pre-bonsai, necesita riego frecuente'),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 60, wateringMultiplier: 0.8, description: 'Formacion, podas frecuentes'),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Mantenimiento'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 36, notes: 'Trasplante cada 3-5 años, podar raices moderadamente'),
       ],
     ),
 
@@ -232,6 +327,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12, notes: 'Necesita maceta amplia para desarrollar hojas grandes'),
+      ],
     ),
     PlantSpecies(
       id: 'local_maranta', commonName: 'Maranta (planta de la oracion)', scientificName: 'Maranta leuconeura', category: 'indoor',
@@ -242,6 +342,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.7),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 10, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 5),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Divide en primavera si esta muy llena de raices'),
       ],
     ),
     PlantSpecies(
@@ -254,6 +359,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 8, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 4),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Prefiere macetas pequenas, trasplanta solo si es necesario'),
+      ],
     ),
     PlantSpecies(
       id: 'local_dieffenbachia', commonName: 'Diefembaquia', scientificName: 'Dieffenbachia seguine', category: 'indoor',
@@ -264,6 +374,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 4, wateringMultiplier: 0.7),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12, notes: 'Trasplanta en primavera cuando las raices llenen la maceta'),
       ],
     ),
     PlantSpecies(
@@ -276,6 +391,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 18, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12, notes: 'Puede alcanzar 2-3m, usa maceta con peso para estabilidad'),
+      ],
     ),
     PlantSpecies(
       id: 'local_begonia', commonName: 'Begonia', scientificName: 'Begonia rex', category: 'indoor',
@@ -286,6 +406,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.7),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 8, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 4),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'No mojar las hojas, trasplanta en primavera'),
       ],
     ),
     PlantSpecies(
@@ -298,6 +423,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 8, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 4),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Solo trasplanta si las raices salen del drenaje'),
+      ],
     ),
     PlantSpecies(
       id: 'local_tradescantia', commonName: 'Tradescantia', scientificName: 'Tradescantia zebrina', category: 'indoor',
@@ -308,6 +438,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 1, wateringMultiplier: 0.7),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 4, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Poda los tallos largos para mantener forma compacta'),
       ],
     ),
     PlantSpecies(
@@ -320,6 +455,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 24, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Florece en racimos, no mover'),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Prefiere estar ajustada en la maceta para florecer'),
+      ],
     ),
     PlantSpecies(
       id: 'local_ctenanthe', commonName: 'Ctenanthe', scientificName: 'Ctenanthe burle-marxii', category: 'indoor',
@@ -330,6 +470,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.7),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 10, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 5),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Divide en primavera para obtener nuevas plantas'),
       ],
     ),
     PlantSpecies(
@@ -342,6 +487,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 24, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 18, notes: 'Necesita maceta pesada para estabilizar el tallo alto'),
+      ],
     ),
     PlantSpecies(
       id: 'local_strelitzia', commonName: 'Ave del paraiso', scientificName: 'Strelitzia reginae', category: 'indoor',
@@ -352,6 +502,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 12, wateringMultiplier: 0.7, description: 'Crecimiento lento, no florece aun'),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 36, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Florece a partir de 4-5 años'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 24, notes: 'Necesita maceta grande para florecer, trasplanta cada 2-3 años'),
       ],
     ),
     PlantSpecies(
@@ -364,6 +519,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 24, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 36, notes: 'Ralentiza crecimiento en macetas grandes, trasplanta cada 3-4 años'),
+      ],
     ),
     PlantSpecies(
       id: 'local_kentia', commonName: 'Kentia', scientificName: 'Howea forsteriana', category: 'indoor',
@@ -374,6 +534,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 12, wateringMultiplier: 0.7),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 36, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 24, notes: 'Palma elegante que necesita maceta amplia para desarrollarse'),
       ],
     ),
 
@@ -390,6 +555,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Solo trasplanta si las raices salen del drenaje'),
+      ],
     ),
     PlantSpecies(
       id: 'local_cactus', commonName: 'Cactus', scientificName: 'Cactaceae', category: 'succulent',
@@ -402,6 +572,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 36, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 36, notes: 'Prefiere macetas de barro que permitan transpirar'),
+      ],
     ),
     PlantSpecies(
       id: 'local_echeveria', commonName: 'Echeveria', scientificName: 'Echeveria elegans', category: 'succulent',
@@ -412,6 +587,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 4, wateringMultiplier: 0.75),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 8, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 4),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Solo trasplanta si esta completamente raizado'),
       ],
     ),
     PlantSpecies(
@@ -424,6 +604,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 24, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Puede vivir decadas en la misma maceta, trasplanta con cautela'),
+      ],
     ),
     PlantSpecies(
       id: 'local_succulent', commonName: 'Suculenta (Sempervivum)', scientificName: 'Sempervivum spp.', category: 'succulent',
@@ -434,6 +619,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 6, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Muy resistente, tolera macetas pequenas'),
       ],
     ),
     PlantSpecies(
@@ -446,6 +636,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Producc hijos facilmente, divide para propagar'),
+      ],
     ),
     PlantSpecies(
       id: 'local_lithops', commonName: 'Piedras vivas', scientificName: 'Lithops spp.', category: 'succulent',
@@ -457,6 +652,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 18, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'No regar durante muda de hojas'),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 9),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 36, notes: 'Nunca trasplantes durante la muda de hojas'),
+      ],
     ),
     PlantSpecies(
       id: 'local_sedum', commonName: 'Sedum', scientificName: 'Sedum morganianum', category: 'succulent',
@@ -467,6 +667,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 8, wateringMultiplier: 0.9),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 4),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Evita mojar las hojas colgantes al trasplantar'),
       ],
     ),
 
@@ -483,6 +688,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 2, wateringMultiplier: 0.75, description: 'Crecimiento vegetativo rapido'),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Fructificacion, riego profundo'),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, notes: 'Maceta grande mejora la produccion de frutos'),
+      ],
       varieties: [
         PlantSpecies(
           id: 'local_tomato_cherry', parentId: 'local_tomato', category: 'outdoor', isEdible: true,
@@ -495,6 +705,11 @@ class LocalSpeciesCatalog {
             GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 1, wateringMultiplier: 0.6),
             GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 1, wateringMultiplier: 0.75),
             GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+          ],
+          transplantSchedule: [
+            TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+            TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
+            TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Maceta mediana es suficiente para esta variedad compacta'),
           ],
         ),
         PlantSpecies(
@@ -509,6 +724,11 @@ class LocalSpeciesCatalog {
             GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 2, wateringMultiplier: 0.7),
             GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
           ],
+          transplantSchedule: [
+            TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+            TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
+            TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, notes: 'Requiere maceta grande para desarrollar todo su potencial'),
+          ],
         ),
       ],
     ),
@@ -522,6 +742,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 1, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Cosechar antes de que florezca'),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Cosecha frecuente, renueva cada temporada'),
+      ],
     ),
     PlantSpecies(
       id: 'local_rosemary', commonName: 'Romero', scientificName: 'Rosmarinus officinalis', category: 'outdoor', isEdible: true,
@@ -532,6 +757,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.7),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Puede crecer en la misma maceta por años'),
       ],
     ),
     PlantSpecies(
@@ -544,6 +774,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 2, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 12, notes: 'Divide las raices invasoras para controlar crecimiento'),
+      ],
     ),
     PlantSpecies(
       id: 'local_pepper', commonName: 'Pimiento', scientificName: 'Capsicum annuum', category: 'outdoor', isEdible: true,
@@ -554,6 +789,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 1, wateringMultiplier: 0.6),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 2, wateringMultiplier: 0.75),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Maceta mediana para mejor produccion de frutos'),
       ],
     ),
     PlantSpecies(
@@ -566,6 +806,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 3, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Mas agua durante fructificacion'),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 12, notes: 'Renueva las plantas cada 3-4 años para mejor produccion'),
+      ],
     ),
     PlantSpecies(
       id: 'local_parsley', commonName: 'Perejil', scientificName: 'Petroselinum crispum', category: 'outdoor', isEdible: true,
@@ -577,6 +822,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 2, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Bianual, trasplanta a maceta amplia para mejor desarrollo'),
+      ],
     ),
     PlantSpecies(
       id: 'local_lettuce', commonName: 'Lechuga', scientificName: 'Lactuca sativa', category: 'outdoor', isEdible: true,
@@ -587,6 +837,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 1, wateringMultiplier: 0.6),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 1, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Cosechar antes de que espigue'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Cultivo rapido, siembra continua para cosecha constante'),
       ],
     ),
 
@@ -601,6 +856,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 1, wateringMultiplier: 0.75),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Mucha agua durante fructificacion'),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, notes: 'Necesita maceta grande para desarrollar bien los frutos'),
+      ],
     ),
     PlantSpecies(
       id: 'local_zucchini', commonName: 'Calabacin', scientificName: 'Cucurbita pepo', category: 'outdoor', isEdible: true,
@@ -611,6 +871,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 1, wateringMultiplier: 0.6),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 1, wateringMultiplier: 0.7),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, notes: 'Maceta grande necesaria para buena produccion'),
       ],
     ),
     PlantSpecies(
@@ -623,6 +888,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 2, wateringMultiplier: 0.75),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, notes: 'Maceta grande para sostener plantas frondosas'),
+      ],
     ),
     PlantSpecies(
       id: 'local_cilantro', commonName: 'Cilantro', scientificName: 'Coriandrum sativum', category: 'outdoor', isEdible: true,
@@ -633,6 +903,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 1, wateringMultiplier: 0.6),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 1, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Se espiga rapido con calor'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Siembra directa preferible, no trasplantes si esta espigando'),
       ],
     ),
     PlantSpecies(
@@ -645,6 +920,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 6, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Perenne, puede permanecer en la misma maceta por años'),
+      ],
     ),
     PlantSpecies(
       id: 'local_oregano', commonName: 'Oregano', scientificName: 'Origanum vulgare', category: 'outdoor', isEdible: true,
@@ -655,6 +935,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 2, wateringMultiplier: 0.7),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 4, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Divide en primavera para renovar la planta'),
       ],
     ),
     PlantSpecies(
@@ -667,6 +952,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 4, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 24, notes: 'Divide los bulbos para obtener nuevas plantas'),
+      ],
     ),
     PlantSpecies(
       id: 'local_spinach', commonName: 'Espinaca', scientificName: 'Spinacia oleracea', category: 'outdoor', isEdible: true,
@@ -677,6 +967,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 1, wateringMultiplier: 0.6),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 1, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Cosechar antes de que espigue'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Cultivo rapido, siembra continua para cosecha constante'),
       ],
     ),
     PlantSpecies(
@@ -689,6 +984,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 1, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Mas agua durante floracion'),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Usa tutor desde el trasplante para facilitar el crecimiento'),
+      ],
     ),
     PlantSpecies(
       id: 'local_garlic', commonName: 'Ajo', scientificName: 'Allium sativum', category: 'outdoor', isEdible: true,
@@ -700,6 +1000,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 4, wateringMultiplier: 0.85),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, wateringMultiplier: 1.2, description: 'Reducir riego antes de cosechar'),
       ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Si siembras en maceta, usa una profunda para el bulbo'),
+      ],
     ),
     PlantSpecies(
       id: 'local_onion', commonName: 'Cebolla', scientificName: 'Allium cepa', category: 'outdoor', isEdible: true,
@@ -710,6 +1015,11 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 2, wateringMultiplier: 0.65),
         GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 3, wateringMultiplier: 0.8),
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, wateringMultiplier: 1.3, description: 'Dejar de regar 2 semanas antes de cosechar'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Maceta profunda para permitir desarrollo del bulbo'),
       ],
     ),
     PlantSpecies(

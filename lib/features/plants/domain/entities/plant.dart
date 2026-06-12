@@ -20,6 +20,7 @@ import 'package:planticula/core/data/species/plant_species.dart';
 /// - speciesCategory: Categoría de la especie (indoor, outdoor, succulent, cannabis)
 /// - latitude/longitude: Ubicación GPS del usuario
 /// - createdAt/updatedAt: Timestamps automáticos
+/// - lastTransplanted: Last time the user registered a pot transplant
 class Plant extends Equatable {
   final String id;
   final String name;
@@ -35,6 +36,8 @@ class Plant extends Equatable {
   final DateTime? acquiredDate;
   final String? environment; // 'indoor' or 'outdoor'
   final String? growthStage; // 'seedling', 'juvenile', 'adult'
+  final String? potSize; // 'extra_small', 'small', 'medium', 'large', 'extra_large'
+  final DateTime? lastTransplanted; // Last registered transplant date
   final double? latitude;
   final double? longitude;
   final DateTime? createdAt;
@@ -55,6 +58,8 @@ class Plant extends Equatable {
     this.acquiredDate,
     this.environment,
     this.growthStage,
+    this.potSize,
+    this.lastTransplanted,
     this.latitude,
     this.longitude,
     this.createdAt,
@@ -77,6 +82,8 @@ class Plant extends Equatable {
     DateTime? acquiredDate,
     String? environment,
     String? growthStage,
+    String? potSize,
+    DateTime? lastTransplanted,
     double? latitude,
     double? longitude,
     DateTime? createdAt,
@@ -97,6 +104,8 @@ class Plant extends Equatable {
       acquiredDate: acquiredDate ?? this.acquiredDate,
       environment: environment ?? this.environment,
       growthStage: growthStage ?? this.growthStage,
+      potSize: potSize ?? this.potSize,
+      lastTransplanted: lastTransplanted ?? this.lastTransplanted,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       createdAt: createdAt ?? this.createdAt,
@@ -127,6 +136,9 @@ class Plant extends Equatable {
   /// Parsed growth stage enum
   GrowthStage get plantGrowthStage => GrowthStage.fromString(growthStage ?? 'adult');
 
+  /// Parsed pot size enum
+  PotSize get plantPotSize => PotSize.fromString(potSize ?? 'medium');
+
   /// Whether plant is outdoors
   bool get isOutdoor => environment == 'outdoor';
 
@@ -146,6 +158,8 @@ class Plant extends Equatable {
         acquiredDate,
         environment,
         growthStage,
+        potSize,
+        lastTransplanted,
         latitude,
         longitude,
         createdAt,

@@ -35,6 +35,7 @@ class PlantsRepositoryImpl implements PlantsRepository {
     DateTime? acquiredDate,
     String? environment,
     String? growthStage,
+    String? potSize,
     double? latitude,
     double? longitude,
   }) async {
@@ -50,6 +51,7 @@ class PlantsRepositoryImpl implements PlantsRepository {
       acquiredDate: acquiredDate,
       environment: environment,
       growthStage: growthStage,
+      potSize: potSize,
       latitude: latitude,
       longitude: longitude,
     );
@@ -76,6 +78,11 @@ class PlantsRepositoryImpl implements PlantsRepository {
   @override
   Future<Result<Plant>> waterPlant(String id) async {
     return await _dataSource.waterPlant(id);
+  }
+
+  @override
+  Future<Result<Plant>> transplantPlant(String id, String newPotSize) async {
+    return await _dataSource.transplantPlant(id, newPotSize);
   }
 
   @override

@@ -1,14 +1,16 @@
 import 'package:planticula/core/data/species/plant_species.dart';
 import 'package:planticula/core/services/weather_service.dart';
 
-/// Intelligent watering calculator that considers species, environment, and weather
+/// Intelligent watering calculator that considers species, environment,
+/// pot size, growth stage, and weather
 class WateringCalculator {
   /// Calculate the recommended watering frequency in days
-  /// considering species, environment, and optionally weather data
+  /// considering species, environment, pot size, and optionally weather data
   static WateringRecommendation calculate({
     required PlantSpecies species,
     required PlantEnvironment environment,
     GrowthStage growthStage = GrowthStage.adult,
+    PotSize potSize = PotSize.medium,
     WeatherData? weather,
   }) {
     // Base frequency from species + environment
@@ -25,6 +27,17 @@ class WateringCalculator {
         adjustments.add('Planta joven: necesita riego mas frecuente');
       } else {
         adjustments.add('Planta madura: necesita menos riego');
+      }
+    }
+
+    // Pot size adjustment
+    final potMultiplier = potSize.wateringFrequencyMultiplier;
+    if (potMultiplier != 1.0) {
+      adjustedDays *= potMultiplier;
+      if (potMultiplier < 1.0) {
+        adjustments.add('Maceta ${potSize.displayName.toLowerCase()}: se seca antes');
+      } else {
+        adjustments.add('Maceta ${potSize.displayName.toLowerCase()}: retiene mas humedad');
       }
     }
 
@@ -76,6 +89,13 @@ class WateringCalculator {
           : 'Frecuencia para exterior';
     }
 
+    // Calculate water amount in ml
+    final waterMl = calculateWaterMl(
+      potSize: potSize,
+      growthStage: growthStage,
+      species: species,
+    );
+
     return WateringRecommendation(
       frequencyDays: finalDays,
       baseFrequencyDays: baseDays,
@@ -85,7 +105,46 @@ class WateringCalculator {
       sunlightHoursMin: species.sunlightHoursMin,
       sunlightHoursMax: species.sunlightHoursMax,
       sunlightLevel: species.sunlightLevel,
+      waterMl: waterMl,
+      potSize: potSize,
     );
+  }
+
+  /// Calculate recommended water amount in ml per watering session
+  /// Based on pot size, growth stage, and species characteristics.
+  ///
+  /// Logic:
+  /// - Base ml comes from pot size (bigger pot = more water)
+  /// - Seedlings get ~40% of adult water amount
+  /// - Juveniles get ~70% of adult water amount  
+  /// - Drought-tolerant plants get ~70% of normal water
+  /// - Humidity-loving plants get ~120% of normal water
+  static int calculateWaterMl({
+    required PotSize potSize,
+    required GrowthStage growthStage,
+    required PlantSpecies species,
+  }) {
+    double ml = potSize.baseWaterMl.toDouble();
+
+    // Growth stage multiplier for water amount
+    switch (growthStage) {
+      case GrowthStage.seedling:
+        ml *= 0.4;
+      case GrowthStage.juvenile:
+        ml *= 0.7;
+      case GrowthStage.adult:
+        ml *= 1.0;
+    }
+
+    // Species characteristics
+    if (species.droughtTolerant) {
+      ml *= 0.7; // Succulents/cacti need less water per session
+    }
+    if (species.humidityLoving) {
+      ml *= 1.2; // Tropical plants like more water
+    }
+
+    return ml.round().clamp(20, 5000);
   }
 
   /// Calculate next watering date after marking plant as watered
@@ -107,6 +166,8 @@ class WateringRecommendation {
   final double sunlightHoursMin;
   final double sunlightHoursMax;
   final SunlightLevel sunlightLevel;
+  final int waterMl; // Millilitres of water per watering session
+  final PotSize potSize;
 
   const WateringRecommendation({
     required this.frequencyDays,
@@ -117,6 +178,8 @@ class WateringRecommendation {
     required this.sunlightHoursMin,
     required this.sunlightHoursMax,
     required this.sunlightLevel,
+    required this.waterMl,
+    required this.potSize,
   });
 
   bool get hasWeatherAdjustments => adjustments.isNotEmpty;
@@ -129,5 +192,24 @@ class WateringRecommendation {
     if (frequencyDays == 7) return 'Cada semana';
     if (frequencyDays == 14) return 'Cada 2 semanas';
     return 'Cada $frequencyDays dias';
+  }
+
+  /// Human-readable water amount
+  String get waterMlDescription {
+    if (waterMl >= 1000) {
+      final liters = waterMl / 1000;
+      return '${liters.toStringAsFixed(1)} L';
+    }
+    return '$waterMl ml';
+  }
+
+  /// Range description (±20%)
+  String get waterMlRange {
+    final min = (waterMl * 0.8).round();
+    final max = (waterMl * 1.2).round();
+    if (max >= 1000) {
+      return '${(min / 1000).toStringAsFixed(1)}-${(max / 1000).toStringAsFixed(1)} L';
+    }
+    return '$min-$max ml';
   }
 }

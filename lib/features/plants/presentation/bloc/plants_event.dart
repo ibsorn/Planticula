@@ -36,6 +36,7 @@ class PlantCreateRequested extends PlantsEvent {
   final DateTime? acquiredDate;
   final String? environment;
   final String? growthStage;
+  final String? potSize;
   final double? latitude;
   final double? longitude;
 
@@ -51,6 +52,7 @@ class PlantCreateRequested extends PlantsEvent {
     this.acquiredDate,
     this.environment,
     this.growthStage,
+    this.potSize,
     this.latitude,
     this.longitude,
   });
@@ -68,6 +70,7 @@ class PlantCreateRequested extends PlantsEvent {
         acquiredDate,
         environment,
         growthStage,
+        potSize,
         latitude,
         longitude,
       ];
@@ -101,6 +104,17 @@ class PlantWaterRequested extends PlantsEvent {
 
   @override
   List<Object?> get props => [id];
+}
+
+/// Registrar trasplante a una maceta nueva
+class PlantTransplantRequested extends PlantsEvent {
+  final String id;
+  final String newPotSize; // PotSize.dbValue
+
+  const PlantTransplantRequested({required this.id, required this.newPotSize});
+
+  @override
+  List<Object?> get props => [id, newPotSize];
 }
 
 /// Seleccionar una planta (para ver detalle)

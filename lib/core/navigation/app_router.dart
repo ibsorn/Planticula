@@ -18,17 +18,39 @@ import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.
 import 'package:planticula/features/profile/presentation/screens/profile_screen.dart';
 import 'package:planticula/features/guides/presentation/screens/guides_screen.dart';
 
+/// Notifier that GoRouter listens to for auth state changes.
+/// When auth changes, the router re-evaluates its redirect logic
+/// WITHOUT recreating the entire router instance.
+class AuthNotifier extends ChangeNotifier {
+  bool _isAuthenticated = false;
+
+  bool get isAuthenticated => _isAuthenticated;
+
+  set isAuthenticated(bool value) {
+    if (_isAuthenticated != value) {
+      _isAuthenticated = value;
+      notifyListeners();
+    }
+  }
+}
+
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
-  static GoRouter router({
-    required bool isAuthenticated,
-  }) {
+  static final AuthNotifier authNotifier = AuthNotifier();
+
+  static final GoRouter _router = _createRouter();
+
+  static GoRouter get router => _router;
+
+  static GoRouter _createRouter() {
     return GoRouter(
       navigatorKey: _rootNavigatorKey,
       initialLocation: AppConstants.routeLogin,
+      refreshListenable: authNotifier,
       redirect: (context, state) {
+        final isAuthenticated = authNotifier.isAuthenticated;
         final isAuthRoute = state.matchedLocation == AppConstants.routeLogin ||
             state.matchedLocation == AppConstants.routeRegister;
 

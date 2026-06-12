@@ -246,4 +246,38 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
       return Failure('Error al registrar riego: ${e.toString()}');
     }
   }
+
+  @override
+  Future<Result<PlantModel>> transplantPlant(String id, String newPotSize) async {
+    try {
+      Logger.d('🪴 Transplanting plant: $id to pot size: $newPotSize');
+
+      if (_userId == null) {
+        return const Failure('Usuario no autenticado');
+      }
+
+      final now = DateTime.now();
+
+      // Actualizar tamaño de maceta y fecha de trasplante
+      final updateData = {
+        'pot_size': newPotSize,
+        'last_transplanted': now.toIso8601String(),
+      };
+
+      final response = await _client
+          .from(_table)
+          .update(updateData)
+          .eq('id', id)
+          .eq('user_id', _userId!)
+          .select()
+          .single();
+
+      final updatedPlant = PlantModel.fromJson(response);
+      Logger.i('✅ Transplanted plant: ${updatedPlant.name}. New pot size: $newPotSize');
+      return Success(updatedPlant);
+    } catch (e, stackTrace) {
+      Logger.e('❌ Error transplanting plant $id', error: e, stackTrace: stackTrace);
+      return Failure('Error al registrar trasplante: ${e.toString()}');
+    }
+  }
 }

@@ -29,6 +29,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
   PlantSpecies? _selectedSpecies;
   PlantEnvironment _environment = PlantEnvironment.indoor;
   GrowthStage _growthStage = GrowthStage.adult;
+  PotSize _potSize = PotSize.medium;
 
   // Search state
   List<PlantSpecies> _searchResults = [];
@@ -138,12 +139,28 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
     _updateRecommendation();
   }
 
+  double _potIconSize(PotSize pot) {
+    switch (pot) {
+      case PotSize.extraSmall:
+        return 16;
+      case PotSize.small:
+        return 20;
+      case PotSize.medium:
+        return 24;
+      case PotSize.large:
+        return 28;
+      case PotSize.extraLarge:
+        return 32;
+    }
+  }
+
   void _updateRecommendation() {
     if (_selectedSpecies == null) return;
     final rec = WateringCalculator.calculate(
       species: _selectedSpecies!,
       environment: _environment,
       growthStage: _growthStage,
+      potSize: _potSize,
       weather: _environment == PlantEnvironment.outdoor ? _weather : null,
     );
     setState(() => _recommendation = rec);
@@ -165,6 +182,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
               _selectedSpecies!.getBaseWateringDays(_environment),
           environment: _environment.name,
           growthStage: _growthStage.name,
+          potSize: _potSize.dbValue,
           latitude: _latitude,
           longitude: _longitude,
         ));
@@ -469,6 +487,92 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
 
             // Adaptive growth stage - human-friendly questions
             ..._buildAdaptiveGrowthQuestion(theme, species),
+            const SizedBox(height: 24),
+
+            // Pot size selection
+            Text('En que maceta esta?', style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text('El tamaño afecta la frecuencia y cantidad de agua por riego',
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withAlpha(128))),
+            const SizedBox(height: 8),
+            Column(
+              children: PotSize.values.map((pot) {
+                final isSelected = _potSize == pot;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _potSize = pot);
+                    _updateRecommendation();
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? theme.colorScheme.primaryContainer
+                          : theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outline.withAlpha(77),
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Pot icon with size scale
+                        SizedBox(
+                          width: 40,
+                          child: Text(
+                            pot.icon,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: _potIconSize(pot)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Name + liters range
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                pot.displayName,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: isSelected
+                                      ? theme.colorScheme.onPrimaryContainer
+                                      : theme.colorScheme.onSurface,
+                                ),
+                              ),
+                              Text(
+                                pot.litersRange,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: isSelected
+                                      ? theme.colorScheme.onPrimaryContainer.withAlpha(179)
+                                      : theme.colorScheme.onSurface.withAlpha(128),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Selection indicator
+                        if (isSelected)
+                          Icon(Icons.check_circle,
+                              color: theme.colorScheme.primary, size: 22)
+                        else
+                          Icon(Icons.radio_button_unchecked,
+                              color: theme.colorScheme.outline.withAlpha(128), size: 22),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
             const SizedBox(height: 24),
 
             // Smart recommendation preview
@@ -964,6 +1068,34 @@ class _RecommendationCard extends StatelessWidget {
                           style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurface.withAlpha(153))),
                       Text(recommendation.frequencyDescription,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            // Water amount
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.cyan.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.local_drink, color: Colors.cyan.shade600),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Cantidad por riego',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withAlpha(153))),
+                      Text(recommendation.waterMlRange,
                           style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold)),
                     ],

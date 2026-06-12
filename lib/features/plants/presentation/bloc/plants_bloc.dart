@@ -17,6 +17,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     on<PlantUpdateRequested>(_onUpdateRequested);
     on<PlantDeleteRequested>(_onDeleteRequested);
     on<PlantWaterRequested>(_onWaterRequested);
+    on<PlantTransplantRequested>(_onTransplantRequested);
     on<PlantSelectRequested>(_onSelectRequested);
     on<PlantsClearError>(_onClearError);
   }
@@ -118,6 +119,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
       acquiredDate: event.acquiredDate,
       environment: event.environment,
       growthStage: event.growthStage,
+      potSize: event.potSize,
       latitude: event.latitude,
       longitude: event.longitude,
     );
@@ -208,6 +210,36 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     ));
 
     final result = await _repository.waterPlant(event.id);
+
+    result.when(
+      success: (plant) {
+        final plants = state.plants
+            .map((p) => p.id == plant.id ? plant : p)
+            .toList();
+        emit(state.copyWith(
+          plants: plants,
+          selectedPlant: plant.id == state.selectedPlant?.id ? plant : state.selectedPlant,
+          operationStatus: PlantsOperationStatus.success,
+        ));
+      },
+      failure: (message, code, error) {
+        emit(state.copyWith(
+          operationStatus: PlantsOperationStatus.error,
+          errorMessage: message,
+        ));
+      },
+    );
+  }
+
+  Future<void> _onTransplantRequested(
+    PlantTransplantRequested event,
+    Emitter<PlantsState> emit,
+  ) async {
+    emit(state.copyWith(
+      operationStatus: PlantsOperationStatus.loading,
+    ));
+
+    final result = await _repository.transplantPlant(event.id, event.newPotSize);
 
     result.when(
       success: (plant) {
