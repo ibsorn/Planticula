@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:planticula/core/constants/app_strings.dart';
 import 'package:planticula/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
@@ -57,7 +58,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mis Plantas'),
+        title: const Text(AppStrings.plantsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -75,7 +76,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Buscar plantas...',
+                hintText: AppStrings.plantsSearchHint,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -119,7 +120,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
                 }
 
                 if (state.hasError) {
-                  return _buildErrorState(state.errorMessage ?? 'Error desconocido');
+                  return _buildErrorState(state.errorMessage ?? AppStrings.unknownError);
                 }
 
                 if (state.isEmpty) {
@@ -135,7 +136,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _onAddPlant,
         icon: const Icon(Icons.add),
-        label: const Text('Añadir'),
+        label: const Text(AppStrings.plantsAddButton),
       ),
     );
   }
@@ -164,7 +165,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
                 context.read<PlantsBloc>().add(PlantsLoadRequested());
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: const Text(AppStrings.plantsErrorRetry),
             ),
           ],
         ),
@@ -186,12 +187,12 @@ class _PlantsScreenState extends State<PlantsScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No tienes plantas aún',
+              AppStrings.plantsEmptyTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             Text(
-              '¡Añade tu primera planta para comenzar a cuidarla!',
+              AppStrings.plantsEmptySubtitle,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
@@ -201,7 +202,7 @@ class _PlantsScreenState extends State<PlantsScreen> {
             ElevatedButton.icon(
               onPressed: _onAddPlant,
               icon: const Icon(Icons.add),
-              label: const Text('Añadir Planta'),
+              label: const Text(AppStrings.plantsAddPlantButton),
             ),
           ],
         ),
@@ -297,7 +298,7 @@ class _PlantCard extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Riego',
+                                  AppStrings.plantWateringBadge,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: colorScheme.error,

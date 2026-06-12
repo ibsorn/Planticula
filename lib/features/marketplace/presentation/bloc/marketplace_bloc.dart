@@ -37,6 +37,10 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     MarketplaceLoadNearby event,
     Emitter<MarketplaceState> emit,
   ) async {
+    await _loadNearbyListings(emit);
+  }
+
+  Future<void> _loadNearbyListings(Emitter<MarketplaceState> emit) async {
     emit(state.copyWith(
       nearbyStatus: MarketplaceStatus.loading,
     ));
@@ -81,6 +85,10 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     MarketplaceLoadMyListings event,
     Emitter<MarketplaceState> emit,
   ) async {
+    await _loadMyListings(emit);
+  }
+
+  Future<void> _loadMyListings(Emitter<MarketplaceState> emit) async {
     emit(state.copyWith(
       myListingsStatus: MarketplaceStatus.loading,
     ));
@@ -107,6 +115,10 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     MarketplaceLoadFavorites event,
     Emitter<MarketplaceState> emit,
   ) async {
+    await _loadFavorites(emit);
+  }
+
+  Future<void> _loadFavorites(Emitter<MarketplaceState> emit) async {
     emit(state.copyWith(
       favoritesStatus: MarketplaceStatus.loading,
     ));
@@ -135,13 +147,13 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
   ) async {
     switch (state.activeTab) {
       case MarketplaceTab.nearby:
-        add(MarketplaceLoadNearby());
+        await _loadNearbyListings(emit);
         break;
       case MarketplaceTab.myListings:
-        add(MarketplaceLoadMyListings());
+        await _loadMyListings(emit);
         break;
       case MarketplaceTab.favorites:
-        add(MarketplaceLoadFavorites());
+        await _loadFavorites(emit);
         break;
     }
   }
@@ -264,26 +276,26 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     );
   }
 
-  void _onFilterChanged(
+  Future<void> _onFilterChanged(
     MarketplaceFilterChanged event,
     Emitter<MarketplaceState> emit,
-  ) {
+  ) async {
     emit(state.copyWith(
       filterRadiusKm: event.radiusKm ?? state.filterRadiusKm,
       filterCategories: event.categories ?? state.filterCategories,
       filterListingTypes: event.listingTypes ?? state.filterListingTypes,
       filterMaxPrice: event.maxPrice ?? state.filterMaxPrice,
     ));
-    add(MarketplaceLoadNearby());
+    await _loadNearbyListings(emit);
   }
 
-  void _onSearchQueryChanged(
+  Future<void> _onSearchQueryChanged(
     MarketplaceSearchQueryChanged event,
     Emitter<MarketplaceState> emit,
-  ) {
+  ) async {
     emit(state.copyWith(searchQuery: event.query));
     if (event.query.length >= 3 || event.query.isEmpty) {
-      add(MarketplaceLoadNearby());
+      await _loadNearbyListings(emit);
     }
   }
 
@@ -407,15 +419,15 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     );
   }
 
-  void _onUpdateUserLocation(
+  Future<void> _onUpdateUserLocation(
     MarketplaceUpdateUserLocation event,
     Emitter<MarketplaceState> emit,
-  ) {
+  ) async {
     emit(state.copyWith(
       userLatitude: event.latitude,
       userLongitude: event.longitude,
     ));
-    add(MarketplaceLoadNearby());
+    await _loadNearbyListings(emit);
   }
 
   void _onClearError(

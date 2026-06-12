@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:planticula/core/constants/app_constants.dart';
+import 'package:planticula/core/constants/app_strings.dart';
 import 'package:planticula/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:planticula/shared/widgets/app_button.dart';
 import 'package:planticula/shared/widgets/app_text_field.dart';
@@ -37,7 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!_acceptTerms) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Debes aceptar los términos y condiciones'),
+            content: Text(AppStrings.registerTermsError),
           ),
         );
         return;
@@ -55,14 +55,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Crear Cuenta'),
+        title: const Text(AppStrings.registerTitle),
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state.hasError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? 'Error desconocido'),
+                content: Text(state.errorMessage ?? AppStrings.unknownError),
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
@@ -78,12 +78,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      '¡Bienvenido a ${AppConstants.appName}!',
+                      AppStrings.registerWelcome,
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Crea tu cuenta para comenzar a cuidar tus plantas',
+                      AppStrings.registerSubtitle,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: Theme.of(context)
                                 .colorScheme
@@ -96,12 +96,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // Name field
                     AppTextField(
                       controller: _nameController,
-                      label: 'Nombre',
-                      hint: 'Tu nombre',
+                      label: AppStrings.fieldName,
+                      hint: AppStrings.fieldNameHint,
                       prefixIcon: Icons.person_outlined,
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
-                          return 'El nombre es requerido';
+                          return AppStrings.fieldNameRequired;
                         }
                         return null;
                       },
@@ -111,16 +111,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // Email field
                     AppTextField(
                       controller: _emailController,
-                      label: 'Email',
-                      hint: 'tu@email.com',
+                      label: AppStrings.fieldEmail,
+                      hint: AppStrings.fieldEmailHint,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
-                          return 'El email es requerido';
+                          return AppStrings.fieldEmailRequired;
                         }
                         if (!value!.contains('@')) {
-                          return 'Email inválido';
+                          return AppStrings.fieldEmailInvalid;
                         }
                         return null;
                       },
@@ -130,8 +130,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // Password field
                     AppTextField(
                       controller: _passwordController,
-                      label: 'Contraseña',
-                      hint: '********',
+                      label: AppStrings.fieldPassword,
+                      hint: AppStrings.fieldPasswordHint,
                       obscureText: _obscurePassword,
                       prefixIcon: Icons.lock_outlined,
                       suffixIcon: IconButton(
@@ -148,10 +148,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
-                          return 'La contraseña es requerida';
+                          return AppStrings.fieldPasswordRequired;
                         }
                         if (value!.length < 6) {
-                          return 'Mínimo 6 caracteres';
+                          return AppStrings.fieldPasswordMinLength;
                         }
                         return null;
                       },
@@ -161,8 +161,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // Confirm password field
                     AppTextField(
                       controller: _confirmPasswordController,
-                      label: 'Confirmar Contraseña',
-                      hint: '********',
+                      label: AppStrings.fieldPasswordConfirm,
+                      hint: AppStrings.fieldPasswordHint,
                       obscureText: _obscureConfirmPassword,
                       prefixIcon: Icons.lock_outlined,
                       suffixIcon: IconButton(
@@ -179,10 +179,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
-                          return 'Confirma tu contraseña';
+                          return AppStrings.fieldPasswordConfirmError;
                         }
                         if (value != _passwordController.text) {
-                          return 'Las contraseñas no coinciden';
+                          return AppStrings.fieldPasswordMismatch;
                         }
                         return null;
                       },
@@ -202,7 +202,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'Acepto los términos y condiciones y la política de privacidad',
+                            AppStrings.registerTermsCheckbox,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),
@@ -212,7 +212,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     // Register button
                     AppButton(
-                      text: 'Crear Cuenta',
+                      text: AppStrings.registerButton,
                       onPressed: _onRegister,
                       isLoading: state.isLoading,
                     ),
@@ -223,12 +223,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          '¿Ya tienes cuenta?',
+                          AppStrings.registerHasAccount,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         TextButton(
                           onPressed: () => context.pop(),
-                          child: const Text('Inicia sesión'),
+                          child: const Text(AppStrings.registerLoginLink),
                         ),
                       ],
                     ),

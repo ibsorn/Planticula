@@ -41,7 +41,6 @@ void main() {
       growthPhases: [
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
-      transplantSchedule: [],
     );
 
     const testSpeciesNeverTransplant = PlantSpecies(

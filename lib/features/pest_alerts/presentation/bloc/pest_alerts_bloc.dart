@@ -35,6 +35,10 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     PestAlertsLoadNearby event,
     Emitter<PestAlertsState> emit,
   ) async {
+    await _loadNearbyAlerts(emit);
+  }
+
+  Future<void> _loadNearbyAlerts(Emitter<PestAlertsState> emit) async {
     emit(state.copyWith(
       nearbyStatus: PestAlertsStatus.loading,
     ));
@@ -81,6 +85,10 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     PestAlertsLoadMyAlerts event,
     Emitter<PestAlertsState> emit,
   ) async {
+    await _loadMyAlerts(emit);
+  }
+
+  Future<void> _loadMyAlerts(Emitter<PestAlertsState> emit) async {
     emit(state.copyWith(
       myAlertsStatus: PestAlertsStatus.loading,
     ));
@@ -110,9 +118,9 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     Emitter<PestAlertsState> emit,
   ) async {
     if (state.activeTab == PestAlertsTab.nearby) {
-      add(PestAlertsLoadNearby());
+      await _loadNearbyAlerts(emit);
     } else {
-      add(PestAlertsLoadMyAlerts());
+      await _loadMyAlerts(emit);
     }
   }
 
@@ -208,7 +216,7 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     );
 
     result.when(
-      success: (alert) {
+      success: (alert) async {
         emit(state.copyWith(
           submissionStatus: SubmissionStatus.success,
           photoSelectionStatus: PhotoSelectionStatus.initial,
@@ -218,7 +226,7 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
 
         // Recargar alertas cercanas si tenemos ubicación
         if (state.userLatitude != null) {
-          add(PestAlertsLoadNearby());
+          await _loadNearbyAlerts(emit);
         }
       },
       failure: (message, code, error) {
@@ -230,10 +238,10 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     );
   }
 
-  void _onFilterChanged(
+  Future<void> _onFilterChanged(
     PestAlertsFilterChanged event,
     Emitter<PestAlertsState> emit,
-  ) {
+  ) async {
     emit(state.copyWith(
       filterRadiusKm: event.radiusKm ?? state.filterRadiusKm,
       filterDaysLimit: event.daysLimit ?? state.filterDaysLimit,
@@ -243,7 +251,7 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     ));
 
     // Recargar con nuevos filtros
-    add(PestAlertsLoadNearby());
+    await _loadNearbyAlerts(emit);
   }
 
   void _onAlertSelected(
@@ -374,16 +382,16 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     ));
   }
 
-  void _onUpdateUserLocation(
+  Future<void> _onUpdateUserLocation(
     PestAlertsUpdateUserLocation event,
     Emitter<PestAlertsState> emit,
-  ) {
+  ) async {
     emit(state.copyWith(
       userLatitude: event.latitude,
       userLongitude: event.longitude,
     ));
 
     // Cargar alertas cercanas automáticamente
-    add(PestAlertsLoadNearby());
+    await _loadNearbyAlerts(emit);
   }
 }

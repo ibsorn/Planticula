@@ -1,3 +1,4 @@
+import 'package:planticula/core/constants/app_constants.dart';
 import 'package:planticula/core/data/species/plant_species.dart';
 import 'package:planticula/core/services/weather_service.dart';
 
@@ -44,28 +45,28 @@ class WateringCalculator {
     // Weather adjustments (only for outdoor plants with weather data)
     if (environment == PlantEnvironment.outdoor && weather != null) {
       // Temperature adjustment
-      final avgTemp = weather.avgMaxTempNextDays(3);
-      if (avgTemp > 30) {
+      final avgTemp = weather.avgMaxTempNextDays(AppConstants.weatherForecastDays);
+      if (avgTemp > AppConstants.tempHighThresholdC) {
         adjustedDays *= species.hotWeatherMultiplier;
         adjustments.add('Calor (${avgTemp.round()}C): regar mas seguido');
-      } else if (avgTemp < 10) {
+      } else if (avgTemp < AppConstants.tempLowThresholdC) {
         adjustedDays *= species.coldWeatherMultiplier;
         adjustments.add('Frio (${avgTemp.round()}C): reducir riego');
       }
 
       // Rain adjustment
-      final rainNextDays = weather.precipitationNextDays(3);
-      if (rainNextDays > 5) {
+      final rainNextDays = weather.precipitationNextDays(AppConstants.weatherForecastDays);
+      if (rainNextDays > AppConstants.rainHeavyMm) {
         adjustedDays += species.rainReductionDays;
         adjustments.add('Lluvia prevista (${rainNextDays.round()}mm): posponer riego');
-      } else if (rainNextDays > 2) {
+      } else if (rainNextDays > AppConstants.rainLightMm) {
         adjustedDays += species.rainReductionDays / 2;
         adjustments.add('Lluvia ligera prevista: ajuste menor');
       }
 
       // Humidity adjustment for humidity-loving plants
-      if (species.humidityLoving && weather.current.humidity < 40) {
-        adjustedDays *= 0.8;
+      if (species.humidityLoving && weather.current.humidity < AppConstants.humidityLowPct) {
+        adjustedDays *= AppConstants.lowHumidityWateringMultiplier;
         adjustments.add('Humedad baja: regar mas seguido');
       }
     }
@@ -73,15 +74,15 @@ class WateringCalculator {
     // Indoor adjustments
     if (environment == PlantEnvironment.indoor && weather != null) {
       // In winter (cold outside), indoor heating dries plants
-      final avgTemp = weather.avgMaxTempNextDays(3);
-      if (avgTemp < 10) {
-        adjustedDays *= 0.9; // Slightly more frequent due to heating
+      final avgTemp = weather.avgMaxTempNextDays(AppConstants.weatherForecastDays);
+      if (avgTemp < AppConstants.tempLowThresholdC) {
+        adjustedDays *= AppConstants.indoorHeatingMultiplier; // Slightly more frequent due to heating
         adjustments.add('Calefaccion interior: regar un poco mas');
       }
     }
 
     // Clamp to reasonable range
-    final finalDays = adjustedDays.round().clamp(1, 60);
+    final finalDays = adjustedDays.round().clamp(AppConstants.wateringFrequencyMinDays, AppConstants.wateringFrequencyMaxDays);
 
     if (adjustments.isEmpty) {
       reason = environment == PlantEnvironment.indoor
@@ -129,22 +130,22 @@ class WateringCalculator {
     // Growth stage multiplier for water amount
     switch (growthStage) {
       case GrowthStage.seedling:
-        ml *= 0.4;
+        ml *= AppConstants.seedlingWaterMultiplier;
       case GrowthStage.juvenile:
-        ml *= 0.7;
+        ml *= AppConstants.juvenileWaterMultiplier;
       case GrowthStage.adult:
         ml *= 1.0;
     }
 
     // Species characteristics
     if (species.droughtTolerant) {
-      ml *= 0.7; // Succulents/cacti need less water per session
+      ml *= AppConstants.droughtTolerantWaterMultiplier; // Succulents/cacti need less water per session
     }
     if (species.humidityLoving) {
-      ml *= 1.2; // Tropical plants like more water
+      ml *= AppConstants.humidityLovingWaterMultiplier; // Tropical plants like more water
     }
 
-    return ml.round().clamp(20, 5000);
+    return ml.round().clamp(AppConstants.waterMlMin, AppConstants.waterMlMax);
   }
 
   /// Calculate next watering date after marking plant as watered
@@ -196,7 +197,7 @@ class WateringRecommendation {
 
   /// Human-readable water amount
   String get waterMlDescription {
-    if (waterMl >= 1000) {
+    if (waterMl >= AppConstants.waterMlLiterThreshold) {
       final liters = waterMl / 1000;
       return '${liters.toStringAsFixed(1)} L';
     }
@@ -205,9 +206,9 @@ class WateringRecommendation {
 
   /// Range description (±20%)
   String get waterMlRange {
-    final min = (waterMl * 0.8).round();
-    final max = (waterMl * 1.2).round();
-    if (max >= 1000) {
+    final min = (waterMl * AppConstants.waterRangeLowerFactor).round();
+    final max = (waterMl * AppConstants.waterRangeUpperFactor).round();
+    if (max >= AppConstants.waterMlLiterThreshold) {
       return '${(min / 1000).toStringAsFixed(1)}-${(max / 1000).toStringAsFixed(1)} L';
     }
     return '$min-$max ml';

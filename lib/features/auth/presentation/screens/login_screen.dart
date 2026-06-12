@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planticula/core/constants/app_constants.dart';
+import 'package:planticula/core/constants/app_strings.dart';
 import 'package:planticula/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:planticula/shared/widgets/app_button.dart';
 import 'package:planticula/shared/widgets/app_text_field.dart';
@@ -48,29 +49,29 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Restablecer contrasena'),
+        title: const Text(AppStrings.forgotPasswordTitle),
         content: Form(
           key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Introduce tu email y te enviaremos un enlace para restablecer tu contrasena.',
+                AppStrings.forgotPasswordBody,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: resetEmailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
-                  labelText: 'Email',
+                  labelText: AppStrings.fieldEmail,
                   prefixIcon: Icon(Icons.email_outlined),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'El email es requerido';
+                    return AppStrings.fieldEmailRequired;
                   }
                   if (!value.contains('@')) {
-                    return 'Email no valido';
+                    return AppStrings.fieldEmailInvalidDialog;
                   }
                   return null;
                 },
@@ -81,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancelar'),
+            child: const Text(AppStrings.cancel),
           ),
           FilledButton(
             onPressed: () {
@@ -94,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Navigator.of(dialogContext).pop();
               }
             },
-            child: const Text('Enviar'),
+            child: const Text(AppStrings.send),
           ),
         ],
       ),
@@ -109,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (state.hasError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? 'Error desconocido'),
+                content: Text(state.errorMessage ?? AppStrings.unknownError),
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
@@ -151,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Tu asistente de cultivo inteligente',
+                      AppStrings.appSubtitle,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
@@ -162,16 +163,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Form fields
                     AppTextField(
                       controller: _emailController,
-                      label: 'Email',
-                      hint: 'tu@email.com',
+                      label: AppStrings.fieldEmail,
+                      hint: AppStrings.fieldEmailHint,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
-                          return 'El email es requerido';
+                          return AppStrings.fieldEmailRequired;
                         }
                         if (!value!.contains('@')) {
-                          return 'Email inválido';
+                          return AppStrings.fieldEmailInvalid;
                         }
                         return null;
                       },
@@ -179,8 +180,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                     AppTextField(
                       controller: _passwordController,
-                      label: 'Contraseña',
-                      hint: '********',
+                      label: AppStrings.fieldPassword,
+                      hint: AppStrings.fieldPasswordHint,
                       obscureText: _obscurePassword,
                       prefixIcon: Icons.lock_outlined,
                       suffixIcon: IconButton(
@@ -197,10 +198,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
-                          return 'La contraseña es requerida';
+                          return AppStrings.fieldPasswordRequired;
                         }
                         if (value!.length < 6) {
-                          return 'Mínimo 6 caracteres';
+                          return AppStrings.fieldPasswordMinLength;
                         }
                         return null;
                       },
@@ -210,14 +211,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () => _showForgotPasswordDialog(context),
-                        child: const Text('¿Olvidaste tu contraseña?'),
+                        child: const Text(AppStrings.loginForgotPassword),
                       ),
                     ),
                     const SizedBox(height: 24),
 
                     // Login button
                     AppButton(
-                      text: 'Iniciar Sesión',
+                      text: AppStrings.loginButton,
                       onPressed: _onLogin,
                       isLoading: state.isLoading,
                     ),
@@ -228,12 +229,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          '¿No tienes cuenta?',
+                          AppStrings.loginNoAccount,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         TextButton(
                           onPressed: _onRegister,
-                          child: const Text('Regístrate'),
+                          child: const Text(AppStrings.loginRegisterLink),
                         ),
                       ],
                     ),

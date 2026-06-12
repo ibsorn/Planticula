@@ -26,6 +26,10 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     PlantsLoadRequested event,
     Emitter<PlantsState> emit,
   ) async {
+    await _loadPlants(emit);
+  }
+
+  Future<void> _loadPlants(Emitter<PlantsState> emit) async {
     emit(state.copyWith(status: PlantsStatus.loading));
 
     final result = await _repository.getPlants();
@@ -75,7 +79,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     Emitter<PlantsState> emit,
   ) async {
     if (event.query.isEmpty) {
-      add(PlantsLoadRequested());
+      await _loadPlants(emit);
       return;
     }
 

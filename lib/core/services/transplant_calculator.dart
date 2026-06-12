@@ -82,7 +82,7 @@ class TransplantCalculator {
 
       // How overdue?
       final monthsOverdue = monthsInStage - phaseInfo.triggerAfterMonths;
-      final status = monthsOverdue >= 3
+      final status = monthsOverdue >= AppConstants.transplantUrgentMonths
           ? TransplantStatus.urgent
           : TransplantStatus.due;
 
@@ -93,7 +93,7 @@ class TransplantCalculator {
         minPotSize: phaseInfo.minPotSize,
         monthsInCurrentStage: monthsInStage,
         monthsOverdue: monthsOverdue > 0 ? monthsOverdue : null,
-        reason: monthsOverdue >= 3
+        reason: monthsOverdue >= AppConstants.transplantUrgentMonths
             ? 'Llevas $monthsInStage meses en esta maceta, es momento de un trasplante'
             : 'La planta esta lista para una maceta mas grande',
         notes: phaseInfo.notes,
@@ -102,7 +102,7 @@ class TransplantCalculator {
 
     // Not yet time — give a preview if it's approaching (within 1 month)
     final monthsUntilDue = phaseInfo.triggerAfterMonths - monthsInStage;
-    if (monthsUntilDue <= 1 &&
+    if (monthsUntilDue <= AppConstants.transplantUpcomingMonths &&
         potIndex < PotSize.values.indexOf(phaseInfo.idealPotSize)) {
       return TransplantRecommendation(
         status: TransplantStatus.upcoming,
