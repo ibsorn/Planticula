@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:planticula/core/theme/app_colors.dart';
 
 class GuidesScreen extends StatefulWidget {
   const GuidesScreen({super.key});
@@ -29,7 +30,7 @@ class _GuidesScreenState extends State<GuidesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Guias de Cuidado'),
+        title: const Text('Guías de cuidado 📖'),
       ),
       body: Column(
         children: [
@@ -113,6 +114,10 @@ class _GuidesScreenState extends State<GuidesScreen> {
       title: 'Riego',
       subtitle: 'Consejos sobre frecuencia y tecnicas de riego',
       tips: filteredTips,
+      emoji: '💧',
+      accent: AppColors.water,
+      deep: AppColors.waterDeep,
+      soft: AppColors.waterSoft,
     );
   }
 
@@ -151,6 +156,10 @@ class _GuidesScreenState extends State<GuidesScreen> {
       title: 'Luz y Sol',
       subtitle: 'Comprende las necesidades luminicas de tus plantas',
       tips: filteredTips,
+      emoji: '☀️',
+      accent: AppColors.sun,
+      deep: AppColors.sunDeep,
+      soft: AppColors.sunSoft,
     );
   }
 
@@ -189,6 +198,10 @@ class _GuidesScreenState extends State<GuidesScreen> {
       title: 'Temperatura y Humedad',
       subtitle: 'Controla el ambiente para un crecimiento optimo',
       tips: filteredTips,
+      emoji: '🌡️',
+      accent: AppColors.soil,
+      deep: AppColors.soilDeep,
+      soft: AppColors.soilSoft,
     );
   }
 
@@ -227,6 +240,10 @@ class _GuidesScreenState extends State<GuidesScreen> {
       title: 'Plagas y Enfermedades',
       subtitle: 'Identifica, previene y trata problemas comunes',
       tips: filteredTips,
+      emoji: '🐛',
+      accent: AppColors.pest,
+      deep: AppColors.pestDeep,
+      soft: AppColors.pestSoft,
     );
   }
 
@@ -265,6 +282,7 @@ class _GuidesScreenState extends State<GuidesScreen> {
       title: 'Suelo y Abono',
       subtitle: 'Nutricion y salud del sustrato',
       tips: filteredTips,
+      emoji: '🪨',
     );
   }
 
@@ -303,6 +321,10 @@ class _GuidesScreenState extends State<GuidesScreen> {
       title: 'Poda y Trasplante',
       subtitle: 'Mantenimiento estructural de las plantas',
       tips: filteredTips,
+      emoji: '✂️',
+      accent: AppColors.market,
+      deep: AppColors.marketDeep,
+      soft: AppColors.marketSoft,
     );
   }
 
@@ -368,47 +390,62 @@ class _GuidesScreenState extends State<GuidesScreen> {
     required String title,
     required String subtitle,
     required List<_GuideTip> tips,
+    String emoji = '🌿',
+    Color accent = AppColors.primary,
+    Color deep = AppColors.primaryDeep,
+    Color soft = AppColors.primarySoft,
   }) {
     if (tips.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    return Card(
+    final bg = AppColors.softOf(context, accent, soft);
+    final fg = AppColors.onSoftOf(context, deep, accent);
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ExpansionTile(
-        leading: Icon(
-          icon,
-          color: colorScheme.primary,
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          leading: Text(emoji, style: const TextStyle(fontSize: 26)),
+          iconColor: fg,
+          collapsedIconColor: fg,
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: fg,
+            ),
           ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 12,
-            color: colorScheme.onSurface.withAlpha(153),
+          subtitle: Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 12,
+              color: fg.withValues(alpha: 0.8),
+            ),
           ),
+          children:
+              tips.map((tip) => _buildTipCard(tip, colorScheme, accent)).toList(),
         ),
-        children: tips.map((tip) => _buildTipCard(tip, colorScheme)).toList(),
       ),
     );
   }
 
-  Widget _buildTipCard(_GuideTip tip, ColorScheme colorScheme) {
+  Widget _buildTipCard(_GuideTip tip, ColorScheme colorScheme, Color accent) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Card(
-        elevation: 1,
+        elevation: 0,
         color: colorScheme.surface,
         child: ListTile(
           leading: Icon(
             tip.icon,
-            color: colorScheme.secondary,
+            color: accent,
           ),
           title: Text(
             tip.title,

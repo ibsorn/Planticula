@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -9,6 +12,7 @@ import 'package:planticula/core/services/species_service.dart';
 import 'package:planticula/core/services/transplant_calculator.dart';
 import 'package:planticula/core/services/watering_calculator.dart';
 import 'package:planticula/core/services/weather_service.dart';
+import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
 import 'package:planticula/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
@@ -33,15 +37,45 @@ class _TodayScreenState extends State<TodayScreen> {
   final Map<String, PlantSpecies> _speciesByPlantId = {};
   final Set<String> _wateredNow = {};
   final Set<String> _transplantedNow = {};
+  late final ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 2));
     final plantsState = context.read<PlantsBloc>().state;
     if (plantsState.status == PlantsStatus.initial) {
       context.read<PlantsBloc>().add(PlantsLoadRequested());
     } else {
       _loadAuxData(plantsState.plants);
+    }
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  /// Number of tasks still pending today.
+  int _pendingTaskCount(List<Plant> plants) {
+    final water = plants
+        .where((p) => p.needsWatering && !_wateredNow.contains(p.id))
+        .length;
+    var transplant = 0;
+    for (final plant in plants) {
+      if (_transplantedNow.contains(plant.id)) continue;
+      if (_transplantFor(plant) != null) transplant++;
+    }
+    return water + transplant;
+  }
+
+  /// Fires the confetti when the user just completed the last task.
+  void _celebrateIfAllDone() {
+    final plants = context.read<PlantsBloc>().state.plants;
+    if (plants.isNotEmpty && _pendingTaskCount(plants) == 0) {
+      _confettiController.play();
     }
   }
 
@@ -116,6 +150,7 @@ class _TodayScreenState extends State<TodayScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('¡${plant.name} regada! 💧')),
     );
+    _celebrateIfAllDone();
   }
 
   void _transplantPlant(Plant plant, TransplantRecommendation rec) {
@@ -130,6 +165,7 @@ class _TodayScreenState extends State<TodayScreen> {
         content: Text('¡${plant.name} trasplantada a ${newSize.displayName.toLowerCase()}! 🪴'),
       ),
     );
+    _celebrateIfAllDone();
   }
 
   void _openPlant(Plant plant) {
@@ -140,25 +176,49 @@ class _TodayScreenState extends State<TodayScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: BlocConsumer<PlantsBloc, PlantsState>(
-          listener: (context, state) {
-            if (state.status == PlantsStatus.loaded) {
-              _loadAuxData(state.plants);
-            }
-          },
-          builder: (context, state) {
-            if (state.isLoading || state.status == PlantsStatus.initial) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            return RefreshIndicator(
-              onRefresh: () async =>
-                  context.read<PlantsBloc>().add(PlantsLoadRequested()),
-              child: ListView(
-                padding: AppDimens.screenPadding,
-                children: _buildContent(context, state),
+        child: Stack(
+          children: [
+            BlocConsumer<PlantsBloc, PlantsState>(
+              listener: (context, state) {
+                if (state.status == PlantsStatus.loaded) {
+                  _loadAuxData(state.plants);
+                }
+              },
+              builder: (context, state) {
+                if (state.isLoading || state.status == PlantsStatus.initial) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return RefreshIndicator(
+                  onRefresh: () async =>
+                      context.read<PlantsBloc>().add(PlantsLoadRequested()),
+                  child: ListView(
+                    padding: AppDimens.screenPadding,
+                    children: _buildContent(context, state),
+                  ),
+                );
+              },
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirection: math.pi / 2, // downwards
+                blastDirectionality: BlastDirectionality.explosive,
+                emissionFrequency: 0.05,
+                numberOfParticles: 24,
+                maxBlastForce: 24,
+                minBlastForce: 8,
+                gravity: 0.25,
+                colors: const [
+                  AppColors.primary,
+                  AppColors.water,
+                  AppColors.sun,
+                  AppColors.soil,
+                  AppColors.market,
+                ],
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );

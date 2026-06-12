@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/features/pest_alerts/domain/entities/pest_alert.dart';
 import 'package:planticula/features/pest_alerts/presentation/widgets/severity_badge.dart';
+import 'package:planticula/shared/widgets/app_badge.dart';
+import 'package:planticula/shared/widgets/domain_chip.dart';
 
 class PestAlertCard extends StatelessWidget {
   final PestAlert alert;
@@ -58,27 +61,10 @@ class PestAlertCard extends StatelessWidget {
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.near_me, size: 14, color: Colors.white),
-                          const SizedBox(width: 4),
-                          Text(
-                            alert.distanceDisplay!,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+                    child: AppBadge(
+                      label: alert.distanceDisplay!,
+                      emoji: '📍',
+                      color: Colors.black87,
                     ),
                   ),
               ],
@@ -101,27 +87,9 @@ class PestAlertCard extends StatelessWidget {
                         ),
                       ),
                       if (alert.confirmedByCount != null && alert.confirmedByCount! > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.people, size: 14, color: colorScheme.primary),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${alert.confirmedByCount}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                            ],
-                          ),
+                        DomainChip.primary(
+                          label: '${alert.confirmedByCount}',
+                          emoji: '👥',
                         ),
                     ],
                   ),
@@ -143,13 +111,11 @@ class PestAlertCard extends StatelessWidget {
                       ),
                       if (alert.isResolved) ...[
                         const SizedBox(width: 12),
-                        const Icon(Icons.check_circle, size: 14, color: Colors.green),
-                        const SizedBox(width: 4),
                         const Text(
-                          'Resuelta',
+                          '✅ Resuelta',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.green,
+                            color: AppColors.success,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -202,11 +168,7 @@ class PestAlertCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.bug_report,
-            size: 48,
-            color: Color(alert.severity.colorValue).withValues(alpha: 0.5),
-          ),
+          const Text('🐛', style: TextStyle(fontSize: 44)),
           const SizedBox(height: 8),
           Text(
             'Sin foto',

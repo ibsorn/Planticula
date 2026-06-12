@@ -3,7 +3,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planticula/features/marketplace/domain/entities/marketplace_listing.dart';
 import 'package:planticula/features/marketplace/presentation/bloc/marketplace_bloc.dart';
+import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/features/marketplace/presentation/widgets/marketplace_listing_image.dart';
+
+String _categoryEmoji(ListingCategory category) {
+  switch (category) {
+    case ListingCategory.cutting:
+      return '✂️';
+    case ListingCategory.plant:
+      return '🌿';
+    case ListingCategory.substrate:
+      return '🪨';
+    case ListingCategory.tool:
+      return '🛠️';
+  }
+}
 
 class MarketplaceListingCard extends StatelessWidget {
   final MarketplaceListing listing;
@@ -39,10 +53,10 @@ class MarketplaceListingCard extends StatelessWidget {
                   children: [
                     // Tipo badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Color(listing.typeColor).withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(4),
+                        color: Color(listing.typeColor).withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
                         listing.typeBadge,
@@ -69,9 +83,10 @@ class MarketplaceListingCard extends StatelessWidget {
                     // Precio
                     Text(
                       listing.priceDisplay,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: AppColors.onSoftOf(context,
+                                AppColors.marketDeep, AppColors.market),
                           ),
                     ),
                     const SizedBox(height: 8),
@@ -79,38 +94,22 @@ class MarketplaceListingCard extends StatelessWidget {
                     // Footer
                     Row(
                       children: [
-                        Icon(
-                          Icons.category,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                        const SizedBox(width: 4),
                         Text(
-                          listing.category.displayName,
+                          '${_categoryEmoji(listing.category)} ${listing.category.displayName}',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const Spacer(),
                         if (listing.distanceDisplay != null)
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.near_me,
-                                size: 14,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                listing.distanceDisplay!,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            '📍 ${listing.distanceDisplay!}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.market,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                       ],
                     ),
