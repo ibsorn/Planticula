@@ -9,6 +9,11 @@ import 'package:planticula/core/services/watering_calculator.dart';
 import 'package:planticula/core/services/weather_service.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
+import 'package:planticula/features/plants/presentation/widgets/growth_progress_bar.dart';
+import 'package:planticula/features/plants/presentation/widgets/plant_chip.dart';
+import 'package:planticula/features/plants/presentation/widgets/plant_info_card.dart';
+import 'package:planticula/features/plants/presentation/widgets/plant_section_title.dart';
+import 'package:planticula/features/plants/presentation/widgets/transplant_banner.dart';
 
 class PlantDetailScreen extends StatefulWidget {
   final Plant plant;
@@ -159,12 +164,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   Wrap(
                     spacing: 8,
                     children: [
-                      _Chip(
+                      PlantChip(
                         icon: plant.isOutdoor ? Icons.park : Icons.home,
                         label: plant.plantEnvironment.displayName,
                         color: plant.isOutdoor ? Colors.green : Colors.indigo,
                       ),
-                      _Chip(
+                      PlantChip(
                         icon: _stageIcon(plant.plantGrowthStage),
                         label: plant.plantGrowthStage.displayName,
                         color: Colors.teal,
@@ -174,12 +179,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   const SizedBox(height: 20),
 
                   // === WATERING SECTION ===
-                  const _SectionTitle(title: 'Riego', icon: Icons.water_drop),
+                  const PlantSectionTitle(title: 'Riego', icon: Icons.water_drop),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
-                        child: _InfoCard(
+                        child: PlantInfoCard(
                           icon: Icons.repeat,
                           title: 'Frecuencia',
                           value: plant.hasWateringReminder
@@ -190,7 +195,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: _InfoCard(
+                        child: PlantInfoCard(
                           icon: plant.needsWatering ? Icons.warning_amber : Icons.event_available,
                           title: 'Proximo riego',
                           value: _formatNextWatering(),
@@ -203,7 +208,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: _InfoCard(
+                        child: PlantInfoCard(
                           icon: Icons.local_drink,
                           title: 'Cantidad',
                           value: _recommendation != null
@@ -214,7 +219,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: _InfoCard(
+                        child: PlantInfoCard(
                           icon: Icons.yard,
                           title: 'Maceta',
                           value: '${plant.plantPotSize.displayName} (${plant.plantPotSize.litersRange})',
@@ -303,7 +308,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   // === TRANSPLANT SECTION ===
                   if (_transplantRecommendation != null &&
                       _transplantRecommendation!.needsAction) ...[
-                    _TransplantBanner(
+                    TransplantBanner(
                       recommendation: _transplantRecommendation!,
                       plant: plant,
                       onTransplant: () => _showTransplantDialog(context),
@@ -312,7 +317,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   ],
 
                   // === SUNLIGHT SECTION ===
-                  const _SectionTitle(title: 'Sol necesario', icon: Icons.wb_sunny),
+                  const PlantSectionTitle(title: 'Sol necesario', icon: Icons.wb_sunny),
                   const SizedBox(height: 8),
                   if (_species != null)
                     Card(
@@ -359,7 +364,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   const SizedBox(height: 20),
 
                   // === GROWTH PHASE SECTION ===
-                  const _SectionTitle(title: 'Crecimiento', icon: Icons.trending_up),
+                  const PlantSectionTitle(title: 'Crecimiento', icon: Icons.trending_up),
                   const SizedBox(height: 8),
                   Card(
                     child: Padding(
@@ -367,7 +372,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       child: Column(
                         children: [
                           // Growth stage progress bar
-                          _GrowthProgressBar(
+                          GrowthProgressBar(
                             currentStage: plant.plantGrowthStage,
                           ),
                           const SizedBox(height: 12),
@@ -413,17 +418,17 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
                   // === SPECIES INFO ===
                   if (_species != null) ...[
-                    const _SectionTitle(title: 'Sobre esta especie', icon: Icons.info_outline),
+                    const PlantSectionTitle(title: 'Sobre esta especie', icon: Icons.info_outline),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: [
                         if (_species!.droughtTolerant)
-                          const _Chip(icon: Icons.water_drop_outlined, label: 'Tolerante a sequia', color: Colors.amber),
+                          const PlantChip(icon: Icons.water_drop_outlined, label: 'Tolerante a sequia', color: Colors.amber),
                         if (_species!.humidityLoving)
-                          const _Chip(icon: Icons.water, label: 'Necesita humedad', color: Colors.cyan),
-                        _Chip(icon: Icons.thermostat, label: '${_species!.minTemperature}C - ${_species!.maxTemperature}C', color: Colors.deepOrange),
+                          const PlantChip(icon: Icons.water, label: 'Necesita humedad', color: Colors.cyan),
+                        PlantChip(icon: Icons.thermostat, label: '${_species!.minTemperature}C - ${_species!.maxTemperature}C', color: Colors.deepOrange),
                       ],
                     ),
                   ],
@@ -431,7 +436,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   // Notes
                   if (plant.notes != null && plant.notes!.isNotEmpty) ...[
                     const SizedBox(height: 20),
-                    const _SectionTitle(title: 'Notas', icon: Icons.notes),
+                    const PlantSectionTitle(title: 'Notas', icon: Icons.notes),
                     const SizedBox(height: 8),
                     Card(
                       child: Padding(
@@ -635,359 +640,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   }
 }
 
-// ===================== Sub-Widgets =====================
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  final IconData icon;
 
-  const _SectionTitle({required this.title, required this.icon});
 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 8),
-        Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold)),
-      ],
-    );
-  }
-}
 
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-  final Color color;
 
-  const _InfoCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 8),
-            Text(title, style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(153))),
-            const SizedBox(height: 2),
-            Text(value, style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600, color: color)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _Chip({required this.icon, required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withAlpha(26),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-}
-
-class _GrowthProgressBar extends StatelessWidget {
-  final GrowthStage currentStage;
-
-  const _GrowthProgressBar({required this.currentStage});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    const stages = GrowthStage.values;
-    final currentIndex = stages.indexOf(currentStage);
-
-    return Row(
-      children: stages.asMap().entries.map((entry) {
-        final index = entry.key;
-        final stage = entry.value;
-        final isActive = index <= currentIndex;
-        final isCurrent = index == currentIndex;
-
-        return Expanded(
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  if (index > 0)
-                    Expanded(
-                      child: Container(
-                        height: 3,
-                        color: isActive ? theme.colorScheme.primary : theme.colorScheme.outline.withAlpha(51),
-                      ),
-                    ),
-                  Container(
-                    width: isCurrent ? 32 : 24,
-                    height: isCurrent ? 32 : 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isActive ? theme.colorScheme.primary : theme.colorScheme.surface,
-                      border: Border.all(
-                        color: isActive ? theme.colorScheme.primary : theme.colorScheme.outline.withAlpha(77),
-                        width: 2,
-                      ),
-                    ),
-                    child: Icon(
-                      _stageIcon(stage),
-                      size: isCurrent ? 16 : 12,
-                      color: isActive ? theme.colorScheme.onPrimary : theme.colorScheme.outline,
-                    ),
-                  ),
-                  if (index < stages.length - 1)
-                    Expanded(
-                      child: Container(
-                        height: 3,
-                        color: index < currentIndex
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outline.withAlpha(51),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(stage.displayName,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                      color: isActive ? theme.colorScheme.primary : theme.colorScheme.onSurface.withAlpha(102))),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  IconData _stageIcon(GrowthStage stage) {
-    switch (stage) {
-      case GrowthStage.seedling: return Icons.grass;
-      case GrowthStage.juvenile: return Icons.eco;
-      case GrowthStage.adult: return Icons.park;
-    }
-  }
-}
-
-// ===================== Transplant Banner =====================
-
-class _TransplantBanner extends StatelessWidget {
-  final TransplantRecommendation recommendation;
-  final Plant plant;
-  final VoidCallback onTransplant;
-
-  const _TransplantBanner({
-    required this.recommendation,
-    required this.plant,
-    required this.onTransplant,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isUrgent = recommendation.isUrgent;
-
-    final Color bannerColor = isUrgent
-        ? theme.colorScheme.errorContainer
-        : Colors.amber.shade50;
-    final Color iconColor = isUrgent
-        ? theme.colorScheme.error
-        : Colors.amber.shade800;
-    final Color textColor = isUrgent
-        ? theme.colorScheme.onErrorContainer
-        : Colors.amber.shade900;
-    final Color borderColor = isUrgent
-        ? theme.colorScheme.error.withAlpha(128)
-        : Colors.amber.shade300;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.yard, size: 20, color: Colors.green.shade700),
-            const SizedBox(width: 8),
-            Text('Maceta', style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold)),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: bannerColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: borderColor, width: 1.5),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    isUrgent ? Icons.warning_amber_rounded : Icons.info_outline,
-                    size: 20,
-                    color: iconColor,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          recommendation.status.displayName,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                        ),
-                        if (recommendation.reason != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            recommendation.reason!,
-                            style: theme.textTheme.bodySmall?.copyWith(color: textColor),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              if (recommendation.recommendedPotSize != null) ...[
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    _PotSizeChip(
-                      label: plant.plantPotSize.displayName,
-                      sublabel: plant.plantPotSize.litersRange,
-                      isCurrent: true,
-                      color: Colors.grey,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.arrow_forward, size: 18, color: iconColor),
-                    ),
-                    _PotSizeChip(
-                      label: recommendation.recommendedPotSize!.displayName,
-                      sublabel: recommendation.recommendedPotSize!.litersRange,
-                      isCurrent: false,
-                      color: Colors.green,
-                    ),
-                  ],
-                ),
-              ],
-              if (recommendation.notes != null) ...[
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.tips_and_updates, size: 14, color: textColor.withAlpha(180)),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        recommendation.notes!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                            color: textColor.withAlpha(200),
-                            fontStyle: FontStyle.italic),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  icon: const Icon(Icons.swap_horiz, size: 18),
-                  label: const Text('Registrar trasplante'),
-                  onPressed: onTransplant,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: isUrgent
-                        ? theme.colorScheme.error
-                        : Colors.green.shade600,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PotSizeChip extends StatelessWidget {
-  final String label;
-  final String sublabel;
-  final bool isCurrent;
-  final Color color;
-
-  const _PotSizeChip({
-    required this.label,
-    required this.sublabel,
-    required this.isCurrent,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: isCurrent ? Colors.grey.shade100 : Colors.green.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isCurrent ? Colors.grey.shade400 : Colors.green.shade300,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            isCurrent ? 'Actual' : 'Recomendada',
-            style: theme.textTheme.labelSmall?.copyWith(
-                color: color.withAlpha(180), fontSize: 10),
-          ),
-          Text(label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold, color: color.withAlpha(220))),
-          Text(sublabel,
-              style: theme.textTheme.labelSmall?.copyWith(
-                  color: color.withAlpha(150), fontSize: 10)),
-        ],
-      ),
-    );
-  }
-}

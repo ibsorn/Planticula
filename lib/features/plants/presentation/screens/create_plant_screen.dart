@@ -9,6 +9,10 @@ import 'package:planticula/core/services/species_service.dart';
 import 'package:planticula/core/services/watering_calculator.dart';
 import 'package:planticula/core/services/weather_service.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
+import 'package:planticula/features/plants/presentation/widgets/option_card.dart';
+import 'package:planticula/features/plants/presentation/widgets/species_card.dart';
+import 'package:planticula/features/plants/presentation/widgets/variety_card.dart';
+import 'package:planticula/features/plants/presentation/widgets/watering_recommendation_card.dart';
 
 class CreatePlantScreen extends StatefulWidget {
   const CreatePlantScreen({super.key});
@@ -309,7 +313,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
                     itemCount: _searchResults.length,
                     itemBuilder: (context, index) {
                       final species = _searchResults[index];
-                      return _SpeciesCard(
+                      return SpeciesCard(
                         species: species,
                         onTap: () => _selectSpecies(species),
                       );
@@ -360,7 +364,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
             itemCount: parentSpecies.varieties.length,
             itemBuilder: (context, index) {
               final variety = parentSpecies.varieties[index];
-              return _VarietyCard(
+              return VarietyCard(
                 variety: variety,
                 onTap: () => _selectVariety(variety),
               );
@@ -460,7 +464,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
             Row(
               children: [
                 Expanded(
-                  child: _OptionCard(
+                  child: OptionCard(
                     icon: Icons.home,
                     label: 'Dentro de casa',
                     subtitle: 'Salon, habitacion...',
@@ -473,7 +477,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _OptionCard(
+                  child: OptionCard(
                     icon: Icons.park,
                     label: 'Fuera',
                     subtitle: 'Terraza, jardin, balcon',
@@ -587,7 +591,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
                   style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withAlpha(128))),
               const SizedBox(height: 8),
-              _RecommendationCard(recommendation: _recommendation!),
+              WateringRecommendationCard(recommendation: _recommendation!),
 
               // Weather adjustments
               if (_recommendation!.hasWeatherAdjustments &&
@@ -680,7 +684,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
         Text('En que fase esta?', style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        _OptionCard(
+        OptionCard(
           icon: Icons.grass,
           label: 'Recien plantada / germinando',
           subtitle: 'Semilla o brote reciente',
@@ -691,7 +695,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
           },
         ),
         const SizedBox(height: 8),
-        _OptionCard(
+        OptionCard(
           icon: Icons.eco,
           label: 'Creciendo (vegetativo)',
           subtitle: 'Tiene tallos y hojas pero no flores',
@@ -702,7 +706,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
           },
         ),
         const SizedBox(height: 8),
-        _OptionCard(
+        OptionCard(
           icon: Icons.filter_vintage,
           label: 'En floracion',
           subtitle: 'Ya tiene cogollos formandose',
@@ -721,7 +725,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
         Text('Como esta tu planta?', style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        _OptionCard(
+        OptionCard(
           icon: Icons.grass,
           label: 'Acaba de brotar',
           subtitle: 'Tiene pocas hojas pequeñas',
@@ -732,7 +736,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
           },
         ),
         const SizedBox(height: 8),
-        _OptionCard(
+        OptionCard(
           icon: Icons.eco,
           label: 'Creciendo, sin frutos',
           subtitle: 'Tiene hojas pero todavia no da fruto ni flores',
@@ -743,7 +747,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
           },
         ),
         const SizedBox(height: 8),
-        _OptionCard(
+        OptionCard(
           icon: Icons.restaurant,
           label: 'Ya da fruto o esta lista',
           subtitle: 'Tiene flores, frutos o se puede cosechar',
@@ -765,7 +769,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
           style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withAlpha(128))),
       const SizedBox(height: 8),
-      _OptionCard(
+      OptionCard(
         icon: Icons.grass,
         label: 'Pequeña / recien comprada',
         subtitle: 'Brote, esqueje o planta muy joven',
@@ -776,7 +780,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
         },
       ),
       const SizedBox(height: 8),
-      _OptionCard(
+      OptionCard(
         icon: Icons.eco,
         label: 'Mediana, esta creciendo',
         subtitle: 'Ya tiene varias hojas pero aun no es grande',
@@ -787,7 +791,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
         },
       ),
       const SizedBox(height: 8),
-      _OptionCard(
+      OptionCard(
         icon: Icons.park,
         label: 'Grande, ya esta crecida',
         subtitle: 'Planta adulta con buen tamaño',
@@ -801,342 +805,10 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
   }
 }
 
-// ===================== Sub-Widgets =====================
 
-class _SpeciesCard extends StatelessWidget {
-  final PlantSpecies species;
-  final VoidCallback onTap;
 
-  const _SpeciesCard({required this.species, required this.onTap});
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: theme.colorScheme.primaryContainer,
-                child: Icon(Icons.local_florist,
-                    color: theme.colorScheme.onPrimaryContainer),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(species.commonName,
-                              style: const TextStyle(fontWeight: FontWeight.w600)),
-                        ),
-                        if (species.hasVarieties) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.tertiary.withAlpha(26),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text('${species.varieties.length} var.',
-                                style: TextStyle(fontSize: 10, color: theme.colorScheme.tertiary)),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(species.scientificName,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                            color: theme.colorScheme.onSurface.withAlpha(153))),
-                  ],
-                ),
-              ),
-              if (species.hasVarieties)
-                Icon(Icons.chevron_right, color: theme.colorScheme.onSurface.withAlpha(128)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
-class _VarietyCard extends StatelessWidget {
-  final PlantSpecies variety;
-  final VoidCallback onTap;
 
-  const _VarietyCard({required this.variety, required this.onTap});
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(variety.commonName,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold)),
-                  ),
-                  // Watering info
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.water_drop, size: 14, color: Colors.blue.shade300),
-                      const SizedBox(width: 2),
-                      Text('${variety.wateringFrequencyIndoor}d',
-                          style: theme.textTheme.bodySmall),
-                      const SizedBox(width: 8),
-                      Icon(Icons.wb_sunny, size: 14, color: Colors.orange.shade300),
-                      const SizedBox(width: 2),
-                      Text('${variety.sunlightHoursMin.round()}-${variety.sunlightHoursMax.round()}h',
-                          style: theme.textTheme.bodySmall),
-                    ],
-                  ),
-                ],
-              ),
-              if (variety.description != null) ...[
-                const SizedBox(height: 6),
-                Text(variety.description!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withAlpha(179)),
-                    maxLines: 2, overflow: TextOverflow.ellipsis),
-              ],
-              const SizedBox(height: 6),
-              // Temperature range chip
-              Wrap(
-                spacing: 6,
-                children: [
-                  _MiniChip(
-                    icon: Icons.thermostat,
-                    label: '${variety.minTemperature}-${variety.maxTemperature}C',
-                    color: Colors.deepOrange,
-                  ),
-                  if (variety.growthPhases.isNotEmpty && variety.growthPhases.last.description != null)
-                    _MiniChip(
-                      icon: Icons.timer,
-                      label: variety.growthPhases.last.description!,
-                      color: Colors.teal,
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
-class _MiniChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _MiniChip({required this.icon, required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: color),
-          const SizedBox(width: 3),
-          Text(label, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
-}
-
-class _OptionCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String? subtitle;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _OptionCard({
-    required this.icon,
-    required this.label,
-    this.subtitle,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.primaryContainer
-              : theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outline.withAlpha(77),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon,
-                color: isSelected
-                    ? theme.colorScheme.onPrimaryContainer
-                    : theme.colorScheme.onSurface.withAlpha(153),
-                size: 28),
-            const SizedBox(height: 6),
-            Text(label,
-                style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected
-                      ? theme.colorScheme.onPrimaryContainer
-                      : theme.colorScheme.onSurface,
-                  fontSize: 13,
-                )),
-            if (subtitle != null)
-              Text(subtitle!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      color: isSelected
-                          ? theme.colorScheme.onPrimaryContainer.withAlpha(179)
-                          : theme.colorScheme.onSurface.withAlpha(102),
-                      fontSize: 11)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RecommendationCard extends StatelessWidget {
-  final WateringRecommendation recommendation;
-
-  const _RecommendationCard({required this.recommendation});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Watering frequency
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.water_drop, color: Colors.blue.shade600),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Riego',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withAlpha(153))),
-                      Text(recommendation.frequencyDescription,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-            // Water amount
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.cyan.shade50,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.local_drink, color: Colors.cyan.shade600),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Cantidad por riego',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withAlpha(153))),
-                      Text(recommendation.waterMlRange,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-            // Sunlight
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.wb_sunny, color: Colors.orange.shade600),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Sol necesario',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withAlpha(153))),
-                      Text(recommendation.sunlightDescription,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
