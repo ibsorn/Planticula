@@ -1,3 +1,4 @@
+import 'package:planticula/core/constants/app_constants.dart';
 import 'package:planticula/core/data/species/plant_species.dart';
 
 /// Calculates whether a plant needs to be transplanted to a larger pot,
@@ -45,6 +46,11 @@ class TransplantCalculator {
         reason: 'La maceta actual es demasiado pequeña para la fase ${currentStage.displayName}',
         notes: phaseInfo.notes,
       );
+    }
+
+    // --- 1b. neverTransplant sentinel: skip time-based logic entirely ---
+    if (phaseInfo.triggerAfterMonths == AppConstants.neverTransplant) {
+      return const TransplantRecommendation._none();
     }
 
     // --- 2. Time-based check: has the plant been in this stage long enough? ---

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planticula/core/data/species/plant_species.dart';
 import 'package:planticula/core/services/species_service.dart';
@@ -20,7 +21,8 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _searchController = TextEditingController();
-  final _speciesService = SpeciesService();
+  final _speciesService = GetIt.instance<SpeciesService>();
+  final _weatherService = GetIt.instance<WeatherService>();
 
   // Step tracking
   int _currentStep = 0;
@@ -56,7 +58,8 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
     _nameController.dispose();
     _searchController.dispose();
     _searchDebounce?.cancel();
-    _speciesService.dispose();
+    // Note: _speciesService and _weatherService are singletons managed by GetIt,
+    // do NOT dispose them here.
     super.dispose();
   }
 
@@ -90,7 +93,7 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
   Future<void> _fetchWeather() async {
     if (_latitude == null || _longitude == null) return;
     try {
-      final weather = await WeatherService().getWeather(_latitude!, _longitude!);
+      final weather = await _weatherService.getWeather(_latitude!, _longitude!);
       if (mounted) setState(() => _weather = weather);
       _updateRecommendation();
     } catch (_) {}

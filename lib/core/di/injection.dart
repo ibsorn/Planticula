@@ -1,6 +1,8 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:planticula/core/network/supabase_client.dart';
+import 'package:planticula/core/services/species_service.dart';
+import 'package:planticula/core/services/weather_service.dart';
 import 'package:planticula/core/theme/theme_cubit.dart';
 import 'package:planticula/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:planticula/features/auth/domain/repositories/auth_repository.dart';
@@ -35,6 +37,10 @@ Future<void> initDependencies() async {
 
   // Supabase (initialized in main)
   sl.registerSingleton<AppSupabaseClient>(AppSupabaseClient.instance);
+
+  // Core Services (singletons - share cache across the app)
+  sl.registerLazySingleton<WeatherService>(() => WeatherService());
+  sl.registerLazySingleton<SpeciesService>(() => SpeciesService());
 
   // Theme
   sl.registerFactory<ThemeCubit>(() => ThemeCubit(sl()));

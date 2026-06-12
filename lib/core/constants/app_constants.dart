@@ -16,6 +16,10 @@ class AppConstants {
   static const String routePestAlertDetail = '/pest-alerts/:id';
   static const String routeMarketplace = '/marketplace';
   static const String routeCreateListing = '/marketplace/create';
+  static const String routeListingDetail = '/listing/:id';
+  static const String routeSoilAnalysis = '/soil-analysis';
+  static const String routeSoilAnalysisDetail = '/soil-analysis/:id';
+  static const String routeGuides = '/guides';
 
   // Storage Keys
   static const String keyThemeMode = 'theme_mode';
@@ -33,6 +37,10 @@ class AppConstants {
   // Timeouts
   static const int connectionTimeout = 30;
   static const int receiveTimeout = 30;
+
+  // Transplant schedule sentinel: plant should never be transplanted in this phase
+  // (e.g. root vegetables and short-cycle crops that are harvested directly)
+  static const int neverTransplant = 999;
 
   // Private constructor to prevent instantiation
   AppConstants._();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planticula/core/data/species/plant_species.dart';
 import 'package:planticula/core/services/species_service.dart';
@@ -33,7 +34,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
   Future<void> _loadSpeciesData() async {
     if (widget.plant.speciesId != null) {
-      final species = await SpeciesService().getSpeciesById(widget.plant.speciesId!);
+      final species = await GetIt.instance<SpeciesService>().getSpeciesById(widget.plant.speciesId!);
       if (mounted && species != null) {
         setState(() => _species = species);
         _updateRecommendation();
@@ -45,7 +46,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     if (widget.plant.latitude == null || widget.plant.longitude == null) return;
     if (!widget.plant.isOutdoor) return;
     try {
-      final weather = await WeatherService().getWeather(
+      final weather = await GetIt.instance<WeatherService>().getWeather(
         widget.plant.latitude!,
         widget.plant.longitude!,
       );

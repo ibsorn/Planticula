@@ -55,9 +55,9 @@ class MainScaffold extends StatelessWidget {
     if (route.startsWith(AppConstants.routePlants)) return 0;
     if (route.startsWith(AppConstants.routePestAlerts)) return 1;
     if (route.startsWith(AppConstants.routeMarketplace)) return 2;
-    if (route.startsWith('/guides')) return 3;
+    if (route.startsWith(AppConstants.routeGuides)) return 3;
     if (route.startsWith(AppConstants.routeProfile)) return 4;
-    if (route.startsWith('/soil-analysis')) return 4; // Profile area
+    if (route.startsWith(AppConstants.routeSoilAnalysis)) return 4; // Profile area
     return 0;
   }
 
@@ -73,7 +73,7 @@ class MainScaffold extends StatelessWidget {
         context.go(AppConstants.routeMarketplace);
         break;
       case 3:
-        context.go('/guides');
+        context.go(AppConstants.routeGuides);
         break;
       case 4:
         context.go(AppConstants.routeProfile);

@@ -111,12 +111,12 @@ class AppRouter {
             ),
             // Soil Analysis
             GoRoute(
-              path: '/soil-analysis',
+              path: AppConstants.routeSoilAnalysis,
               builder: (context, state) => const SoilAnalysisScreen(),
             ),
             // Guides
             GoRoute(
-              path: '/guides',
+              path: AppConstants.routeGuides,
               builder: (context, state) => const GuidesScreen(),
             ),
             // Profile
@@ -136,14 +136,14 @@ class AppRouter {
           builder: (context, state) => const CreateListingScreen(),
         ),
         GoRoute(
-          path: '/soil-analysis/:id',
+          path: AppConstants.routeSoilAnalysisDetail,
           builder: (context, state) {
             final analysis = state.extra as SoilAnalysis;
             return AnalysisDetailScreen(analysis: analysis);
           },
         ),
         GoRoute(
-          path: '/listing/:id',
+          path: AppConstants.routeListingDetail,
           builder: (context, state) {
             final id = state.pathParameters['id']!;
             return ListingDetailScreen(listingId: id);
