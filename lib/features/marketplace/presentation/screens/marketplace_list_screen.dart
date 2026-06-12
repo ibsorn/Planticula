@@ -8,6 +8,8 @@ import 'package:planticula/features/marketplace/presentation/widgets/marketplace
 import 'package:planticula/features/marketplace/presentation/widgets/marketplace_filter_sheet.dart';
 import 'package:planticula/features/marketplace/presentation/widgets/marketplace_my_listings_tab.dart';
 import 'package:planticula/features/marketplace/presentation/widgets/marketplace_nearby_tab.dart';
+import 'package:planticula/core/theme/app_colors.dart';
+import 'package:planticula/shared/widgets/community_switcher.dart';
 
 class MarketplaceListScreen extends StatefulWidget {
   const MarketplaceListScreen({super.key});
@@ -93,7 +95,7 @@ class _MarketplaceListScreenState extends State<MarketplaceListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Marketplace'),
+        title: const Text('Comunidad 👥'),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
@@ -115,6 +117,7 @@ class _MarketplaceListScreenState extends State<MarketplaceListScreen>
       ),
       body: Column(
         children: [
+          const CommunitySwitcher(selected: 1),
           // Search bar
           Padding(
             padding: const EdgeInsets.all(12),
@@ -159,9 +162,11 @@ class _MarketplaceListScreenState extends State<MarketplaceListScreen>
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(AppConstants.routeCreateListing),
-        child: const Icon(Icons.add),
+        backgroundColor: AppColors.market,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Vender o regalar'),
       ),
     );
   }

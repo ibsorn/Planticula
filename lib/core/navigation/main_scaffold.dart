@@ -22,28 +22,23 @@ class MainScaffold extends StatelessWidget {
         onDestinationSelected: (index) => _onItemTapped(context, index),
         destinations: const [
           NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
+            label: 'Hoy',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.local_florist_outlined),
-            selectedIcon: Icon(Icons.local_florist),
-            label: 'Plantas',
+            selectedIcon: Icon(Icons.local_florist_rounded),
+            label: 'Mi Jardín',
           ),
           NavigationDestination(
-            icon: Icon(Icons.warning_amber_outlined),
-            selectedIcon: Icon(Icons.warning_amber),
-            label: 'Alertas',
+            icon: Icon(Icons.groups_outlined),
+            selectedIcon: Icon(Icons.groups_rounded),
+            label: 'Comunidad',
           ),
           NavigationDestination(
-            icon: Icon(Icons.store_outlined),
-            selectedIcon: Icon(Icons.store),
-            label: 'Mercado',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.menu_book_outlined),
-            selectedIcon: Icon(Icons.menu_book),
-            label: 'Guias',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
             label: 'Perfil',
           ),
         ],
@@ -52,30 +47,32 @@ class MainScaffold extends StatelessWidget {
   }
 
   int _getSelectedIndex(String route) {
-    if (route.startsWith(AppConstants.routePlants)) return 0;
-    if (route.startsWith(AppConstants.routePestAlerts)) return 1;
-    if (route.startsWith(AppConstants.routeMarketplace)) return 2;
-    if (route.startsWith(AppConstants.routeGuides)) return 3;
-    if (route.startsWith(AppConstants.routeProfile)) return 4;
-    if (route.startsWith(AppConstants.routeSoilAnalysis)) return 4; // Profile area
+    if (route.startsWith(AppConstants.routeToday)) return 0;
+    if (route.startsWith(AppConstants.routePlants)) return 1;
+    if (route.startsWith(AppConstants.routePestAlerts) ||
+        route.startsWith(AppConstants.routeMarketplace)) {
+      return 2;
+    }
+    if (route.startsWith(AppConstants.routeProfile) ||
+        route.startsWith(AppConstants.routeGuides) ||
+        route.startsWith(AppConstants.routeSoilAnalysis)) {
+      return 3;
+    }
     return 0;
   }
 
   void _onItemTapped(BuildContext context, int index) {
     switch (index) {
       case 0:
-        context.go(AppConstants.routePlants);
+        context.go(AppConstants.routeToday);
         break;
       case 1:
-        context.go(AppConstants.routePestAlerts);
+        context.go(AppConstants.routePlants);
         break;
       case 2:
-        context.go(AppConstants.routeMarketplace);
+        context.go(AppConstants.routePestAlerts);
         break;
       case 3:
-        context.go(AppConstants.routeGuides);
-        break;
-      case 4:
         context.go(AppConstants.routeProfile);
         break;
     }

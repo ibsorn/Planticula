@@ -7,6 +7,9 @@ import 'package:planticula/features/pest_alerts/presentation/screens/pest_alert_
 import 'package:planticula/features/pest_alerts/presentation/widgets/pest_alert_card.dart';
 import 'package:planticula/features/pest_alerts/presentation/widgets/pest_alerts_filter_sheet.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:planticula/core/theme/app_colors.dart';
+import 'package:planticula/shared/widgets/community_switcher.dart';
+import 'package:planticula/shared/widgets/empty_state.dart';
 
 class PestAlertsListScreen extends StatefulWidget {
   const PestAlertsListScreen({super.key});
@@ -88,7 +91,7 @@ class _PestAlertsListScreenState extends State<PestAlertsListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Alertas de Plagas'),
+        title: const Text('Comunidad 👥'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -123,17 +126,25 @@ class _PestAlertsListScreenState extends State<PestAlertsListScreen>
           }
         },
         builder: (context, state) {
-          return TabBarView(
-            controller: _tabController,
+          return Column(
             children: [
-              _buildNearbyTab(state),
-              _buildMyAlertsTab(state),
+              const CommunitySwitcher(selected: 0),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildNearbyTab(state),
+                    _buildMyAlertsTab(state),
+                  ],
+                ),
+              ),
             ],
           );
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/pest-alerts/report'),
+        backgroundColor: AppColors.pest,
         icon: const Icon(Icons.add_alert),
         label: const Text('Reportar'),
       ),
@@ -146,43 +157,25 @@ class _PestAlertsListScreenState extends State<PestAlertsListScreen>
     }
 
     if (!state.hasLocation) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.location_off, size: 64, color: Colors.grey),
-              const SizedBox(height: 16),
-              const Text(
-                'Se requiere ubicación',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Necesitamos tu ubicación para mostrar alertas cercanas',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _getLocationAndLoad,
-                child: const Text('Permitir Ubicación'),
-              ),
-            ],
-          ),
-        ),
+      return EmptyState(
+        emoji: '📍',
+        title: 'Se requiere ubicación',
+        message: 'Necesitamos tu ubicación para mostrar alertas cercanas',
+        actionLabel: 'Permitir ubicación',
+        actionIcon: Icons.my_location_rounded,
+        onAction: _getLocationAndLoad,
       );
     }
 
     if (state.isNearbyEmpty) {
-      return _buildEmptyState(
-        icon: Icons.check_circle_outline,
-        title: 'No hay alertas cercanas',
-        subtitle: 'No se encontraron plagas reportadas en ${state.filterRadiusKm.toStringAsFixed(0)} km',
-        action: ElevatedButton(
-          onPressed: _showFiltersDialog,
-          child: const Text('Ajustar Filtros'),
-        ),
+      return EmptyState(
+        emoji: '🔍',
+        title: '¡Buenas noticias!',
+        message:
+            'Ninguna plaga reportada en ${state.filterRadiusKm.toStringAsFixed(0)} km a la redonda.',
+        actionLabel: 'Ajustar filtros',
+        actionIcon: Icons.tune_rounded,
+        onAction: _showFiltersDialog,
       );
     }
 
@@ -201,14 +194,13 @@ class _PestAlertsListScreenState extends State<PestAlertsListScreen>
     }
 
     if (state.isMyAlertsEmpty) {
-      return _buildEmptyState(
-        icon: Icons.notification_add,
+      return EmptyState(
+        emoji: '🐛',
         title: 'No has reportado plagas',
-        subtitle: 'Ayuda a la comunidad reportando plagas que observes',
-        action: ElevatedButton(
-          onPressed: () => context.push('/pest-alerts/report'),
-          child: const Text('Reportar Plaga'),
-        ),
+        message: 'Ayuda a la comunidad reportando plagas que observes',
+        actionLabel: 'Reportar plaga',
+        actionIcon: Icons.add_alert_rounded,
+        onAction: () => context.push('/pest-alerts/report'),
       );
     }
 
@@ -243,43 +235,6 @@ class _PestAlertsListScreenState extends State<PestAlertsListScreen>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildEmptyState({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    Widget? action,
-  }) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 80, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            if (action != null) ...[
-              const SizedBox(height: 24),
-              action,
-            ],
-          ],
-        ),
-      ),
     );
   }
 

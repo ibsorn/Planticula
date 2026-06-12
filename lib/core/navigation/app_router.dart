@@ -5,6 +5,7 @@ import 'package:planticula/core/navigation/main_scaffold.dart';
 import 'package:planticula/features/auth/presentation/screens/login_screen.dart';
 import 'package:planticula/features/auth/presentation/screens/register_screen.dart';
 import 'package:planticula/features/plants/presentation/screens/plants_screen.dart';
+import 'package:planticula/features/today/presentation/screens/today_screen.dart';
 import 'package:planticula/features/plants/presentation/screens/plant_detail_screen.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/pest_alerts/presentation/screens/pest_alerts_list_screen.dart';
@@ -59,7 +60,7 @@ class AppRouter {
         }
 
         if (isAuthenticated && isAuthRoute) {
-          return AppConstants.routePlants;
+          return AppConstants.routeToday;
         }
 
         return null;
@@ -79,6 +80,11 @@ class AppRouter {
           navigatorKey: _shellNavigatorKey,
           builder: (context, state, child) => MainScaffold(child: child),
           routes: [
+            // Today (home)
+            GoRoute(
+              path: AppConstants.routeToday,
+              builder: (context, state) => const TodayScreen(),
+            ),
             // Plants
             GoRoute(
               path: AppConstants.routePlants,

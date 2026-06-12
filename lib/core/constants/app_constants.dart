@@ -8,6 +8,7 @@ class AppConstants {
   static const String routeLogin = '/login';
   static const String routeRegister = '/register';
   static const String routeHome = '/home';
+  static const String routeToday = '/today';
   static const String routePlants = '/plants';
   static const String routePlantDetail = '/plants/:id';
   static const String routeProfile = '/profile';

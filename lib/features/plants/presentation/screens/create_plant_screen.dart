@@ -202,38 +202,49 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_currentStep == 0
-            ? 'Que planta tienes?'
+            ? '¿Qué planta tienes? 🌿'
             : _currentStep == 2
-                ? 'Elige variedad'
-                : 'Cuentanos mas'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () {
-            if (_currentStep == 1) {
-              // From config, go back to search (or variety if it has varieties)
-              if (_selectedSpecies?.isVariety == true) {
-                setState(() => _currentStep = 2);
-              } else {
-                setState(() => _currentStep = 0);
-              }
-            } else if (_currentStep == 2) {
-              setState(() => _currentStep = 0);
-            } else {
-              context.pop();
-            }
-          },
+                ? 'Elige variedad 🌱'
+                : _currentStep == 3
+                    ? '¡Lista! 🎉'
+                    : 'Cuéntame de ella 💚'),
+        automaticallyImplyLeading: false,
+        leading: _currentStep == 3
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  if (_currentStep == 1) {
+                    // From config, go back to search (or variety if it has varieties)
+                    if (_selectedSpecies?.isVariety == true) {
+                      setState(() => _currentStep = 2);
+                    } else {
+                      setState(() => _currentStep = 0);
+                    }
+                  } else if (_currentStep == 2) {
+                    setState(() => _currentStep = 0);
+                  } else {
+                    context.pop();
+                  }
+                },
+              ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(6),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: _stepProgress),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, _) => LinearProgressIndicator(
+              value: value,
+              minHeight: 6,
+            ),
+          ),
         ),
       ),
       body: BlocConsumer<PlantsBloc, PlantsState>(
         listener: (context, state) {
-          if (state.isOperationSuccess) {
-            context.pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Planta añadida correctamente'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+          if (state.isOperationSuccess && _currentStep != 3) {
+            setState(() => _currentStep = 3);
           }
           if (state.errorMessage != null &&
               state.operationStatus == PlantsOperationStatus.error) {
@@ -251,11 +262,101 @@ class _CreatePlantScreenState extends State<CreatePlantScreen> {
             return _buildSpeciesSearch(theme);
           } else if (_currentStep == 2) {
             return _buildVarietySelection(theme);
+          } else if (_currentStep == 3) {
+            return _buildCelebration(theme);
           } else {
             return _buildConfiguration(theme, state);
           }
         },
       ),
+    );
+  }
+
+  double get _stepProgress {
+    switch (_currentStep) {
+      case 0:
+        return 0.33;
+      case 2:
+        return 0.5;
+      case 1:
+        return 0.66;
+      case 3:
+        return 1;
+      default:
+        return 0.33;
+    }
+  }
+
+  // ===================== STEP 3: Celebration =====================
+
+  Widget _buildCelebration(ThemeData theme) {
+    final name = _nameController.text.trim().isEmpty
+        ? (_selectedSpecies?.commonName ?? 'Tu planta')
+        : _nameController.text.trim();
+    final rec = _recommendation;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 24),
+          const Text('🎉', textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 72)),
+          const SizedBox(height: 16),
+          Text(
+            '¡$name ya está en tu jardín!',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.displaySmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Te avisaré cada vez que necesite algo.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 32),
+          if (rec != null)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _celebrationRow('💧',
+                        'Riego: ${rec.frequencyDescription.toLowerCase()} (${rec.waterMlRange})'),
+                    const SizedBox(height: 8),
+                    _celebrationRow('☀️', rec.sunlightDescription),
+                    if (_environment == PlantEnvironment.outdoor &&
+                        rec.hasWeatherAdjustments) ...[
+                      const SizedBox(height: 8),
+                      _celebrationRow('🌦', 'Ajustaré el riego según el clima de tu zona'),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 32),
+          FilledButton.icon(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.local_florist_rounded),
+            label: const Text('Ver mi jardín'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _celebrationRow(String emoji, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 18)),
+        const SizedBox(width: 12),
+        Expanded(child: Text(text)),
+      ],
     );
   }
 

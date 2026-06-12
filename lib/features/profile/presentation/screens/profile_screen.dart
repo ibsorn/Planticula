@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:planticula/core/constants/app_constants.dart';
+import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/core/theme/theme_cubit.dart';
+import 'package:planticula/shared/widgets/stat_card.dart';
 import 'package:planticula/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
 
@@ -14,8 +17,7 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil'),
-        centerTitle: true,
+        title: const Text('Perfil 👤'),
       ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
@@ -40,6 +42,10 @@ class ProfileScreen extends StatelessWidget {
 
               // Statistics section
               _buildStatisticsCard(context),
+              const SizedBox(height: 16),
+
+              // Tools section (guides + soil analysis)
+              _buildToolsCard(context),
               const SizedBox(height: 16),
 
               // Theme toggle section
@@ -110,8 +116,38 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildStatisticsCard(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    return BlocBuilder<PlantsBloc, PlantsState>(
+      builder: (context, state) {
+        final totalPlants = state.plants.length;
+        final plantsNeedingWater = state.plantsNeedingWater.length;
 
+        return Row(
+          children: [
+            Expanded(
+              child: StatCard(
+                value: totalPlants.toString(),
+                label: 'Plantas',
+                emoji: '🌿',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StatCard(
+                value: plantsNeedingWater.toString(),
+                label: 'Con sed',
+                emoji: '💧',
+                accent: AppColors.water,
+                deep: AppColors.waterDeep,
+                soft: AppColors.waterSoft,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildToolsCard(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -119,81 +155,26 @@ class ProfileScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Estadísticas',
+              'Herramientas 🧰',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 16),
-            BlocBuilder<PlantsBloc, PlantsState>(
-              builder: (context, state) {
-                final totalPlants = state.plants.length;
-                final plantsNeedingWater = state.plantsNeedingWater.length;
-
-                return Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        icon: Icons.local_florist,
-                        value: totalPlants.toString(),
-                        label: 'Plantas',
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        icon: Icons.water_drop,
-                        value: plantsNeedingWater.toString(),
-                        label: 'Necesitan agua',
-                        color: colorScheme.tertiary,
-                      ),
-                    ),
-                  ],
-                );
-              },
+            const SizedBox(height: 8),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Text('📖', style: TextStyle(fontSize: 24)),
+              title: const Text('Guías de cuidado'),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.go(AppConstants.routeGuides),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Text('🔬', style: TextStyle(fontSize: 24)),
+              title: const Text('Análisis de suelo'),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.go(AppConstants.routeSoilAnalysis),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem(
-    BuildContext context, {
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withAlpha(26),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withAlpha(153),
-                ),
-            textAlign: TextAlign.center,
-          ),
-        ],
       ),
     );
   }
