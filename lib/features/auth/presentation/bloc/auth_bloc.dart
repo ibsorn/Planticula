@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:planticula/features/auth/domain/entities/user.dart';
@@ -14,6 +16,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   late final SignInUseCase _signInUseCase;
   late final SignUpUseCase _signUpUseCase;
   late final SignOutUseCase _signOutUseCase;
+  late final StreamSubscription<dynamic> _authSubscription;
 
   AuthBloc(this._authRepository) : super(const AuthState()) {
     _signInUseCase = SignInUseCase(_authRepository);
@@ -31,10 +34,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   void _init() {
-    _authRepository.onAuthStateChanged.listen((user) {
+    _authSubscription = _authRepository.onAuthStateChanged.listen((user) {
       add(AuthUserChanged(user));
     });
     add(AuthCheckRequested());
+  }
+
+  @override
+  Future<void> close() {
+    _authSubscription.cancel();
+    return super.close();
   }
 
   Future<void> _onAuthCheckRequested(

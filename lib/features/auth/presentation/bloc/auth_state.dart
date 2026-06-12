@@ -35,7 +35,7 @@ class AuthState extends Equatable {
       status: status ?? this.status,
       user: user ?? this.user,
       errorMessage: errorMessage ?? this.errorMessage,
-      successMessage: successMessage,
+      successMessage: successMessage ?? this.successMessage,
     );
   }
 

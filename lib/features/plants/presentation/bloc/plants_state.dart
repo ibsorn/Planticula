@@ -52,7 +52,7 @@ class PlantsState extends Equatable {
       status: status ?? this.status,
       operationStatus: operationStatus ?? this.operationStatus,
       plants: plants ?? this.plants,
-      errorMessage: errorMessage,
+      errorMessage: errorMessage ?? this.errorMessage,
       selectedPlant: selectedPlant ?? this.selectedPlant,
     );
   }

@@ -211,11 +211,11 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
 
       // Obtener la planta actual
       final plantResult = await getPlantById(id);
-      if (plantResult is Failure<PlantModel>) {
+      if (plantResult is! Success<PlantModel>) {
         return plantResult;
       }
 
-      final plant = (plantResult as Success<PlantModel>).data;
+      final plant = plantResult.data;
 
       if (plant.wateringFrequency == null || plant.wateringFrequency! <= 0) {
         return const Failure('La planta no tiene configurada frecuencia de riego');

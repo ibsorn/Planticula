@@ -250,14 +250,17 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     PestAlertsAlertSelected event,
     Emitter<PestAlertsState> emit,
   ) {
-    final alert = state.nearbyAlerts.firstWhere(
-      (a) => a.id == event.alertId,
-      orElse: () => state.myAlerts.firstWhere(
-        (a) => a.id == event.alertId,
-        orElse: () => state.nearbyAlerts.first,
-      ),
+    PestAlert? alert = state.nearbyAlerts.cast<PestAlert?>().firstWhere(
+      (a) => a?.id == event.alertId,
+      orElse: () => null,
     );
-    emit(state.copyWith(selectedAlert: alert));
+    alert ??= state.myAlerts.cast<PestAlert?>().firstWhere(
+      (a) => a?.id == event.alertId,
+      orElse: () => null,
+    );
+    if (alert != null) {
+      emit(state.copyWith(selectedAlert: alert));
+    }
   }
 
   Future<void> _onMarkResolved(

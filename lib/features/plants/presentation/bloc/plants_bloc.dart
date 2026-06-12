@@ -265,6 +265,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     PlantSelectRequested event,
     Emitter<PlantsState> emit,
   ) {
+    if (state.plants.isEmpty) return;
     final plant = state.plants.firstWhere(
       (p) => p.id == event.id,
       orElse: () => state.plants.first,

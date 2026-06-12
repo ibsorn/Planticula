@@ -440,7 +440,7 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
       transplantSchedule: [
-        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 0),
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small),
         TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
         TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 18, notes: 'Poda los tallos largos para mantener forma compacta'),
       ],
@@ -691,7 +691,7 @@ class LocalSpeciesCatalog {
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
         TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 0, notes: 'Maceta grande mejora la produccion de frutos'),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, notes: 'Maceta grande mejora la produccion de frutos'),
       ],
       varieties: [
         PlantSpecies(
@@ -709,7 +709,7 @@ class LocalSpeciesCatalog {
           transplantSchedule: [
             TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
             TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
-            TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Maceta mediana es suficiente para esta variedad compacta'),
+            TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Maceta mediana es suficiente para esta variedad compacta'),
           ],
         ),
         PlantSpecies(
@@ -727,7 +727,7 @@ class LocalSpeciesCatalog {
           transplantSchedule: [
             TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
             TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
-            TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 0, notes: 'Requiere maceta grande para desarrollar todo su potencial'),
+            TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, notes: 'Requiere maceta grande para desarrollar todo su potencial'),
           ],
         ),
       ],
@@ -745,7 +745,7 @@ class LocalSpeciesCatalog {
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
         TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Cosecha frecuente, renueva cada temporada'),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Cosecha frecuente, renueva cada temporada'),
       ],
     ),
     PlantSpecies(
@@ -793,7 +793,7 @@ class LocalSpeciesCatalog {
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
         TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Maceta mediana para mejor produccion de frutos'),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Maceta mediana para mejor produccion de frutos'),
       ],
     ),
     PlantSpecies(
@@ -825,7 +825,7 @@ class LocalSpeciesCatalog {
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
         TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Bianual, trasplanta a maceta amplia para mejor desarrollo'),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Bianual, trasplanta a maceta amplia para mejor desarrollo'),
       ],
     ),
     PlantSpecies(
@@ -840,8 +840,8 @@ class LocalSpeciesCatalog {
       ],
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 0),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Cultivo rapido, siembra continua para cosecha constante'),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Cultivo rapido, siembra continua para cosecha constante'),
       ],
     ),
 
@@ -858,8 +858,8 @@ class LocalSpeciesCatalog {
       ],
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 0),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 0, notes: 'Necesita maceta grande para desarrollar bien los frutos'),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, notes: 'Necesita maceta grande para desarrollar bien los frutos'),
       ],
     ),
     PlantSpecies(
@@ -874,8 +874,8 @@ class LocalSpeciesCatalog {
       ],
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 0),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 0, notes: 'Maceta grande necesaria para buena produccion'),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, notes: 'Maceta grande necesaria para buena produccion'),
       ],
     ),
     PlantSpecies(
@@ -891,7 +891,7 @@ class LocalSpeciesCatalog {
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
         TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 0, notes: 'Maceta grande para sostener plantas frondosas'),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, notes: 'Maceta grande para sostener plantas frondosas'),
       ],
     ),
     PlantSpecies(
@@ -906,8 +906,8 @@ class LocalSpeciesCatalog {
       ],
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 0),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Siembra directa preferible, no trasplantes si esta espigando'),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Siembra directa preferible, no trasplantes si esta espigando'),
       ],
     ),
     PlantSpecies(
@@ -970,8 +970,8 @@ class LocalSpeciesCatalog {
       ],
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 0),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Cultivo rapido, siembra continua para cosecha constante'),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Cultivo rapido, siembra continua para cosecha constante'),
       ],
     ),
     PlantSpecies(
@@ -986,8 +986,8 @@ class LocalSpeciesCatalog {
       ],
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 0),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Usa tutor desde el trasplante para facilitar el crecimiento'),
+        TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Usa tutor desde el trasplante para facilitar el crecimiento'),
       ],
     ),
     PlantSpecies(
@@ -1003,7 +1003,7 @@ class LocalSpeciesCatalog {
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
         TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Si siembras en maceta, usa una profunda para el bulbo'),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Si siembras en maceta, usa una profunda para el bulbo'),
       ],
     ),
     PlantSpecies(
@@ -1019,7 +1019,7 @@ class LocalSpeciesCatalog {
       transplantSchedule: [
         TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 1),
         TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Maceta profunda para permitir desarrollo del bulbo'),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Maceta profunda para permitir desarrollo del bulbo'),
       ],
     ),
     PlantSpecies(
@@ -1033,9 +1033,9 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
       ],
       transplantSchedule: [
-        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 0),
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small),
         TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Evita trasplantar, siembra directa en maceta profunda'),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.medium, notes: 'Evita trasplantar, siembra directa en maceta profunda'),
       ],
     ),
 
@@ -1197,9 +1197,9 @@ class LocalSpeciesCatalog {
         GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0, description: 'Planta anual, florece y muere'),
       ],
       transplantSchedule: [
-        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 0),
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small),
         TransplantPhaseInfo(stage: GrowthStage.juvenile, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
-        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 0, notes: 'Siembra directa preferible, evita trasplantar si es posible'),
+        TransplantPhaseInfo(stage: GrowthStage.adult, minPotSize: PotSize.medium, idealPotSize: PotSize.large, notes: 'Siembra directa preferible, evita trasplantar si es posible'),
       ],
     ),
 
