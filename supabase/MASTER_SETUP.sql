@@ -1574,7 +1574,7 @@ VALUES
     '[{"stage":"seedling","min_pot_size":"extra_small","ideal_pot_size":"small","trigger_after_months":2},{"stage":"juvenile","min_pot_size":"small","ideal_pot_size":"large","trigger_after_months":999}]'),
 
 ('local_cannabis_wedding_cake','local_cannabis','Wedding Cake','Cannabis sativa (Wedding Cake)',
-    'Hibrido indica-dominante. THC muy alto. Floracion 7-9 semanas.',
+    'Indica dominante (cruce GSC x Cherry Pie). Muy resinosa y potente. Floracion 9-10 semanas.',
     'cannabis',FALSE, 2,2, 10,12,'full_sun', 18,28,FALSE,TRUE, 0.5,1.5,2,
     '[{"stage":"seedling","duration_months":1},{"stage":"juvenile","duration_months":2},{"stage":"adult","duration_months":0}]',
     '[{"stage":"seedling","min_pot_size":"extra_small","ideal_pot_size":"small","trigger_after_months":2},{"stage":"juvenile","min_pot_size":"small","ideal_pot_size":"large","trigger_after_months":999}]'),
@@ -1601,11 +1601,6 @@ VALUES
 -- Indica / Hibridas indica-dominante
 ('local_cannabis_gsc','local_cannabis','Girl Scout Cookies (GSC)','Cannabis sativa (GSC)',
     'Hibrida indica dominante muy potente. Aromas dulces y terrosos. Floracion 9-10 semanas.',
-    'cannabis',FALSE, 2,2, 6,12,'full_sun', 12,30,FALSE,FALSE, 0.7,1.4,2,
-    '[{"stage":"seedling","duration_months":1},{"stage":"juvenile","duration_months":2},{"stage":"adult","duration_months":0}]',
-    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":1},{"stage":"juvenile","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":1}]'),
-('local_cannabis_wedding_cake','local_cannabis','Wedding Cake','Cannabis sativa (Wedding Cake)',
-    'Indica dominante (cruce GSC x Cherry Pie). Muy resinosa y potente. Floracion 9-10 semanas.',
     'cannabis',FALSE, 2,2, 6,12,'full_sun', 12,30,FALSE,FALSE, 0.7,1.4,2,
     '[{"stage":"seedling","duration_months":1},{"stage":"juvenile","duration_months":2},{"stage":"adult","duration_months":0}]',
     '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":1},{"stage":"juvenile","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":1}]'),
