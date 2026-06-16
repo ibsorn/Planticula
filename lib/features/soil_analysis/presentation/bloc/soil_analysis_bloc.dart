@@ -226,7 +226,11 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
         emit(state.copyWith(
           analyses: analyses,
           selectedAnalysis: analysis.id == state.selectedAnalysis?.id ? analysis : state.selectedAnalysis,
+          lastCreatedAnalysis: analysis,
           operationStatus: OperationStatus.success,
+          // Limpiar imagen seleccionada para volver a la lista
+          selectedImageBytes: null,
+          selectedImageName: null,
         ));
       },
       failure: (message, code, error) {
@@ -245,6 +249,9 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
           analyses: analyses,
           operationStatus: OperationStatus.error,
           errorMessage: message,
+          // Limpiar imagen también en caso de error para volver a la lista
+          selectedImageBytes: null,
+          selectedImageName: null,
         ));
       },
     );

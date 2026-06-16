@@ -41,6 +41,9 @@ class SoilAnalysisState extends Equatable {
   final double progress;
   final String progressMessage;
 
+  // Sentinel to allow copyWith to clear nullable fields to null
+  static const _absent = Object();
+
   const SoilAnalysisState({
     this.status = SoilAnalysisStatus.initial,
     this.imageSelectionStatus = ImageSelectionStatus.initial,
@@ -79,11 +82,11 @@ class SoilAnalysisState extends Equatable {
     ImageSelectionStatus? imageSelectionStatus,
     OperationStatus? operationStatus,
     List<SoilAnalysis>? analyses,
-    String? errorMessage,
+    Object? errorMessage = _absent,
     SoilAnalysis? selectedAnalysis,
     SoilAnalysis? lastCreatedAnalysis,
-    Uint8List? selectedImageBytes,
-    String? selectedImageName,
+    Object? selectedImageBytes = _absent,
+    Object? selectedImageName = _absent,
     double? progress,
     String? progressMessage,
   }) {
@@ -92,11 +95,11 @@ class SoilAnalysisState extends Equatable {
       imageSelectionStatus: imageSelectionStatus ?? this.imageSelectionStatus,
       operationStatus: operationStatus ?? this.operationStatus,
       analyses: analyses ?? this.analyses,
-      errorMessage: errorMessage,
+      errorMessage: errorMessage == _absent ? this.errorMessage : errorMessage as String?,
       selectedAnalysis: selectedAnalysis ?? this.selectedAnalysis,
       lastCreatedAnalysis: lastCreatedAnalysis ?? this.lastCreatedAnalysis,
-      selectedImageBytes: selectedImageBytes ?? this.selectedImageBytes,
-      selectedImageName: selectedImageName ?? this.selectedImageName,
+      selectedImageBytes: selectedImageBytes == _absent ? this.selectedImageBytes : selectedImageBytes as Uint8List?,
+      selectedImageName: selectedImageName == _absent ? this.selectedImageName : selectedImageName as String?,
       progress: progress ?? this.progress,
       progressMessage: progressMessage ?? this.progressMessage,
     );

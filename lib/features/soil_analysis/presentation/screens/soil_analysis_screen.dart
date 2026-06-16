@@ -91,8 +91,12 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
         title: const Text('Análisis de Sustrato'),
       ),
       body: BlocConsumer<SoilAnalysisBloc, SoilAnalysisState>(
+        listenWhen: (previous, current) =>
+            previous.operationStatus != current.operationStatus ||
+            previous.errorMessage != current.errorMessage,
         listener: (context, state) {
-          if (state.errorMessage != null && !state.isLoading) {
+          if (state.errorMessage != null &&
+              state.operationStatus == OperationStatus.error) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.errorMessage!),
@@ -103,17 +107,22 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
           }
 
           if (state.isOperationSuccess && state.lastCreatedAnalysis != null) {
-            final completed = state.lastCreatedAnalysis!.isCompleted;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  completed
-                      ? '¡Análisis completado!'
-                      : 'Imagen subida correctamente',
+            final analysis = state.lastCreatedAnalysis!;
+            if (analysis.isCompleted) {
+              // Navegar directamente al detalle del análisis
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AnalysisDetailScreen(analysis: analysis),
                 ),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Imagen subida correctamente'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
           }
         },
         builder: (context, state) {
