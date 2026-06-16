@@ -48,6 +48,17 @@ class ToolsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppDimens.md),
                 _ToolCard(
+                  icon: Icons.bug_report_outlined,
+                  title: 'Diagnóstico de Plantas',
+                  description:
+                      'Fotografía hojas, tallos o raíces afectadas y la IA identificará plagas, enfermedades o carencias con remedios caseros.',
+                  accent: AppColors.pest,
+                  deep: AppColors.pestDeep,
+                  soft: AppColors.pestSoft,
+                  onTap: () => context.go(AppConstants.routePlantDisease),
+                ),
+                const SizedBox(height: AppDimens.md),
+                _ToolCard(
                   icon: Icons.menu_book_outlined,
                   title: 'Guías de Cuidado',
                   description:

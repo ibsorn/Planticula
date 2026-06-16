@@ -69,6 +69,7 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
 
     context.read<SoilAnalysisBloc>().add(SoilAnalysisUploadRequested(
           plantId: widget.plantId,
+          triggerAnalysis: true,
         ));
   }
 
@@ -99,10 +100,26 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
             );
           }
 
-          if (state.isOperationSuccess && state.lastCreatedAnalysis != null) {
+          if (state.isAnalyzing) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Imagen subida correctamente'),
+                content: Text('Analizando sustrato con IA...'),
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 30),
+              ),
+            );
+          }
+
+          if (state.isOperationSuccess && state.lastCreatedAnalysis != null) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            final completed = state.lastCreatedAnalysis!.isCompleted;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  completed
+                      ? '¡Análisis completado!'
+                      : 'Imagen subida correctamente',
+                ),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -208,9 +225,14 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
                 ),
                 const SizedBox(height: 16),
                 AppButton(
-                  text: 'Subir Imagen',
-                  onPressed: () => _onUpload(state.selectedImageBytes),
-                  isLoading: state.isUploading,
+                  text: state.isAnalyzing
+                      ? 'Analizando con IA...'
+                      : 'Analizar con IA',
+                  onPressed: (state.isUploading || state.isAnalyzing)
+                      ? null
+                      : () => _onUpload(state.selectedImageBytes),
+                  isLoading: state.isUploading || state.isAnalyzing,
+                  icon: Icons.science_outlined,
                 ),
                 const SizedBox(height: 8),
                 TextButton(

@@ -22,6 +22,9 @@ import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.
 import 'package:planticula/features/profile/presentation/screens/profile_screen.dart';
 import 'package:planticula/features/guides/presentation/screens/guides_screen.dart';
 import 'package:planticula/features/tools/presentation/screens/tools_screen.dart';
+import 'package:planticula/features/plant_disease/presentation/screens/plant_disease_screen.dart';
+import 'package:planticula/features/plant_disease/presentation/screens/diagnosis_result_screen.dart';
+import 'package:planticula/features/plant_disease/domain/entities/plant_disease_diagnosis.dart';
 
 /// Notifier that GoRouter listens to for auth state changes.
 /// When auth changes, the router re-evaluates its redirect logic
@@ -159,6 +162,11 @@ class AppRouter {
               path: AppConstants.routeGuides,
               builder: (context, state) => const GuidesScreen(),
             ),
+            // Plant Disease Diagnosis
+            GoRoute(
+              path: AppConstants.routePlantDisease,
+              builder: (context, state) => const PlantDiseaseScreen(),
+            ),
             // Profile
             GoRoute(
               path: AppConstants.routeProfile,
@@ -170,6 +178,13 @@ class AppRouter {
         GoRoute(
           path: AppConstants.routeReportPest,
           builder: (context, state) => const ReportPestScreen(),
+        ),
+        GoRoute(
+          path: AppConstants.routePlantDiagnosisResult,
+          builder: (context, state) {
+            final diagnosis = state.extra as PlantDiseaseDiagnosis;
+            return DiagnosisResultScreen(diagnosis: diagnosis);
+          },
         ),
         GoRoute(
           path: AppConstants.routeCreateListing,

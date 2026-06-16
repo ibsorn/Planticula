@@ -59,7 +59,8 @@ class MainScaffold extends StatelessWidget {
     // Tab 1 – Herramientas
     if (route.startsWith(AppConstants.routeTools) ||
         route.startsWith(AppConstants.routeSoilAnalysis) ||
-        route.startsWith(AppConstants.routeGuides)) {
+        route.startsWith(AppConstants.routeGuides) ||
+        route.startsWith(AppConstants.routePlantDisease)) {
       return 1;
     }
     // Tab 2 – Comunidad

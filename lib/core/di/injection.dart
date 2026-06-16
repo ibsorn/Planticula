@@ -30,6 +30,11 @@ import 'package:planticula/features/marketplace/data/datasources/marketplace_rem
 import 'package:planticula/features/marketplace/data/repositories/marketplace_repository_impl.dart';
 import 'package:planticula/features/marketplace/domain/repositories/marketplace_repository.dart';
 import 'package:planticula/features/marketplace/presentation/bloc/marketplace_bloc.dart';
+import 'package:planticula/features/plant_disease/data/datasources/plant_disease_datasource.dart';
+import 'package:planticula/features/plant_disease/data/datasources/plant_disease_datasource_impl.dart';
+import 'package:planticula/features/plant_disease/data/repositories/plant_disease_repository_impl.dart';
+import 'package:planticula/features/plant_disease/domain/repositories/plant_disease_repository.dart';
+import 'package:planticula/features/plant_disease/presentation/bloc/plant_disease_bloc.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -112,4 +117,17 @@ Future<void> initDependencies() async {
 
   // Marketplace - Presentation Layer
   sl.registerFactory<MarketplaceBloc>(() => MarketplaceBloc(sl()));
+
+  // Plant Disease - Data Layer
+  sl.registerLazySingleton<PlantDiseaseDatasource>(
+    () => PlantDiseaseDatasourceImpl(sl()),
+  );
+
+  // Plant Disease - Repository Layer
+  sl.registerLazySingleton<PlantDiseaseRepository>(
+    () => PlantDiseaseRepositoryImpl(sl()),
+  );
+
+  // Plant Disease - Presentation Layer
+  sl.registerFactory<PlantDiseaseBloc>(() => PlantDiseaseBloc(sl()));
 }

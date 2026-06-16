@@ -24,6 +24,8 @@ class AppConstants {
   static const String routeSoilAnalysis = '/soil-analysis';
   static const String routeSoilAnalysisDetail = '/soil-analysis/:id';
   static const String routeGuides = '/guides';
+  static const String routePlantDisease = '/plant-disease';
+  static const String routePlantDiagnosisResult = '/plant-disease/result';
 
   // Storage Keys
   static const String keyThemeMode = 'theme_mode';

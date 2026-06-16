@@ -83,6 +83,7 @@ DROP TABLE IF EXISTS public.pest_alerts CASCADE;
 DROP TABLE IF EXISTS marketplace_favorites CASCADE;
 DROP TABLE IF EXISTS marketplace_listings CASCADE;
 DROP TABLE IF EXISTS soil_analyses CASCADE;
+DROP TABLE IF EXISTS plant_disease_diagnoses CASCADE;
 DROP TABLE IF EXISTS plants CASCADE;
 DROP TABLE IF EXISTS species_catalog CASCADE;
 
@@ -747,7 +748,78 @@ $$;
 
 
 -- ============================================================================
--- SECCIÓN 7: PEST ALERTS
+-- SECCIÓN 7: PLANT DISEASE DIAGNOSES
+-- ============================================================================
+-- Tabla para diagnósticos de enfermedades/plagas generados por IA.
+-- El análisis se realiza en cliente (OpenRouter) y los resultados
+-- se persisten aquí.  Los remedios se almacenan como JSONB.
+
+CREATE TABLE IF NOT EXISTS plant_disease_diagnoses (
+    id               UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id          UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    plant_id         UUID REFERENCES plants(id) ON DELETE SET NULL,
+
+    -- Image stored in 'disease-photos' bucket
+    image_url        TEXT NOT NULL,
+    thumbnail_url    TEXT,
+
+    -- Diagnosis status
+    status           TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'analyzing', 'completed', 'error')),
+    analyzed_at      TIMESTAMPTZ,
+
+    -- AI results
+    diagnosis_type   TEXT
+        CHECK (diagnosis_type IS NULL OR diagnosis_type IN (
+            'pest', 'disease', 'deficiency', 'environmentalStress', 'healthy', 'unknown'
+        )),
+    problem_name     TEXT,
+    scientific_name  TEXT,
+    severity         TEXT
+        CHECK (severity IS NULL OR severity IN ('low', 'medium', 'high', 'critical')),
+    confidence_score DOUBLE PRECISION CHECK (confidence_score IS NULL OR (confidence_score >= 0 AND confidence_score <= 1)),
+
+    description      TEXT,
+    remedies         JSONB NOT NULL DEFAULT '[]'::jsonb,
+    prevention_tips  TEXT,
+    analysis_notes   TEXT,
+
+    -- Metadata
+    created_at       TIMESTAMPTZ DEFAULT NOW(),
+    updated_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_disease_diagnoses_user_id    ON plant_disease_diagnoses(user_id);
+CREATE INDEX IF NOT EXISTS idx_disease_diagnoses_plant_id   ON plant_disease_diagnoses(plant_id);
+CREATE INDEX IF NOT EXISTS idx_disease_diagnoses_status     ON plant_disease_diagnoses(status);
+CREATE INDEX IF NOT EXISTS idx_disease_diagnoses_created_at ON plant_disease_diagnoses(created_at DESC);
+
+-- RLS
+ALTER TABLE plant_disease_diagnoses ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read own diagnoses"   ON plant_disease_diagnoses;
+DROP POLICY IF EXISTS "Users can insert own diagnoses" ON plant_disease_diagnoses;
+DROP POLICY IF EXISTS "Users can update own diagnoses" ON plant_disease_diagnoses;
+DROP POLICY IF EXISTS "Users can delete own diagnoses" ON plant_disease_diagnoses;
+
+CREATE POLICY "Users can read own diagnoses" ON plant_disease_diagnoses
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own diagnoses" ON plant_disease_diagnoses
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own diagnoses" ON plant_disease_diagnoses
+    FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete own diagnoses" ON plant_disease_diagnoses
+    FOR DELETE USING (auth.uid() = user_id);
+
+DROP TRIGGER IF EXISTS update_plant_disease_diagnoses_updated_at ON plant_disease_diagnoses;
+CREATE TRIGGER update_plant_disease_diagnoses_updated_at
+    BEFORE UPDATE ON plant_disease_diagnoses
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+
+-- ============================================================================
+-- SECCIÓN 8: PEST ALERTS
 -- ============================================================================
 
 -- [FIX-5] lat/lon como DOUBLE PRECISION (igual que marketplace, más simple)
@@ -1007,7 +1079,8 @@ VALUES
     ('plant-images',       'plant-images',       TRUE),
     ('soil-images',        'soil-images',        TRUE),
     ('pest-photos',        'pest-photos',        TRUE),
-    ('marketplace-photos', 'marketplace-photos', TRUE)
+    ('marketplace-photos', 'marketplace-photos', TRUE),
+    ('disease-photos',     'disease-photos',     TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- ---- plant-images ----
@@ -1069,6 +1142,21 @@ CREATE POLICY "Users update own marketplace photos" ON storage.objects
     FOR UPDATE USING (bucket_id = 'marketplace-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
 CREATE POLICY "Users delete own marketplace photos" ON storage.objects
     FOR DELETE USING (bucket_id = 'marketplace-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ---- disease-photos ----
+DROP POLICY IF EXISTS "Public read disease photos"       ON storage.objects;
+DROP POLICY IF EXISTS "Auth users upload disease photos" ON storage.objects;
+DROP POLICY IF EXISTS "Users update own disease photos"  ON storage.objects;
+DROP POLICY IF EXISTS "Users delete own disease photos"  ON storage.objects;
+
+CREATE POLICY "Public read disease photos" ON storage.objects
+    FOR SELECT USING (bucket_id = 'disease-photos');
+CREATE POLICY "Auth users upload disease photos" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'disease-photos' AND auth.role() = 'authenticated');
+CREATE POLICY "Users update own disease photos" ON storage.objects
+    FOR UPDATE USING (bucket_id = 'disease-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Users delete own disease photos" ON storage.objects
+    FOR DELETE USING (bucket_id = 'disease-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
 
 
 -- ============================================================================

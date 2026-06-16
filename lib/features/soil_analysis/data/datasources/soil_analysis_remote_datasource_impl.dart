@@ -1,7 +1,9 @@
 import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/core/network/supabase_client.dart';
+import 'package:planticula/core/services/soil_analysis_ai_service.dart';
 import 'package:planticula/core/utils/logger.dart';
 import 'package:planticula/features/soil_analysis/data/datasources/soil_analysis_remote_datasource.dart';
 import 'package:planticula/features/soil_analysis/data/models/soil_analysis_model.dart';
@@ -276,34 +278,72 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
   @override
   Future<Result<SoilAnalysisModel>> analyzeImage(String analysisId) async {
     try {
-      Logger.d('🔬 Invoking Edge Function for analysis: $analysisId');
+      Logger.d('🔬 Starting AI analysis for: $analysisId');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
       }
 
-      // Actualizar estado a processing
+      // Get the analysis to get the image URL
+      final analysisResult = await getAnalysisById(analysisId);
+      if (analysisResult is Failure<SoilAnalysisModel>) {
+        return analysisResult;
+      }
+      final analysis = (analysisResult as Success<SoilAnalysisModel>).data;
+
+      // Update status to processing
       await _client
           .from(_table)
           .update({'status': 'processing'})
           .eq('id', analysisId)
           .eq('user_id', _userId!);
 
-      // Invocar Edge Function
-      final response = await _client.functions.invoke(
-        'analyze-soil',
-        body: {'analysis_id': analysisId},
-      );
+      // Download the image from the public URL
+      final imageResponse = await http.get(Uri.parse(analysis.imageUrl));
+      if (imageResponse.statusCode != 200) {
+        throw Exception('Failed to download image: ${imageResponse.statusCode}');
+      }
+      final imageBytes = imageResponse.bodyBytes;
 
-      Logger.d('Edge Function response: ${response.data}');
+      // Call the AI service
+      final aiResult = await SoilAnalysisAIService().analyzeFromBytes(imageBytes);
 
-      // Obtener el análisis actualizado
+      if (aiResult.isSuccessful) {
+        // Update the analysis with AI results
+        await _client.from(_table).update({
+          'status': 'completed',
+          'analyzed_at': DateTime.now().toIso8601String(),
+          'soil_type': aiResult.soilType?.name,
+          'ph_level': aiResult.phLevel,
+          'moisture_level': aiResult.moistureLevel?.name,
+          'drainage_quality': aiResult.drainageQuality?.name,
+          'organic_matter': aiResult.organicMatter?.name,
+          'recommendations': aiResult.recommendations,
+          'analysis_notes': aiResult.analysisNotes,
+        }).eq('id', analysisId).eq('user_id', _userId!);
+
+        Logger.i('✅ AI analysis completed for: $analysisId');
+      } else {
+        // Mark as error with AI error message
+        await _client
+            .from(_table)
+            .update({
+              'status': 'error',
+              'analysis_notes': aiResult.errorMessage ?? 'Error en análisis IA',
+            })
+            .eq('id', analysisId)
+            .eq('user_id', _userId!);
+
+        return Failure(aiResult.errorMessage ?? 'Error en análisis IA');
+      }
+
+      // Return the updated analysis
       return await getAnalysisById(analysisId);
     } catch (e, stackTrace) {
-      Logger.e('❌ Error invoking Edge Function for analysis $analysisId',
+      Logger.e('❌ Error in AI analysis for $analysisId',
           error: e, stackTrace: stackTrace);
 
-      // Marcar como error
+      // Mark as error
       await _client
           .from(_table)
           .update({
