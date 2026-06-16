@@ -1,9 +1,12 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:planticula/core/network/supabase_client.dart';
+import 'package:planticula/core/services/ai_provider_config.dart';
 import 'package:planticula/core/services/location_service.dart';
+import 'package:planticula/core/services/plant_disease_ai_service.dart';
 import 'package:planticula/core/services/plant_identification_service.dart';
 import 'package:planticula/core/services/plant_recommendation_service.dart';
+import 'package:planticula/core/services/soil_analysis_ai_service.dart';
 import 'package:planticula/core/services/species_service.dart';
 import 'package:planticula/core/services/weather_service.dart';
 import 'package:planticula/core/theme/theme_cubit.dart';
@@ -53,8 +56,33 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<PlantRecommendationService>(
     () => PlantRecommendationService(),
   );
+
+  // AI provider configs — one singleton per function, resolved from .env at startup
+  sl.registerLazySingleton<AiProviderConfig>(
+    () => AiProviderConfig.plantIdentification(),
+    instanceName: 'plantId',
+  );
+  sl.registerLazySingleton<AiProviderConfig>(
+    () => AiProviderConfig.soilAnalysis(),
+    instanceName: 'soilAi',
+  );
+  sl.registerLazySingleton<AiProviderConfig>(
+    () => AiProviderConfig.plantDisease(),
+    instanceName: 'diseaseAi',
+  );
+
+  // AI services — receive their config by constructor
   sl.registerLazySingleton<PlantIdentificationService>(
-    () => PlantIdentificationService(sl<SpeciesService>()),
+    () => PlantIdentificationService(
+      sl<SpeciesService>(),
+      sl<AiProviderConfig>(instanceName: 'plantId'),
+    ),
+  );
+  sl.registerLazySingleton<SoilAnalysisAIService>(
+    () => SoilAnalysisAIService(sl<AiProviderConfig>(instanceName: 'soilAi')),
+  );
+  sl.registerLazySingleton<PlantDiseaseAIService>(
+    () => PlantDiseaseAIService(sl<AiProviderConfig>(instanceName: 'diseaseAi')),
   );
 
   // Theme
@@ -81,7 +109,7 @@ Future<void> initDependencies() async {
 
   // Soil Analysis - Data Layer
   sl.registerLazySingleton<SoilAnalysisRemoteDataSource>(
-    () => SoilAnalysisRemoteDataSourceImpl(sl()),
+    () => SoilAnalysisRemoteDataSourceImpl(sl(), sl()),
   );
 
   // Soil Analysis - Repository Layer
@@ -125,7 +153,7 @@ Future<void> initDependencies() async {
 
   // Plant Disease - Repository Layer
   sl.registerLazySingleton<PlantDiseaseRepository>(
-    () => PlantDiseaseRepositoryImpl(sl()),
+    () => PlantDiseaseRepositoryImpl(sl(), sl()),
   );
 
   // Plant Disease - Presentation Layer

@@ -157,10 +157,9 @@ class PlantIdentificationResult {
 /// - google/gemini-flash-1.5 (buen balance)
 class PlantIdentificationService {
   final SpeciesService _speciesService;
+  final AiProviderConfig _cfg;
 
-  PlantIdentificationService(this._speciesService);
-
-  AiProviderConfig get _cfg => AiProviderConfig.plantIdentification();
+  PlantIdentificationService(this._speciesService, this._cfg);
 
   /// Identifica una planta desde una imagen usando OpenRouter
   ///

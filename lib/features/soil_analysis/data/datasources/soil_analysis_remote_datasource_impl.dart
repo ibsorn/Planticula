@@ -11,8 +11,9 @@ import 'package:planticula/features/soil_analysis/data/models/soil_analysis_mode
 /// Implementación de SoilAnalysisRemoteDataSource usando Supabase
 class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
   final AppSupabaseClient _client;
+  final SoilAnalysisAIService _aiService;
 
-  SoilAnalysisRemoteDataSourceImpl(this._client);
+  SoilAnalysisRemoteDataSourceImpl(this._client, this._aiService);
 
   String get _table => 'soil_analyses';
   String get _bucket => 'soil-images';
@@ -306,7 +307,7 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
       final imageBytes = imageResponse.bodyBytes;
 
       // Call the AI service
-      final aiResult = await SoilAnalysisAIService().analyzeFromBytes(imageBytes);
+      final aiResult = await _aiService.analyzeFromBytes(imageBytes);
 
       if (aiResult.isSuccessful) {
         // Update the analysis with AI results

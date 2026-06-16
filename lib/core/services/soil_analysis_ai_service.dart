@@ -71,7 +71,9 @@ class SoilAnalysisAIResult {
 /// call to OpenRouter, reusing the same API key and model configuration
 /// already used by [PlantIdentificationService].
 class SoilAnalysisAIService {
-  AiProviderConfig get _cfg => AiProviderConfig.soilAnalysis();
+  final AiProviderConfig _cfg;
+
+  const SoilAnalysisAIService(this._cfg);
 
 
   /// Analyses [imageBytes] and returns a structured [SoilAnalysisAIResult].

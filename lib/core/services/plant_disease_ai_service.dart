@@ -79,7 +79,9 @@ class PlantDiseaseAIResult {
 ///
 /// The AI is instructed to prioritise homemade remedies over commercial products.
 class PlantDiseaseAIService {
-  AiProviderConfig get _cfg => AiProviderConfig.plantDisease();
+  final AiProviderConfig _cfg;
+
+  const PlantDiseaseAIService(this._cfg);
 
 
   /// Analyses [imageBytes] for plant health problems.

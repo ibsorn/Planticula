@@ -9,8 +9,9 @@ import 'package:planticula/features/plant_disease/domain/repositories/plant_dise
 
 class PlantDiseaseRepositoryImpl implements PlantDiseaseRepository {
   final PlantDiseaseDatasource _datasource;
+  final PlantDiseaseAIService _aiService;
 
-  PlantDiseaseRepositoryImpl(this._datasource);
+  PlantDiseaseRepositoryImpl(this._datasource, this._aiService);
 
   @override
   Future<Result<List<PlantDiseaseDiagnosis>>> getDiagnoses() async {
@@ -53,8 +54,7 @@ class PlantDiseaseRepositoryImpl implements PlantDiseaseRepository {
       final httpResponse = await http.get(Uri.parse(imageUrl));
       final downloadedBytes = httpResponse.bodyBytes;
 
-      final aiService = PlantDiseaseAIService();
-      final aiResult = await aiService.analyzeFromBytes(downloadedBytes);
+      final aiResult = await _aiService.analyzeFromBytes(downloadedBytes);
 
       if (aiResult.isSuccessful) {
         final updated = created.withResults(
