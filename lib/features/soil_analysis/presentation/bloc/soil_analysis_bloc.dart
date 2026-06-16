@@ -173,24 +173,39 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
     result.when(
       success: (analysis) {
         final analyses = [analysis, ...state.analyses];
-        emit(state.copyWith(
-          analyses: analyses,
-          status: SoilAnalysisStatus.loaded,
-          operationStatus: event.triggerAnalysis
-              ? OperationStatus.analyzing
-              : OperationStatus.success,
-          lastCreatedAnalysis: analysis,
-        ));
 
-        // Si se solicitó análisis automático, esperar resultado
         if (event.triggerAnalysis) {
+          // El análisis IA se lanzará a continuación: mantener imagen visible
+          // durante el progreso; _onRequestAnalysis la limpiará al terminar.
+          emit(state.copyWith(
+            analyses: analyses,
+            status: SoilAnalysisStatus.loaded,
+            operationStatus: OperationStatus.analyzing,
+            lastCreatedAnalysis: analysis,
+          ));
           add(SoilAnalysisRequestAnalysis(analysis.id));
+        } else {
+          // Solo subida: limpiar imagen y volver a la lista.
+          emit(state.copyWith(
+            analyses: analyses,
+            status: SoilAnalysisStatus.loaded,
+            operationStatus: OperationStatus.success,
+            lastCreatedAnalysis: analysis,
+            selectedImageBytes: null,
+            selectedImageName: null,
+            imageSelectionStatus: ImageSelectionStatus.initial,
+          ));
         }
       },
       failure: (message, code, error) {
+        // En caso de error limpiar también la imagen para no dejar al usuario
+        // bloqueado en el preview sin poder cancelar.
         emit(state.copyWith(
           operationStatus: OperationStatus.error,
           errorMessage: message,
+          selectedImageBytes: null,
+          selectedImageName: null,
+          imageSelectionStatus: ImageSelectionStatus.initial,
         ));
       },
     );
@@ -301,6 +316,14 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
     SoilAnalysisClearError event,
     Emitter<SoilAnalysisState> emit,
   ) {
-    emit(state.copyWith());
+    emit(state.copyWith(
+      // Limpiar imagen seleccionada (permite cancelar el preview)
+      selectedImageBytes: null,
+      selectedImageName: null,
+      imageSelectionStatus: ImageSelectionStatus.initial,
+      // Limpiar error y resetear operationStatus
+      errorMessage: null,
+      operationStatus: OperationStatus.initial,
+    ));
   }
 }
