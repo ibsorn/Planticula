@@ -17,9 +17,11 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     on<PlantUpdateRequested>(_onUpdateRequested);
     on<PlantDeleteRequested>(_onDeleteRequested);
     on<PlantWaterRequested>(_onWaterRequested);
+    on<PlantWaterOnDateRequested>(_onWaterOnDateRequested);
     on<PlantTransplantRequested>(_onTransplantRequested);
     on<PlantSelectRequested>(_onSelectRequested);
     on<PlantsClearError>(_onClearError);
+    on<PlantClearLastWateringRequested>(_onClearLastWateringRequested);
   }
 
   Future<void> _onLoadRequested(
@@ -113,6 +115,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
 
     final result = await _repository.createPlant(
       name: event.name,
+      customName: event.customName,
       scientificName: event.scientificName,
       speciesId: event.speciesId,
       speciesCategory: event.speciesCategory,
@@ -235,6 +238,36 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     );
   }
 
+  Future<void> _onWaterOnDateRequested(
+    PlantWaterOnDateRequested event,
+    Emitter<PlantsState> emit,
+  ) async {
+    emit(state.copyWith(
+      operationStatus: PlantsOperationStatus.loading,
+    ));
+
+    final result = await _repository.waterPlantWithDate(event.id, event.daysAgo);
+
+    result.when(
+      success: (plant) {
+        final plants = state.plants
+            .map((p) => p.id == plant.id ? plant : p)
+            .toList();
+        emit(state.copyWith(
+          plants: plants,
+          selectedPlant: plant.id == state.selectedPlant?.id ? plant : state.selectedPlant,
+          operationStatus: PlantsOperationStatus.success,
+        ));
+      },
+      failure: (message, code, error) {
+        emit(state.copyWith(
+          operationStatus: PlantsOperationStatus.error,
+          errorMessage: message,
+        ));
+      },
+    );
+  }
+
   Future<void> _onTransplantRequested(
     PlantTransplantRequested event,
     Emitter<PlantsState> emit,
@@ -282,5 +315,44 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     Emitter<PlantsState> emit,
   ) {
     emit(const PlantsState());
+  }
+
+  Future<void> _onClearLastWateringRequested(
+    PlantClearLastWateringRequested event,
+    Emitter<PlantsState> emit,
+  ) async {
+    emit(state.copyWith(
+      operationStatus: PlantsOperationStatus.loading,
+    ));
+
+    // Buscar la planta actual en el estado
+    final plant = state.plants.firstWhere(
+      (p) => p.id == event.id,
+      orElse: () => state.selectedPlant!,
+    );
+
+    // Crear copia con lastWatered = null
+    final updatedPlant = plant.copyWith(lastWatered: null);
+
+    final result = await _repository.updatePlant(updatedPlant);
+
+    result.when(
+      success: (p) {
+        final plants = state.plants
+            .map((pl) => pl.id == p.id ? p : pl)
+            .toList();
+        emit(state.copyWith(
+          plants: plants,
+          selectedPlant: p.id == state.selectedPlant?.id ? p : state.selectedPlant,
+          operationStatus: PlantsOperationStatus.success,
+        ));
+      },
+      failure: (message, code, error) {
+        emit(state.copyWith(
+          operationStatus: PlantsOperationStatus.error,
+          errorMessage: message,
+        ));
+      },
+    );
   }
 }

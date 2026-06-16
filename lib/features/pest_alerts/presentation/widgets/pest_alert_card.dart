@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/features/pest_alerts/domain/entities/pest_alert.dart';
-import 'package:planticula/features/pest_alerts/presentation/widgets/severity_badge.dart';
 import 'package:planticula/shared/widgets/app_badge.dart';
 import 'package:planticula/shared/widgets/domain_chip.dart';
 
@@ -54,7 +53,10 @@ class PestAlertCard extends StatelessWidget {
                 Positioned(
                   top: 8,
                   left: 8,
-                  child: SeverityBadge(severity: alert.severity),
+                  child: AppBadge(
+                    label: alert.severity.displayName,
+                    color: Color(alert.severity.colorValue),
+                  ),
                 ),
                 // Badge de distancia
                 if (showDistance && alert.distanceDisplay != null)

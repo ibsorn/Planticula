@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planticula/features/pest_alerts/domain/entities/pest_alert.dart';
 import 'package:planticula/features/pest_alerts/presentation/bloc/pest_alerts_bloc.dart';
+import 'package:planticula/shared/widgets/app_bottom_sheet.dart';
 import 'package:planticula/shared/widgets/app_button.dart';
 
 class ReportPestScreen extends StatefulWidget {
@@ -89,31 +90,29 @@ class _ReportPestScreenState extends State<ReportPestScreen> {
   }
 
   void _showImageSourceDialog() {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Galería'),
-              onTap: () {
-                Navigator.pop(context);
-                context.read<PestAlertsBloc>().add(PestAlertsPhotoPickRequested());
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Cámara'),
-              onTap: () {
-                Navigator.pop(context);
-                context.read<PestAlertsBloc>().add(PestAlertsPhotoCaptureRequested());
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
+      title: 'Añadir foto',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.photo_library),
+            title: const Text('Galería'),
+            onTap: () {
+              Navigator.pop(context);
+              context.read<PestAlertsBloc>().add(PestAlertsPhotoPickRequested());
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.camera_alt),
+            title: const Text('Cámara'),
+            onTap: () {
+              Navigator.pop(context);
+              context.read<PestAlertsBloc>().add(PestAlertsPhotoCaptureRequested());
+            },
+          ),
+        ],
       ),
     );
   }

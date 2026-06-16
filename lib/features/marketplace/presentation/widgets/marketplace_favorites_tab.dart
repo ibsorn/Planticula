@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:planticula/features/marketplace/presentation/bloc/marketplace_bloc.dart';
-import 'package:planticula/features/marketplace/presentation/widgets/marketplace_empty_message.dart';
+import 'package:planticula/shared/widgets/empty_state.dart';
 import 'package:planticula/features/marketplace/presentation/widgets/marketplace_listing_card.dart';
 
 class MarketplaceFavoritesTab extends StatelessWidget {
@@ -16,10 +16,10 @@ class MarketplaceFavoritesTab extends StatelessWidget {
         }
 
         if (state.favoritesStatus == MarketplaceStatus.empty) {
-          return const MarketplaceEmptyMessage(
+          return const EmptyState(
             icon: Icons.favorite_border,
             title: 'Sin favoritos',
-            subtitle: 'Guarda los anuncios que te interesen',
+            message: 'Guarda los anuncios que te interesen',
           );
         }
 

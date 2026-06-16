@@ -148,9 +148,87 @@ class _TodayScreenState extends State<TodayScreen> {
     setState(() => _wateredNow.add(plant.id));
     context.read<PlantsBloc>().add(PlantWaterRequested(plant.id));
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('¡${plant.name} regada! 💧')),
+      SnackBar(content: Text('¡${plant.displayName} regada! 💧')),
     );
     _celebrateIfAllDone();
+  }
+
+  void _waterPlantWithDate(Plant plant, int daysAgo) {
+    setState(() => _wateredNow.add(plant.id));
+    context.read<PlantsBloc>().add(
+      PlantWaterOnDateRequested(id: plant.id, daysAgo: daysAgo),
+    );
+    final message = daysAgo == 0
+        ? '¡${plant.displayName} regada hoy! 💧'
+        : daysAgo == 1
+            ? 'Riego registrado: ayer 💧'
+            : 'Riego registrado: hace $daysAgo días 💧';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+    _celebrateIfAllDone();
+  }
+
+  void _showWaterOptions(Plant plant) {
+    final options = [
+      (days: 0, label: 'Hoy', icon: Icons.today_rounded),
+      (days: 1, label: 'Ayer', icon: Icons.calendar_today_outlined),
+      (days: 2, label: 'Anteayer', icon: Icons.calendar_today_outlined),
+      (days: 3, label: 'Hace 3 dias', icon: Icons.calendar_today_outlined),
+      (days: 5, label: 'Hace 5 dias', icon: Icons.calendar_today_outlined),
+      (days: 7, label: 'Hace 1 semana', icon: Icons.calendar_today_outlined),
+      (days: 14, label: 'Hace 2 semanas', icon: Icons.calendar_today_outlined),
+      (days: 30, label: 'Hace 1 mes', icon: Icons.calendar_today_outlined),
+    ];
+    final theme = Theme.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.75,
+      ),
+      builder: (sheetContext) => ListView(
+        shrinkWrap: true,
+        padding: const EdgeInsets.fromLTRB(
+          AppDimens.lg,
+          0,
+          AppDimens.lg,
+          AppDimens.lg,
+        ),
+        children: [
+          Text(
+            'Cuando se rego ${plant.displayName}?',
+            style: theme.textTheme.titleLarge,
+          ),
+          const SizedBox(height: AppDimens.xs),
+          Text(
+            'Asi calculamos el proximo riego desde la fecha real.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppDimens.md),
+          for (final option in options)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                option.icon,
+                color: option.days == 0
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+              title: Text(option.label),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _waterPlantWithDate(plant, option.days);
+              },
+            ),
+        ],
+      ),
+    );
   }
 
   void _transplantPlant(Plant plant, TransplantRecommendation rec) {
@@ -302,10 +380,11 @@ class _TodayScreenState extends State<TodayScreen> {
             padding: const EdgeInsets.only(bottom: AppDimens.sm),
             child: TaskTile.water(
               emoji: '💧',
-              title: 'Regar ${plant.name}',
+              title: 'Regar ${plant.displayName}',
               subtitle: _waterAmountFor(plant),
               onCheck: () => _waterPlant(plant),
               onTap: () => _openPlant(plant),
+              onLongPress: () => _showWaterOptions(plant),
             ),
           ),
         for (final (plant, rec) in transplantToday)
@@ -313,7 +392,7 @@ class _TodayScreenState extends State<TodayScreen> {
             padding: const EdgeInsets.only(bottom: AppDimens.sm),
             child: TaskTile.transplant(
               emoji: '🪴',
-              title: 'Trasplantar ${plant.name}',
+              title: 'Trasplantar ${plant.displayName}',
               subtitle:
                   '${rec.currentPotSize?.displayName ?? ''} → ${rec.recommendedPotSize?.displayName ?? ''}',
               onCheck: () => _transplantPlant(plant, rec),

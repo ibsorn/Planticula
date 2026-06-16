@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.dart';
 import 'package:planticula/features/soil_analysis/presentation/bloc/soil_analysis_bloc.dart';
 import 'package:planticula/features/soil_analysis/presentation/screens/analysis_detail_screen.dart';
+import 'package:planticula/shared/widgets/app_bottom_sheet.dart';
 import 'package:planticula/shared/widgets/app_button.dart';
+import 'package:planticula/shared/widgets/empty_state.dart';
 
 class SoilAnalysisScreen extends StatefulWidget {
   final String? plantId; // Opcional - si viene de una planta específica
@@ -29,37 +31,35 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
   }
 
   void _showImageSourceDialog() {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Galería'),
-              subtitle: const Text('Seleccionar imagen existente'),
-              onTap: () {
-                Navigator.pop(context);
-                context
-                    .read<SoilAnalysisBloc>()
-                    .add(SoilAnalysisImagePickRequested());
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Cámara'),
-              subtitle: const Text('Tomar foto nueva'),
-              onTap: () {
-                Navigator.pop(context);
-                context
-                    .read<SoilAnalysisBloc>()
-                    .add(SoilAnalysisImageCaptureRequested());
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
+      title: 'Añadir imagen',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.photo_library),
+            title: const Text('Galería'),
+            subtitle: const Text('Seleccionar imagen existente'),
+            onTap: () {
+              Navigator.pop(context);
+              context
+                  .read<SoilAnalysisBloc>()
+                  .add(SoilAnalysisImagePickRequested());
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.camera_alt),
+            title: const Text('Cámara'),
+            subtitle: const Text('Tomar foto nueva'),
+            onTap: () {
+              Navigator.pop(context);
+              context
+                  .read<SoilAnalysisBloc>()
+                  .add(SoilAnalysisImageCaptureRequested());
+            },
+          ),
+        ],
       ),
     );
   }
@@ -138,71 +138,21 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
   }
 
   Widget _buildErrorState(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                context.read<SoilAnalysisBloc>().add(SoilAnalysisLoadRequested());
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-            ),
-          ],
-        ),
-      ),
+    return EmptyState.error(
+      message: message,
+      onRetry: () =>
+          context.read<SoilAnalysisBloc>().add(SoilAnalysisLoadRequested()),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.science_outlined,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Sin análisis de sustrato',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Toma una foto del sustrato de tu planta para analizarlo',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _showImageSourceDialog,
-              icon: const Icon(Icons.add_a_photo),
-              label: const Text('Tomar Foto'),
-            ),
-          ],
-        ),
-      ),
+    return EmptyState(
+      icon: Icons.science_outlined,
+      title: 'Sin análisis de sustrato',
+      message: 'Toma una foto del sustrato de tu planta para analizarlo',
+      actionLabel: 'Tomar Foto',
+      actionIcon: Icons.add_a_photo,
+      onAction: _showImageSourceDialog,
     );
   }
 

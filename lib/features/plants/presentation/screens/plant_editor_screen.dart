@@ -1,0 +1,738 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
+import 'package:planticula/core/data/species/plant_species.dart';
+import 'package:planticula/core/services/location_service.dart';
+import 'package:planticula/core/services/plant_identification_service.dart';
+import 'package:planticula/core/services/plant_recommendation_service.dart';
+import 'package:planticula/core/services/species_service.dart';
+import 'package:planticula/core/services/watering_calculator.dart';
+import 'package:planticula/core/services/weather_service.dart';
+import 'package:planticula/core/theme/app_colors.dart';
+import 'package:planticula/core/theme/app_dimens.dart';
+import 'package:planticula/features/plants/domain/entities/plant.dart';
+import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
+import 'package:planticula/features/plants/presentation/widgets/confidence_indicator.dart';
+import 'package:planticula/features/plants/presentation/widgets/environment_selector.dart';
+import 'package:planticula/features/plants/presentation/widgets/growth_stage_selector.dart';
+import 'package:planticula/features/plants/presentation/widgets/pot_size_selector.dart';
+import 'package:planticula/features/plants/presentation/widgets/watering_recommendation_card.dart';
+
+/// Modos de operación del editor
+enum PlantEditorMode {
+  /// Creación manual - sin datos predefinidos
+  manual,
+
+  /// Creación con IA - datos sugeridos con confianza
+  aiAssisted,
+
+  /// Edición de planta existente
+  edit,
+}
+
+/// Pantalla unificada para crear/editar plantas
+///
+/// Soporta 3 modos:
+/// - [manual]: Creación desde cero, todos los valores por defecto
+/// - [aiAssisted]: Creación con datos sugeridos por IA, muestra confianza
+/// - [edit]: Edición de planta existente, carga datos actuales
+///
+/// Diseño consistente en todos los modos, solo cambia el origen de los datos.
+class PlantEditorScreen extends StatefulWidget {
+  /// Modo de operación
+  final PlantEditorMode mode;
+
+  /// Planta existente (solo para modo edit)
+  final Plant? existingPlant;
+
+  /// Resultado de identificación IA (solo para modo aiAssisted)
+  final PlantIdentificationResult? identificationResult;
+
+  /// Imagen capturada (solo para modo aiAssisted)
+  final File? imageFile;
+
+  const PlantEditorScreen({
+    super.key,
+    required this.mode,
+    this.existingPlant,
+    this.identificationResult,
+    this.imageFile,
+  }) : assert(
+          mode != PlantEditorMode.edit || existingPlant != null,
+          'existingPlant is required for edit mode',
+        ),
+       assert(
+          mode != PlantEditorMode.aiAssisted ||
+              (identificationResult != null && imageFile != null),
+          'identificationResult and imageFile are required for aiAssisted mode',
+        );
+
+  /// Factory constructor para modo manual
+  const PlantEditorScreen.manual({super.key})
+      : mode = PlantEditorMode.manual,
+        existingPlant = null,
+        identificationResult = null,
+        imageFile = null;
+
+  /// Factory constructor para modo IA
+  const PlantEditorScreen.aiAssisted({
+    super.key,
+    required PlantIdentificationResult this.identificationResult,
+    required File this.imageFile,
+  })  : mode = PlantEditorMode.aiAssisted,
+        existingPlant = null;
+
+  /// Factory constructor para modo edición
+  const PlantEditorScreen.edit({
+    super.key,
+    required Plant this.existingPlant,
+  })  : mode = PlantEditorMode.edit,
+        identificationResult = null,
+        imageFile = null;
+
+  @override
+  State<PlantEditorScreen> createState() => _PlantEditorScreenState();
+}
+
+class _PlantEditorScreenState extends State<PlantEditorScreen> {
+  // Services
+  final _speciesService = GetIt.instance<SpeciesService>();
+  final _weatherService = GetIt.instance<WeatherService>();
+  final _locationService = GetIt.instance<LocationService>();
+  final _recommendationService = GetIt.instance<PlantRecommendationService>();
+
+  // Controllers
+  final _customNameController = TextEditingController();
+  final _searchController = TextEditingController();
+
+  // State
+  PlantSpecies? _selectedSpecies;
+  PlantEnvironment _environment = PlantEnvironment.indoor;
+  GrowthStage _growthStage = GrowthStage.development;
+  PotSize _potSize = PotSize.medium;
+
+  // Search
+  List<PlantSpecies> _searchResults = [];
+  bool _isSearching = false;
+
+  // Location
+  double? _latitude;
+  double? _longitude;
+
+  // Weather
+  WeatherData? _weather;
+
+  // Recommendation
+  WateringRecommendation? _recommendation;
+
+  // UI State
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeFromMode();
+    _loadSpecies();
+    _getLocation();
+  }
+
+  /// Inicializa los valores según el modo
+  void _initializeFromMode() {
+    switch (widget.mode) {
+      case PlantEditorMode.manual:
+        // Valores por defecto ya establecidos
+        break;
+
+      case PlantEditorMode.aiAssisted:
+        final result = widget.identificationResult!;
+        _selectedSpecies = result.species;
+        _environment = result.suggestedEnvironment ?? PlantEnvironment.indoor;
+        _growthStage = result.suggestedGrowthStage ?? GrowthStage.development;
+        _potSize = result.suggestedPotSize ?? PotSize.medium;
+        break;
+
+      case PlantEditorMode.edit:
+        final plant = widget.existingPlant!;
+        _customNameController.text = plant.customName ?? '';
+        _environment = plant.plantEnvironment;
+        _growthStage = plant.plantGrowthStage;
+        _potSize = plant.plantPotSize;
+        // La especie se cargará en _loadSpecies
+        break;
+    }
+  }
+
+  Future<void> _loadSpecies() async {
+    final results = await _speciesService.searchSpecies('');
+    if (mounted) {
+      setState(() => _searchResults = results);
+
+      // Para modo edición, encontrar la especie actual
+      if (widget.mode == PlantEditorMode.edit) {
+        final plant = widget.existingPlant!;
+        final matchingSpecies = results.where((s) => s.id == plant.speciesId);
+        if (matchingSpecies.isNotEmpty) {
+          setState(() => _selectedSpecies = matchingSpecies.first);
+        }
+      }
+    }
+  }
+
+  Future<void> _getLocation() async {
+    if (widget.mode == PlantEditorMode.edit) return; // No necesita ubicación para edición
+
+    final coords = await _locationService.getCurrentCoordinates();
+    if (coords == null || !mounted) return;
+    setState(() {
+      _latitude = coords.latitude;
+      _longitude = coords.longitude;
+    });
+    _fetchWeather();
+  }
+
+  Future<void> _fetchWeather() async {
+    if (_latitude == null || _longitude == null) return;
+    try {
+      final weather = await _weatherService.getWeather(_latitude!, _longitude!);
+      if (mounted) {
+        setState(() => _weather = weather);
+        _updateRecommendation();
+      }
+    } catch (_) {}
+  }
+
+  void _updateRecommendation() {
+    if (_selectedSpecies == null) return;
+
+    setState(() {
+      _recommendation = _recommendationService.watering(
+        species: _selectedSpecies!,
+        environment: _environment,
+        growthStage: _growthStage,
+        potSize: _potSize,
+        weather: _weather,
+      );
+    });
+  }
+
+  Future<void> _save() async {
+    if (_selectedSpecies == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, selecciona una especie')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      switch (widget.mode) {
+        case PlantEditorMode.manual:
+        case PlantEditorMode.aiAssisted:
+          // Crear nueva planta
+          context.read<PlantsBloc>().add(PlantCreateRequested(
+            name: _selectedSpecies!.scientificName ?? _selectedSpecies!.commonName,
+            customName: _customNameController.text.trim().isEmpty
+                ? null
+                : _customNameController.text.trim(),
+            speciesId: _selectedSpecies!.id,
+            speciesCategory: _selectedSpecies!.category,
+            wateringFrequency: _recommendation?.frequencyDays ??
+                _selectedSpecies!.getBaseWateringDays(_environment),
+            environment: _environment.name,
+            growthStage: _growthStage.name,
+            potSize: _potSize.dbValue,
+            latitude: _latitude,
+            longitude: _longitude,
+          ));
+          break;
+
+        case PlantEditorMode.edit:
+          // Actualizar planta existente
+          final updatedPlant = widget.existingPlant!.copyWith(
+            customName: _customNameController.text.trim().isEmpty
+                ? null
+                : _customNameController.text.trim(),
+            speciesId: _selectedSpecies!.id,
+            speciesCategory: _selectedSpecies!.category,
+            environment: _environment.name,
+            growthStage: _growthStage.name,
+            potSize: _potSize.dbValue,
+          );
+          context.read<PlantsBloc>().add(PlantUpdateRequested(updatedPlant));
+          break;
+      }
+
+      if (mounted) {
+        context.pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(widget.mode == PlantEditorMode.edit
+                ? 'Planta actualizada ✏️'
+                : '¡Planta añadida! 🌱'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _customNameController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // ---------------------------------------------------------------------------
+  // BUILD
+  // ---------------------------------------------------------------------------
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_getTitle()),
+        centerTitle: true,
+        actions: [
+          if (_isSaving)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else
+            TextButton(
+              onPressed: _save,
+              child: const Text('Guardar'),
+            ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppDimens.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Imagen (solo modo IA)
+            if (widget.mode == PlantEditorMode.aiAssisted) ...[
+              _buildImagePreview(),
+              const SizedBox(height: AppDimens.lg),
+            ],
+
+            // Badge de modo IA
+            if (widget.mode == PlantEditorMode.aiAssisted) ...[
+              _buildAIBadge(),
+              const SizedBox(height: AppDimens.lg),
+            ],
+
+            // Nombre personalizado
+            _buildCustomNameField(),
+            const SizedBox(height: AppDimens.lg),
+
+            // Selector de especie
+            _buildSpeciesSelector(theme),
+            const SizedBox(height: AppDimens.lg),
+
+            // Selector de entorno
+            _buildEnvironmentSelector(),
+            const SizedBox(height: AppDimens.lg),
+
+            // Selector de etapa
+            _buildGrowthStageSelector(),
+            const SizedBox(height: AppDimens.lg),
+
+            // Selector de maceta
+            _buildPotSizeSelector(),
+            const SizedBox(height: AppDimens.lg),
+
+            // Recomendación de riego
+            if (_recommendation != null) ...[
+              _buildRecommendationCard(),
+              const SizedBox(height: AppDimens.lg),
+            ],
+
+            // Botón guardar grande (al final)
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _isSaving ? null : _save,
+                icon: _isSaving
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      )
+                    : Icon(widget.mode == PlantEditorMode.edit
+                        ? Icons.save_outlined
+                        : Icons.add_circle_outline),
+                label: Text(_getSaveButtonText()),
+              ),
+            ),
+
+            const SizedBox(height: AppDimens.xl),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getTitle() {
+    switch (widget.mode) {
+      case PlantEditorMode.manual:
+        return 'Nueva planta';
+      case PlantEditorMode.aiAssisted:
+        return 'Revisar identificación';
+      case PlantEditorMode.edit:
+        return 'Editar planta';
+    }
+  }
+
+  String _getSaveButtonText() {
+    switch (widget.mode) {
+      case PlantEditorMode.manual:
+      case PlantEditorMode.aiAssisted:
+        return 'Añadir planta';
+      case PlantEditorMode.edit:
+        return 'Guardar cambios';
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // WIDGETS
+  // ---------------------------------------------------------------------------
+
+  Widget _buildImagePreview() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppDimens.md),
+      child: Image.file(
+        widget.imageFile!,
+        height: 200,
+        width: double.infinity,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
+  Widget _buildAIBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimens.md,
+        vertical: AppDimens.sm,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.success.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppDimens.sm),
+        border: Border.all(
+          color: AppColors.primary.withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.auto_awesome,
+            size: 18,
+            color: AppColors.primary,
+          ),
+          const SizedBox(width: AppDimens.sm),
+          Expanded(
+            child: Text(
+              'La IA ha analizado tu foto. Revisa los datos antes de guardar.',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCustomNameField() {
+    return TextField(
+      controller: _customNameController,
+      decoration: const InputDecoration(
+        labelText: 'Nombre personalizado (opcional)',
+        hintText: 'Ej: Mi tomatera favorita',
+        prefixIcon: Icon(Icons.label_outline),
+        border: OutlineInputBorder(),
+      ),
+      maxLength: 50,
+    );
+  }
+
+  Widget _buildSpeciesSelector(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Título con indicador de confianza si es modo IA
+        Row(
+          children: [
+            Text(
+              'Especie',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (widget.mode == PlantEditorMode.aiAssisted) ...[
+              const SizedBox(width: AppDimens.sm),
+              ConfidenceIndicator(
+                confidence: widget.identificationResult!.speciesConfidence,
+                size: ConfidenceSize.small,
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: AppDimens.sm),
+
+        // Card de especie seleccionada o buscador
+        Card(
+          child: _selectedSpecies != null
+              ? ListTile(
+                  leading: _selectedSpecies!.imageUrl != null
+                      ? CircleAvatar(
+                          backgroundImage: NetworkImage(_selectedSpecies!.imageUrl!),
+                        )
+                      : const CircleAvatar(child: Icon(Icons.local_florist)),
+                  title: Text(_selectedSpecies!.commonName),
+                  subtitle: _selectedSpecies!.scientificName != null
+                      ? Text(
+                          _selectedSpecies!.scientificName!,
+                          style: const TextStyle(fontStyle: FontStyle.italic),
+                        )
+                      : null,
+                  trailing: TextButton(
+                    onPressed: () => _showSpeciesSearch(),
+                    child: const Text('Cambiar'),
+                  ),
+                )
+              : ListTile(
+                  leading: const CircleAvatar(
+                    child: Icon(Icons.search),
+                  ),
+                  title: const Text('Buscar especie...'),
+                  subtitle: const Text('Selecciona el tipo de planta'),
+                  onTap: () => _showSpeciesSearch(),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnvironmentSelector() {
+    return EnvironmentSelector(
+      selectedEnvironment: _environment,
+      suggestedEnvironment: widget.mode == PlantEditorMode.aiAssisted
+          ? widget.identificationResult!.suggestedEnvironment
+          : null,
+      suggestionConfidence: widget.mode == PlantEditorMode.aiAssisted
+          ? widget.identificationResult!.environmentConfidence
+          : null,
+      onEnvironmentSelected: (env) {
+        setState(() {
+          _environment = env;
+          _updateRecommendation();
+        });
+      },
+      showConfidenceIndicator: widget.mode == PlantEditorMode.aiAssisted,
+    );
+  }
+
+  Widget _buildGrowthStageSelector() {
+    return GrowthStageSelector(
+      selectedStage: _growthStage,
+      suggestedStage: widget.mode == PlantEditorMode.aiAssisted
+          ? widget.identificationResult!.suggestedGrowthStage
+          : null,
+      suggestionConfidence: widget.mode == PlantEditorMode.aiAssisted
+          ? widget.identificationResult!.growthStageConfidence
+          : null,
+      onStageSelected: (stage) {
+        setState(() {
+          _growthStage = stage;
+          _updateRecommendation();
+        });
+      },
+      showConfidenceIndicator: widget.mode == PlantEditorMode.aiAssisted,
+    );
+  }
+
+  Widget _buildPotSizeSelector() {
+    return PotSizeSelector(
+      selectedSize: _potSize,
+      suggestedSize: widget.mode == PlantEditorMode.aiAssisted
+          ? widget.identificationResult!.suggestedPotSize
+          : null,
+      onSizeSelected: (size) {
+        setState(() {
+          _potSize = size;
+          _updateRecommendation();
+        });
+      },
+      showSuggestionIndicator: widget.mode == PlantEditorMode.aiAssisted,
+    );
+  }
+
+  Widget _buildRecommendationCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Recomendación de riego',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: AppDimens.sm),
+        WateringRecommendationCard(recommendation: _recommendation!),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // SPECIES SEARCH
+  // ---------------------------------------------------------------------------
+
+  void _showSpeciesSearch() {
+    final searchController = TextEditingController();
+    List<PlantSpecies> results = [];
+    bool isSearching = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return StatefulBuilder(
+              builder: (context, setStateDialog) {
+                return Column(
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.all(AppDimens.md),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(height: AppDimens.md),
+                          Text(
+                            'Seleccionar especie',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Search field
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppDimens.md),
+                      child: TextField(
+                        controller: searchController,
+                        decoration: const InputDecoration(
+                          hintText: 'Buscar especie...',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) async {
+                          if (value.length >= 2) {
+                            setStateDialog(() => isSearching = true);
+                            results = await _speciesService.searchSpecies(value);
+                            setStateDialog(() => isSearching = false);
+                          }
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: AppDimens.md),
+
+                    // Results
+                    Expanded(
+                      child: isSearching
+                          ? const Center(child: CircularProgressIndicator())
+                          : results.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    searchController.text.isEmpty
+                                        ? 'Escribe para buscar'
+                                        : 'No se encontraron especies',
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                    ),
+                                  ),
+                                )
+                              : ListView.builder(
+                                  controller: scrollController,
+                                  itemCount: results.length,
+                                  itemBuilder: (context, index) {
+                                    final species = results[index];
+                                    return ListTile(
+                                      leading: species.imageUrl != null
+                                          ? CircleAvatar(
+                                              backgroundImage: NetworkImage(species.imageUrl!),
+                                            )
+                                          : const CircleAvatar(
+                                              child: Icon(Icons.local_florist)),
+                                      title: Text(species.commonName),
+                                      subtitle: species.scientificName != null
+                                          ? Text(
+                                              species.scientificName!,
+                                              style: const TextStyle(fontStyle: FontStyle.italic),
+                                            )
+                                          : null,
+                                      onTap: () {
+                                        Navigator.pop(ctx);
+                                        setState(() {
+                                          _selectedSpecies = species;
+                                          _updateRecommendation();
+                                        });
+                                      },
+                                    );
+                                  },
+                                ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}

@@ -26,6 +26,7 @@ class PlantsSearchRequested extends PlantsEvent {
 /// Crear una nueva planta
 class PlantCreateRequested extends PlantsEvent {
   final String name;
+  final String? customName;
   final String? scientificName;
   final String? speciesId;
   final String? speciesCategory;
@@ -42,6 +43,7 @@ class PlantCreateRequested extends PlantsEvent {
 
   const PlantCreateRequested({
     required this.name,
+    this.customName,
     this.scientificName,
     this.speciesId,
     this.speciesCategory,
@@ -60,6 +62,7 @@ class PlantCreateRequested extends PlantsEvent {
   @override
   List<Object?> get props => [
         name,
+        customName,
         scientificName,
         speciesId,
         speciesCategory,
@@ -106,6 +109,20 @@ class PlantWaterRequested extends PlantsEvent {
   List<Object?> get props => [id];
 }
 
+/// Marcar planta como regada en una fecha específica (para riegos pasados)
+class PlantWaterOnDateRequested extends PlantsEvent {
+  final String id;
+  final int daysAgo; // 0 = hoy, 1 = ayer, 2 = anteayer, etc.
+
+  const PlantWaterOnDateRequested({
+    required this.id,
+    required this.daysAgo,
+  });
+
+  @override
+  List<Object?> get props => [id, daysAgo];
+}
+
 /// Registrar trasplante a una maceta nueva
 class PlantTransplantRequested extends PlantsEvent {
   final String id;
@@ -129,3 +146,13 @@ class PlantSelectRequested extends PlantsEvent {
 
 /// Limpiar errores
 class PlantsClearError extends PlantsEvent {}
+
+/// Borrar el último registro de riego (para corregir errores)
+class PlantClearLastWateringRequested extends PlantsEvent {
+  final String id;
+
+  const PlantClearLastWateringRequested(this.id);
+
+  @override
+  List<Object?> get props => [id];
+}

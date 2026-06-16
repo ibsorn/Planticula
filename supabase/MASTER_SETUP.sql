@@ -189,6 +189,8 @@ CREATE TABLE IF NOT EXISTS plants (
     -- Información básica
     name                TEXT NOT NULL
         CHECK (char_length(name) > 0 AND char_length(name) <= 100),
+    custom_name         TEXT
+        CHECK (custom_name IS NULL OR char_length(custom_name) <= 100),
     scientific_name     TEXT
         CHECK (scientific_name IS NULL OR char_length(scientific_name) <= 100),
     -- [FIX-1] species_id es TEXT desde el principio (migración 003 lo convertía)
@@ -211,10 +213,11 @@ CREATE TABLE IF NOT EXISTS plants (
     next_watering       TIMESTAMPTZ,
 
     -- Entorno y fase (migración 003)
+    -- ACTUALIZADO: Nuevo sistema de 5 etapas de crecimiento
     environment         TEXT DEFAULT 'indoor'
         CHECK (environment IN ('indoor', 'outdoor')),
-    growth_stage        TEXT DEFAULT 'adult'
-        CHECK (growth_stage IN ('seedling', 'juvenile', 'adult')),
+    growth_stage        TEXT DEFAULT 'development'
+        CHECK (growth_stage IN ('germination', 'seedling', 'development', 'mature', 'flowering')),
 
     -- Maceta (migración 008)
     pot_size            TEXT DEFAULT 'medium'
@@ -236,6 +239,7 @@ CREATE TABLE IF NOT EXISTS plants (
 -- Índices
 CREATE INDEX IF NOT EXISTS idx_plants_user_id          ON plants(user_id);
 CREATE INDEX IF NOT EXISTS idx_plants_name             ON plants(name);
+CREATE INDEX IF NOT EXISTS idx_plants_custom_name      ON plants(custom_name) WHERE custom_name IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_plants_next_watering    ON plants(next_watering) WHERE next_watering IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_plants_user_next        ON plants(user_id, next_watering);
 CREATE INDEX IF NOT EXISTS idx_plants_species_category ON plants(species_category);
@@ -288,9 +292,10 @@ CREATE POLICY "Users can delete own plants" ON plants
     FOR DELETE USING (auth.uid() = user_id);
 
 -- Comentarios de columnas
+COMMENT ON COLUMN plants.custom_name         IS 'User-defined custom name for the plant (e.g., "My favorite tomato plant")';
 COMMENT ON COLUMN plants.species_id          IS 'Species identifier: local_xxx for catalog, api_xxx for external API';
 COMMENT ON COLUMN plants.environment         IS 'Plant environment: indoor or outdoor';
-COMMENT ON COLUMN plants.growth_stage        IS 'Current growth phase: seedling, juvenile, or adult';
+COMMENT ON COLUMN plants.growth_stage        IS 'Current growth phase: germination (just sprouted), seedling (small with few leaves), development (actively growing), mature (full size, stable), flowering (blooming or fruiting)';
 COMMENT ON COLUMN plants.pot_size            IS 'Pot size: extra_small(0.5-1.5L), small(1.5-5L), medium(5-15L), large(15-40L), extra_large(40L+)';
 COMMENT ON COLUMN plants.last_transplanted   IS 'Last time the user registered a pot transplant for this plant';
 COMMENT ON COLUMN plants.species_category    IS 'Cached category from species_catalog for fast filtering';

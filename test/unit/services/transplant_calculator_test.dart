@@ -16,11 +16,11 @@ void main() {
       sunlightHoursMax: 8,
       sunlightLevel: SunlightLevel.medium,
       growthPhases: [
-        GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
       ],
       transplantSchedule: [
         TransplantPhaseInfo(
-          stage: GrowthStage.adult,
+          stage: GrowthStage.mature,
           minPotSize: PotSize.small,
           idealPotSize: PotSize.medium,
           triggerAfterMonths: 12,
@@ -39,7 +39,7 @@ void main() {
       sunlightHoursMax: 8,
       sunlightLevel: SunlightLevel.medium,
       growthPhases: [
-        GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
       ],
     );
 
@@ -54,11 +54,11 @@ void main() {
       sunlightHoursMax: 10,
       sunlightLevel: SunlightLevel.fullSun,
       growthPhases: [
-        GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
       ],
       transplantSchedule: [
         TransplantPhaseInfo(
-          stage: GrowthStage.adult,
+          stage: GrowthStage.mature,
           minPotSize: PotSize.medium,
           idealPotSize: PotSize.large,
           triggerAfterMonths: AppConstants.neverTransplant,
@@ -70,7 +70,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: testSpeciesWithoutSchedule,
         currentPotSize: PotSize.small,
-        currentStage: GrowthStage.adult,
+        currentStage: GrowthStage.mature,
       );
 
       expect(result.status, equals(TransplantStatus.none));
@@ -81,7 +81,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: testSpeciesNeverTransplant,
         currentPotSize: PotSize.medium, // medium >= medium (minPotSize) so pot size check passes
-        currentStage: GrowthStage.adult,
+        currentStage: GrowthStage.mature,
         plantedDate: DateTime.now().subtract(const Duration(days: 365)),
       );
 
@@ -93,7 +93,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: testSpeciesWithSchedule,
         currentPotSize: PotSize.extraSmall, // extraSmall < small (minPotSize)
-        currentStage: GrowthStage.adult,
+        currentStage: GrowthStage.mature,
       );
 
       expect(result.status, equals(TransplantStatus.urgent));
@@ -105,7 +105,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: testSpeciesWithSchedule,
         currentPotSize: PotSize.small, // small < medium (ideal)
-        currentStage: GrowthStage.adult,
+        currentStage: GrowthStage.mature,
         // No plantedDate or lastTransplanted
       );
 
@@ -118,7 +118,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: testSpeciesWithSchedule,
         currentPotSize: PotSize.medium, // medium >= medium (ideal)
-        currentStage: GrowthStage.adult,
+        currentStage: GrowthStage.mature,
         // No plantedDate or lastTransplanted
       );
 
@@ -132,7 +132,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: testSpeciesWithSchedule,
         currentPotSize: PotSize.small,
-        currentStage: GrowthStage.adult,
+        currentStage: GrowthStage.mature,
         plantedDate: thirteenMonthsAgo,
       );
 
@@ -149,7 +149,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: testSpeciesWithSchedule,
         currentPotSize: PotSize.small,
-        currentStage: GrowthStage.adult,
+        currentStage: GrowthStage.mature,
         plantedDate: sixteenMonthsAgo,
       );
 
@@ -167,7 +167,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: testSpeciesWithSchedule,
         currentPotSize: PotSize.small,
-        currentStage: GrowthStage.adult,
+        currentStage: GrowthStage.mature,
         plantedDate: elevenMonthsAgo,
       );
 
@@ -183,7 +183,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: testSpeciesWithSchedule,
         currentPotSize: PotSize.small,
-        currentStage: GrowthStage.adult,
+        currentStage: GrowthStage.mature,
         plantedDate: sixMonthsAgo,
       );
 
@@ -198,7 +198,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: testSpeciesWithSchedule,
         currentPotSize: PotSize.large, // large > medium (ideal)
-        currentStage: GrowthStage.adult,
+        currentStage: GrowthStage.mature,
         plantedDate: sixteenMonthsAgo,
       );
 
@@ -216,7 +216,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: testSpeciesWithSchedule,
         currentPotSize: PotSize.small,
-        currentStage: GrowthStage.adult,
+        currentStage: GrowthStage.mature,
         plantedDate: tenMonthsAgo,
         lastTransplanted: threeMonthsAgo,
       );
@@ -239,18 +239,18 @@ void main() {
         sunlightHoursMax: 8,
         sunlightLevel: SunlightLevel.medium,
         growthPhases: [
-          GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 6, wateringMultiplier: 0.85),
-          GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+          GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 6, wateringMultiplier: 0.85),
+          GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
         ],
         transplantSchedule: [
           TransplantPhaseInfo(
-            stage: GrowthStage.juvenile,
+            stage: GrowthStage.development,
             minPotSize: PotSize.extraSmall,
             idealPotSize: PotSize.small,
             triggerAfterMonths: 3,
           ),
           TransplantPhaseInfo(
-            stage: GrowthStage.adult,
+            stage: GrowthStage.mature,
             minPotSize: PotSize.small,
             idealPotSize: PotSize.medium,
             triggerAfterMonths: 12,
@@ -263,7 +263,7 @@ void main() {
       final result = TransplantCalculator.evaluate(
         species: speciesWithJuvenileSchedule,
         currentPotSize: PotSize.extraSmall,
-        currentStage: GrowthStage.juvenile,
+        currentStage: GrowthStage.development,
         plantedDate: fourMonthsAgo,
       );
 
@@ -285,7 +285,7 @@ void main() {
         sunlightLevel: SunlightLevel.medium,
         growthPhases: [
           GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.7),
-          GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+          GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
         ],
         transplantSchedule: [
           TransplantPhaseInfo(

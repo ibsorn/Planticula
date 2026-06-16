@@ -53,12 +53,12 @@ void main() {
           wateringMultiplier: 0.7,
         ),
         GrowthPhaseInfo(
-          stage: GrowthStage.juvenile,
+          stage: GrowthStage.development,
           durationMonths: 6,
           wateringMultiplier: 0.85,
         ),
         GrowthPhaseInfo(
-          stage: GrowthStage.adult,
+          stage: GrowthStage.mature,
           durationMonths: 0,
         ),
       ],
@@ -188,7 +188,7 @@ void main() {
         sunlightHoursMax: 10,
         sunlightLevel: SunlightLevel.fullSun,
         growthPhases: [
-          GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+          GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
         ],
         droughtTolerant: true,
       );
@@ -215,7 +215,7 @@ void main() {
         sunlightHoursMax: 8,
         sunlightLevel: SunlightLevel.medium,
         growthPhases: [
-          GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+          GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
         ],
         humidityLoving: true,
       );
@@ -250,7 +250,7 @@ void main() {
       final juvenileResult = WateringCalculator.calculate(
         species: testSpecies,
         environment: PlantEnvironment.indoor,
-        growthStage: GrowthStage.juvenile,
+        growthStage: GrowthStage.development,
       );
 
       final adultResult = WateringCalculator.calculate(

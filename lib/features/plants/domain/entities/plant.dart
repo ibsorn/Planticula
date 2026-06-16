@@ -5,7 +5,8 @@ import 'package:planticula/core/data/species/plant_species.dart';
 ///
 /// Campos principales:
 /// - id: UUID generado por Supabase
-/// - name: Nombre personalizado de la planta
+/// - name: Nombre de la especie/planta (del catálogo o ingresado manualmente)
+/// - customName: Nombre personalizado que el usuario le asigna (ej: "Mi tomatera favorita")
 /// - scientificName: Nombre científico (opcional)
 /// - speciesId: ID de la especie (local_ o api_)
 /// - imageUrl: URL de la imagen en Storage (opcional)
@@ -24,6 +25,7 @@ import 'package:planticula/core/data/species/plant_species.dart';
 class Plant extends Equatable {
   final String id;
   final String name;
+  final String? customName;
   final String? scientificName;
   final String? speciesId;
   final String? speciesCategory; // Cached from species: indoor, outdoor, succulent, cannabis
@@ -46,6 +48,7 @@ class Plant extends Equatable {
   const Plant({
     required this.id,
     required this.name,
+    this.customName,
     this.scientificName,
     this.speciesId,
     this.speciesCategory,
@@ -70,6 +73,7 @@ class Plant extends Equatable {
   Plant copyWith({
     String? id,
     String? name,
+    String? customName,
     String? scientificName,
     String? speciesId,
     String? speciesCategory,
@@ -92,6 +96,7 @@ class Plant extends Equatable {
     return Plant(
       id: id ?? this.id,
       name: name ?? this.name,
+      customName: customName ?? this.customName,
       scientificName: scientificName ?? this.scientificName,
       speciesId: speciesId ?? this.speciesId,
       speciesCategory: speciesCategory ?? this.speciesCategory,
@@ -112,6 +117,12 @@ class Plant extends Equatable {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  /// Nombre a mostrar: customName si existe, sino name
+  String get displayName => customName?.isNotEmpty == true ? customName! : name;
+
+  /// Indica si tiene un nombre personalizado
+  bool get hasCustomName => customName != null && customName!.isNotEmpty;
 
   /// Calcula si la planta necesita riego
   bool get needsWatering {
@@ -146,6 +157,7 @@ class Plant extends Equatable {
   List<Object?> get props => [
         id,
         name,
+        customName,
         scientificName,
         speciesId,
         speciesCategory,

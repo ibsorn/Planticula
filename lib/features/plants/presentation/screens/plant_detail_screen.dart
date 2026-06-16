@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:planticula/core/constants/app_constants.dart';
 import 'package:planticula/core/data/species/plant_species.dart';
+import 'package:planticula/core/services/plant_recommendation_service.dart';
 import 'package:planticula/core/services/species_service.dart';
 import 'package:planticula/core/services/transplant_calculator.dart';
 import 'package:planticula/core/services/watering_calculator.dart';
@@ -12,6 +14,7 @@ import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
+import 'package:planticula/features/plants/presentation/screens/plant_editor_screen.dart';
 import 'package:planticula/shared/widgets/domain_chip.dart';
 import 'package:planticula/shared/widgets/hero_banner.dart';
 import 'package:planticula/shared/widgets/phase_timeline.dart';
@@ -32,6 +35,7 @@ class PlantDetailScreen extends StatefulWidget {
 }
 
 class _PlantDetailScreenState extends State<PlantDetailScreen> {
+  final _recommendationService = GetIt.instance<PlantRecommendationService>();
   WeatherData? _weather;
   WateringRecommendation? _recommendation;
   TransplantRecommendation? _transplantRecommendation;
@@ -80,14 +84,14 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
   void _updateRecommendation() {
     if (_species == null) return;
-    final rec = WateringCalculator.calculate(
+    final rec = _recommendationService.watering(
       species: _species!,
       environment: widget.plant.plantEnvironment,
       growthStage: widget.plant.plantGrowthStage,
       potSize: widget.plant.plantPotSize,
-      weather: widget.plant.isOutdoor ? _weather : null,
+      weather: _weather,
     );
-    final transplantRec = TransplantCalculator.evaluate(
+    final transplantRec = _recommendationService.transplant(
       species: _species!,
       currentPotSize: widget.plant.plantPotSize,
       currentStage: widget.plant.plantGrowthStage,
@@ -164,9 +168,24 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert_rounded),
           onSelected: (value) {
-            if (value == 'delete') _showDeleteConfirmation(context);
+            switch (value) {
+              case 'edit_data':
+                _navigateToEditor(context, plant);
+              case 'delete':
+                _showDeleteConfirmation(context);
+            }
           },
           itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'edit_data',
+              child: Row(
+                children: [
+                  Icon(Icons.edit_note_outlined),
+                  SizedBox(width: AppDimens.sm),
+                  Text('Editar datos'),
+                ],
+              ),
+            ),
             const PopupMenuItem(
               value: 'delete',
               child: Row(
@@ -188,7 +207,14 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(plant.name, style: theme.textTheme.displaySmall),
+        Text(plant.displayName, style: theme.textTheme.displaySmall),
+        if (plant.hasCustomName)
+          Text(
+            plant.name,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         if (plant.scientificName != null)
           Text(
             plant.scientificName!,
@@ -220,65 +246,149 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   }
 
   // ---------------------------------------------------------------------
-  // Block 1: NOW
+  // Block 1: NOW - Compact Watering Card
   // ---------------------------------------------------------------------
   Widget _buildNowBlock(BuildContext context, Plant plant) {
-    final theme = Theme.of(context);
     final needsWater = plant.needsWatering;
     final amount = _recommendation?.waterMlRange;
-
-    final banner = needsWater
-        ? HeroBanner.water(
-            emoji: '💧',
-            title: 'Riega hoy',
-            subtitle: amount != null ? 'Cantidad: $amount' : null,
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () => _onWaterPlant(context),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.water,
-                  foregroundColor: Colors.white,
-                ),
-                icon: const Icon(Icons.check_rounded),
-                label: const Text('La he regado'),
-              ),
-            ),
-          )
-        : HeroBanner.success(
-            emoji: '✅',
-            title: 'Todo en orden',
-            subtitle: _nextWateringText(plant),
-            child: plant.hasWateringReminder
-                ? Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: () => _onWaterPlant(context),
-                      icon: const Icon(Icons.water_drop_outlined, size: 18),
-                      label: const Text('Registrar riego ahora'),
-                    ),
-                  )
-                : null,
-          );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        banner,
-        const SizedBox(height: AppDimens.sm),
-        Text(
-          [
-            if (plant.hasWateringReminder)
-              'Cada ${plant.wateringFrequency} días',
-            if (plant.lastWatered != null)
-              'Último: ${_formatDate(plant.lastWatered!)}',
-          ].join(' · '),
-          style: theme.textTheme.labelMedium,
-        ),
+        _buildWateringCard(context, plant, needsWater, amount),
         if (plant.isOutdoor && _weather != null) ...[
           const SizedBox(height: AppDimens.lg),
           _buildWeatherCard(context),
         ],
+      ],
+    );
+  }
+
+  Widget _buildWateringCard(BuildContext context, Plant plant, bool needsWater, String? amount) {
+    final theme = Theme.of(context);
+    final accentColor = needsWater ? AppColors.water : AppColors.success;
+
+    return Card(
+      child: Padding(
+        padding: AppDimens.cardPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header con icono y estado
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppDimens.sm),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppDimens.sm),
+                  ),
+                  child: Icon(
+                    needsWater ? Icons.water_drop : Icons.check_circle,
+                    color: accentColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppDimens.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        needsWater ? 'Riega hoy' : 'Todo en orden',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (amount != null)
+                        Text(
+                          'Cantidad: $amount',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            // Divider
+            const Divider(height: AppDimens.xl),
+
+            // Info de riegos
+            Row(
+              children: [
+                Expanded(
+                  child: _buildWateringInfo(
+                    context,
+                    icon: Icons.history,
+                    label: 'Último',
+                    value: plant.lastWatered != null
+                        ? _relativeDate(plant.lastWatered!)
+                        : 'Sin registro',
+                  ),
+                ),
+                Expanded(
+                  child: _buildWateringInfo(
+                    context,
+                    icon: Icons.event,
+                    label: 'Próximo',
+                    value: _nextWateringText(plant),
+                  ),
+                ),
+              ],
+            ),
+
+            // Botón de opciones de riego
+            const SizedBox(height: AppDimens.md),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => _showWateringOptions(context, plant),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.water,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                ),
+                icon: const Icon(Icons.water_drop_outlined, size: 18),
+                label: const Text('Opciones de riego'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWateringInfo(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
     );
   }
@@ -341,7 +451,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   Widget _buildGrowthBlock(BuildContext context, Plant plant) {
     final theme = Theme.of(context);
     final stage = plant.plantGrowthStage;
-    final monthsToAdult = _species?.monthsUntilAdult(stage);
+    final monthsToMature = _species?.monthsUntilMature(stage);
     final transplant = _transplantRecommendation;
 
     return Column(
@@ -358,15 +468,15 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   currentIndex: GrowthStage.values.indexOf(stage),
                   stageProgress: 0.5,
                 ),
-                if (monthsToAdult != null && monthsToAdult > 0) ...[
+                if (monthsToMature != null && monthsToMature > 0) ...[
                   const SizedBox(height: AppDimens.md),
                   Text(
-                    'Aproximadamente $monthsToAdult ${monthsToAdult == 1 ? 'mes' : 'meses'} para ser adulta 🌳',
+                    'Aproximadamente $monthsToMature ${monthsToMature == 1 ? 'mes' : 'meses'} para madurar 🌳',
                     style: theme.textTheme.labelMedium,
                   ),
-                ] else if (stage == GrowthStage.adult) ...[
+                ] else if (stage == GrowthStage.mature || stage == GrowthStage.flowering) ...[
                   const SizedBox(height: AppDimens.md),
-                  Text('Planta adulta y feliz ✨',
+                  Text('Planta madura y feliz ✨',
                       style: theme.textTheme.labelMedium),
                 ],
               ],
@@ -403,7 +513,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           onPressed: () => _showTransplantDialog(context),
           style: FilledButton.styleFrom(
             backgroundColor: urgent ? AppColors.error : AppColors.soil,
-            foregroundColor: Colors.white,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
           ),
           icon: const Icon(Icons.compost_rounded, size: 18),
           label: const Text('Registrar trasplante'),
@@ -516,14 +626,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   }
 
   String _stageEmoji(GrowthStage stage) {
-    switch (stage) {
-      case GrowthStage.seedling:
-        return '🌱';
-      case GrowthStage.juvenile:
-        return '🌿';
-      case GrowthStage.adult:
-        return '🌳';
-    }
+    // Usar los iconos del enum (nuevo sistema de 5 etapas)
+    return stage.icon;
   }
 
   String _nextWateringText(Plant plant) {
@@ -552,7 +656,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   void _onWaterPlant(BuildContext context) {
     context.read<PlantsBloc>().add(PlantWaterRequested(widget.plant.id));
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('¡${widget.plant.name} regada! 💧')),
+      SnackBar(content: Text('¡${widget.plant.displayName} regada! 💧')),
     );
   }
 
@@ -562,7 +666,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('¿Eliminar planta?'),
         content: Text(
-            '¿Eliminar "${widget.plant.name}"? Esta acción no se puede deshacer.'),
+            '¿Eliminar "${widget.plant.displayName}"? Esta acción no se puede deshacer.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
@@ -655,6 +759,255 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Watering Options Menu
+  // ---------------------------------------------------------------------
+  void _showWateringOptions(BuildContext context, Plant plant) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppDimens.md),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: AppDimens.md),
+
+                // Title
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppDimens.lg),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.water_drop, color: AppColors.water),
+                      const SizedBox(width: AppDimens.sm),
+                      Text(
+                        'Opciones de riego',
+                        style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppDimens.sm),
+                const Divider(),
+
+                // Options
+                ListTile(
+                  leading: const Icon(Icons.check_circle, color: AppColors.success),
+                  title: const Text('La he regado hoy'),
+                  subtitle: const Text('Registrar riego ahora mismo'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _onWaterPlant(context);
+                  },
+                ),
+
+                ListTile(
+                  leading: const Icon(Icons.history, color: AppColors.water),
+                  title: const Text('La regué hace...'),
+                  subtitle: const Text('Registrar riego en fecha pasada'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _showWateringDaysPicker(context);
+                  },
+                ),
+
+                // Only show if there's a last watering to forget
+                if (plant.lastWatered != null)
+                  ListTile(
+                    leading: const Icon(Icons.delete_outline, color: AppColors.error),
+                    title: const Text('Olvidar último riego'),
+                    subtitle: const Text('Eliminar registro del último riego'),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _showForgetWateringConfirmation(context);
+                    },
+                  ),
+
+                const SizedBox(height: AppDimens.md),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Days Ago Picker for Past Watering
+  // ---------------------------------------------------------------------
+  void _showWateringDaysPicker(BuildContext context) {
+    int selectedDays = 1;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setStateDialog) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(AppDimens.lg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppDimens.lg),
+
+                    // Title
+                    Row(
+                      children: [
+                        const Icon(Icons.history, color: AppColors.water),
+                        const SizedBox(width: AppDimens.sm),
+                        Text(
+                          '¿Hace cuántos días?',
+                          style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppDimens.md),
+
+                    // Quick chips
+                    Wrap(
+                      spacing: AppDimens.sm,
+                      runSpacing: AppDimens.sm,
+                      children: [
+                        for (final days in [1, 2, 3, 5, 7, 14, 21, 30])
+                          ChoiceChip(
+                            label: Text(days == 1 ? 'Ayer' : 'Hace $days días'),
+                            selected: selectedDays == days,
+                            onSelected: (_) => setStateDialog(() => selectedDays = days),
+                          ),
+                      ],
+                    ),
+
+                    const SizedBox(height: AppDimens.md),
+
+                    // Slider
+                    Text(
+                      'O selecciona: $selectedDays días',
+                      style: Theme.of(ctx).textTheme.bodyMedium,
+                    ),
+                    Slider(
+                      value: selectedDays.toDouble(),
+                      min: 1,
+                      max: 30,
+                      divisions: 29,
+                      label: '$selectedDays días',
+                      onChanged: (value) => setStateDialog(() => selectedDays = value.round()),
+                    ),
+
+                    const SizedBox(height: AppDimens.lg),
+
+                    // Confirm button
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _onWaterPlantWithDate(context, selectedDays);
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.water,
+                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                        icon: const Icon(Icons.check),
+                        label: const Text('Confirmar'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _onWaterPlantWithDate(BuildContext context, int daysAgo) {
+    context.read<PlantsBloc>().add(PlantWaterOnDateRequested(
+      id: widget.plant.id,
+      daysAgo: daysAgo,
+    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('¡Riego registrado! 💧 (hace $daysAgo días)')),
+    );
+  }
+
+  void _showForgetWateringConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('¿Olvidar último riego?'),
+        content: Text(
+            'Se eliminará el registro del último riego de "${widget.plant.displayName}". Esto afectará el cálculo del próximo riego.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar')),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<PlantsBloc>().add(
+                  PlantClearLastWateringRequested(widget.plant.id));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Último riego olvidado 🗑️')),
+              );
+            },
+            style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error),
+            child: const Text('Olvidar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Navigate to Plant Editor
+  // ---------------------------------------------------------------------
+  void _navigateToEditor(BuildContext context, Plant plant) {
+    context.push(
+      AppConstants.routePlantEditor,
+      extra: {
+        'mode': PlantEditorMode.edit,
+        'existingPlant': plant,
+      },
     );
   }
 }

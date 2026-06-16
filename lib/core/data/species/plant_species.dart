@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'plant_enums.dart';
+export 'plant_enums.dart';
 
 /// Represents a plant species with its care requirements
 /// Can have varieties (subspecies) via the `varieties` list
@@ -105,9 +107,11 @@ class PlantSpecies extends Equatable {
     return 1.0;
   }
 
-  /// Estimate months until adult phase from current phase
-  int? monthsUntilAdult(GrowthStage currentStage) {
-    if (currentStage == GrowthStage.adult) return 0;
+  /// Estimate months until mature phase from current phase
+  int? monthsUntilMature(GrowthStage currentStage) {
+    if (currentStage == GrowthStage.mature || currentStage == GrowthStage.flowering) {
+      return 0;
+    }
 
     int totalMonths = 0;
     bool counting = false;
@@ -118,14 +122,18 @@ class PlantSpecies extends Equatable {
         totalMonths += phase.durationMonths ~/ 2; // halfway through current
         continue;
       }
-      if (counting && phase.stage != GrowthStage.adult) {
+      if (counting && phase.stage != GrowthStage.mature) {
         totalMonths += phase.durationMonths;
       }
-      if (phase.stage == GrowthStage.adult) break;
+      if (phase.stage == GrowthStage.mature) break;
     }
 
     return counting ? totalMonths : null;
   }
+
+  /// Legacy alias for backward compatibility
+  @Deprecated('Use monthsUntilMature instead')
+  int? monthsUntilAdult(GrowthStage currentStage) => monthsUntilMature(currentStage);
 
   factory PlantSpecies.fromJson(Map<String, dynamic> json) {
     return PlantSpecies(
@@ -164,240 +172,6 @@ class PlantSpecies extends Equatable {
   List<Object?> get props => [id, commonName, scientificName];
 }
 
-enum PlantEnvironment {
-  indoor,
-  outdoor;
-
-  String get displayName {
-    switch (this) {
-      case PlantEnvironment.indoor:
-        return 'Interior';
-      case PlantEnvironment.outdoor:
-        return 'Exterior';
-    }
-  }
-
-  String get icon {
-    switch (this) {
-      case PlantEnvironment.indoor:
-        return 'home';
-      case PlantEnvironment.outdoor:
-        return 'park';
-    }
-  }
-}
-
-enum GrowthStage {
-  seedling,
-  juvenile,
-  adult;
-
-  String get displayName {
-    switch (this) {
-      case GrowthStage.seedling:
-        return 'Plantula';
-      case GrowthStage.juvenile:
-        return 'Juvenil';
-      case GrowthStage.adult:
-        return 'Adulta';
-    }
-  }
-
-  static GrowthStage fromString(String value) {
-    switch (value.toLowerCase()) {
-      case 'seedling':
-        return GrowthStage.seedling;
-      case 'juvenile':
-        return GrowthStage.juvenile;
-      case 'adult':
-        return GrowthStage.adult;
-      default:
-        return GrowthStage.adult;
-    }
-  }
-}
-
-enum SunlightLevel {
-  low,
-  medium,
-  high,
-  fullSun;
-
-  String get displayName {
-    switch (this) {
-      case SunlightLevel.low:
-        return 'Sombra';
-      case SunlightLevel.medium:
-        return 'Semisombra';
-      case SunlightLevel.high:
-        return 'Luz indirecta brillante';
-      case SunlightLevel.fullSun:
-        return 'Sol directo';
-    }
-  }
-
-  static SunlightLevel fromString(String value) {
-    switch (value.toLowerCase()) {
-      case 'low':
-      case 'shade':
-        return SunlightLevel.low;
-      case 'medium':
-      case 'part_shade':
-        return SunlightLevel.medium;
-      case 'high':
-      case 'bright':
-        return SunlightLevel.high;
-      case 'full_sun':
-      case 'fullsun':
-        return SunlightLevel.fullSun;
-      default:
-        return SunlightLevel.medium;
-    }
-  }
-}
-
-/// Tamaño de maceta con rangos de litros y datos para calculo de riego/agua
-enum PotSize {
-  extraSmall, // Muy pequeña: 0.5-1.5L
-  small,      // Pequeña: 1.5-5L
-  medium,     // Mediana: 5-15L
-  large,      // Grande: 15-40L
-  extraLarge; // Muy grande / suelo directo: 40L+
-
-  String get displayName {
-    switch (this) {
-      case PotSize.extraSmall:
-        return 'Muy pequeña';
-      case PotSize.small:
-        return 'Pequeña';
-      case PotSize.medium:
-        return 'Mediana';
-      case PotSize.large:
-        return 'Grande';
-      case PotSize.extraLarge:
-        return 'Muy grande / Suelo';
-    }
-  }
-
-  /// Rango de litros de la maceta
-  String get litersRange {
-    switch (this) {
-      case PotSize.extraSmall:
-        return '0.5 - 1.5 L';
-      case PotSize.small:
-        return '1.5 - 5 L';
-      case PotSize.medium:
-        return '5 - 15 L';
-      case PotSize.large:
-        return '15 - 40 L';
-      case PotSize.extraLarge:
-        return '40+ L / Suelo';
-    }
-  }
-
-  /// Volumen medio representativo en litros (para calculos)
-  double get avgLiters {
-    switch (this) {
-      case PotSize.extraSmall:
-        return 1.0;
-      case PotSize.small:
-        return 3.0;
-      case PotSize.medium:
-        return 10.0;
-      case PotSize.large:
-        return 25.0;
-      case PotSize.extraLarge:
-        return 50.0;
-    }
-  }
-
-  /// Multiplicador de frecuencia de riego respecto a maceta mediana (base).
-  /// Macetas pequeñas se secan antes -> regar mas seguido (multiplier < 1.0)
-  /// Macetas grandes retienen mas -> regar menos seguido (multiplier > 1.0)
-  double get wateringFrequencyMultiplier {
-    switch (this) {
-      case PotSize.extraSmall:
-        return 0.6;  // Regar ~40% mas frecuente
-      case PotSize.small:
-        return 0.8;  // Regar ~20% mas frecuente
-      case PotSize.medium:
-        return 1.0;  // Base (sin ajuste)
-      case PotSize.large:
-        return 1.3;  // Regar ~30% menos frecuente
-      case PotSize.extraLarge:
-        return 1.6;  // Regar ~60% menos frecuente
-    }
-  }
-
-  /// Mililitros de agua base por riego (para maceta mediana de referencia).
-  /// Se escala segun la etapa de crecimiento.
-  /// Estos son los ml para una planta adulta en cada tamaño de maceta.
-  int get baseWaterMl {
-    switch (this) {
-      case PotSize.extraSmall:
-        return 100;   // 50-150ml
-      case PotSize.small:
-        return 250;   // 150-350ml
-      case PotSize.medium:
-        return 500;   // 350-700ml
-      case PotSize.large:
-        return 1000;  // 700-1500ml
-      case PotSize.extraLarge:
-        return 2000;  // 1500-3000ml
-    }
-  }
-
-  /// Icono representativo
-  String get icon {
-    switch (this) {
-      case PotSize.extraSmall:
-        return '🪴';
-      case PotSize.small:
-        return '🌱';
-      case PotSize.medium:
-        return '🪻';
-      case PotSize.large:
-        return '🌳';
-      case PotSize.extraLarge:
-        return '🏡';
-    }
-  }
-
-  static PotSize fromString(String value) {
-    switch (value.toLowerCase()) {
-      case 'extra_small':
-      case 'extrasmall':
-        return PotSize.extraSmall;
-      case 'small':
-        return PotSize.small;
-      case 'medium':
-        return PotSize.medium;
-      case 'large':
-        return PotSize.large;
-      case 'extra_large':
-      case 'extralarge':
-        return PotSize.extraLarge;
-      default:
-        return PotSize.medium;
-    }
-  }
-
-  /// Nombre para almacenar en DB (snake_case)
-  String get dbValue {
-    switch (this) {
-      case PotSize.extraSmall:
-        return 'extra_small';
-      case PotSize.small:
-        return 'small';
-      case PotSize.medium:
-        return 'medium';
-      case PotSize.large:
-        return 'large';
-      case PotSize.extraLarge:
-        return 'extra_large';
-    }
-  }
-}
 
 /// Describes the transplant requirements for a specific growth stage.
 ///
@@ -479,10 +253,44 @@ class GrowthPhaseInfo extends Equatable {
     );
   }
 
+  /// Fases por defecto para plantas genéricas
+  /// Basado en el nuevo sistema de 5 etapas
   static List<GrowthPhaseInfo> get defaultPhases => const [
-        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.7),
-        GrowthPhaseInfo(stage: GrowthStage.juvenile, durationMonths: 12, wateringMultiplier: 0.85),
-        GrowthPhaseInfo(stage: GrowthStage.adult, durationMonths: 0),
+        // Germinación: ~2 semanas (0.5 meses)
+        GrowthPhaseInfo(
+          stage: GrowthStage.germination,
+          durationMonths: 1,
+          wateringMultiplier: 0.7,
+          description: 'Fase inicial de germinación',
+        ),
+        // Plántula: ~2 meses
+        GrowthPhaseInfo(
+          stage: GrowthStage.seedling,
+          durationMonths: 2,
+          wateringMultiplier: 0.8,
+          description: 'Establecimiento de plántula',
+        ),
+        // Desarrollo vegetativo: ~6 meses (fase más larga)
+        GrowthPhaseInfo(
+          stage: GrowthStage.development,
+          durationMonths: 6,
+          wateringMultiplier: 1.0,
+          description: 'Crecimiento vegetativo activo',
+        ),
+        // Madurez: indefinida (fase estable)
+        GrowthPhaseInfo(
+          stage: GrowthStage.mature,
+          durationMonths: 0,
+          wateringMultiplier: 0.9,
+          description: 'Planta madura establecida',
+        ),
+        // Floración: variable según especie
+        GrowthPhaseInfo(
+          stage: GrowthStage.flowering,
+          durationMonths: 3,
+          wateringMultiplier: 1.1,
+          description: 'Fase de floración o fructificación',
+        ),
       ];
 
   @override

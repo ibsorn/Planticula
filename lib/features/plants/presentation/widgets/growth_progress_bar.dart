@@ -72,10 +72,13 @@ class GrowthProgressBar extends StatelessWidget {
   }
 
   IconData _stageIcon(GrowthStage stage) {
+    // Nuevo sistema de 5 etapas
     switch (stage) {
-      case GrowthStage.seedling: return Icons.grass;
-      case GrowthStage.juvenile: return Icons.eco;
-      case GrowthStage.adult: return Icons.park;
+      case GrowthStage.germination: return Icons.spa;        // Germinando
+      case GrowthStage.seedling: return Icons.grass;         // Plántula
+      case GrowthStage.development: return Icons.eco;        // Desarrollo
+      case GrowthStage.mature: return Icons.park;            // Madura
+      case GrowthStage.flowering: return Icons.local_florist; // Floración
     }
   }
 }

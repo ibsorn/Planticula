@@ -17,6 +17,7 @@ class TaskTile extends StatelessWidget {
   final Color soft;
   final VoidCallback? onCheck;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   const TaskTile({
     super.key,
@@ -29,6 +30,7 @@ class TaskTile extends StatelessWidget {
     this.checked = false,
     this.onCheck,
     this.onTap,
+    this.onLongPress,
   });
 
   const TaskTile.water({
@@ -39,6 +41,7 @@ class TaskTile extends StatelessWidget {
     this.checked = false,
     this.onCheck,
     this.onTap,
+    this.onLongPress,
   })  : accent = AppColors.water,
         deep = AppColors.waterDeep,
         soft = AppColors.waterSoft;
@@ -51,6 +54,7 @@ class TaskTile extends StatelessWidget {
     this.checked = false,
     this.onCheck,
     this.onTap,
+    this.onLongPress,
   })  : accent = AppColors.soil,
         deep = AppColors.soilDeep,
         soft = AppColors.soilSoft;
@@ -69,6 +73,7 @@ class TaskTile extends StatelessWidget {
         borderRadius: AppDimens.cardRadius,
         child: InkWell(
           onTap: onTap,
+          onLongPress: onLongPress,
           borderRadius: AppDimens.cardRadius,
           child: Padding(
             padding: const EdgeInsets.symmetric(

@@ -13,6 +13,7 @@ abstract class PlantsRepository {
   /// Crea una nueva planta
   Future<Result<Plant>> createPlant({
     required String name,
+    String? customName,
     String? scientificName,
     String? speciesId,
     String? speciesCategory,
@@ -39,6 +40,10 @@ abstract class PlantsRepository {
 
   /// Marca una planta como regada y actualiza fechas
   Future<Result<Plant>> waterPlant(String id);
+
+  /// Marca una planta como regada en una fecha específica (para riegos pasados)
+  /// [daysAgo]: días atrás desde hoy (0 = hoy, 1 = ayer, etc.)
+  Future<Result<Plant>> waterPlantWithDate(String id, int daysAgo);
 
   /// Registra un trasplante y actualiza el tamaño de maceta
   Future<Result<Plant>> transplantPlant(String id, String newPotSize);

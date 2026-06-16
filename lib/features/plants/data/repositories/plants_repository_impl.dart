@@ -25,6 +25,7 @@ class PlantsRepositoryImpl implements PlantsRepository {
   @override
   Future<Result<Plant>> createPlant({
     required String name,
+    String? customName,
     String? scientificName,
     String? speciesId,
     String? speciesCategory,
@@ -41,6 +42,7 @@ class PlantsRepositoryImpl implements PlantsRepository {
   }) async {
     final plantModel = PlantModel.create(
       name: name,
+      customName: customName,
       scientificName: scientificName,
       speciesId: speciesId,
       speciesCategory: speciesCategory,
@@ -78,6 +80,11 @@ class PlantsRepositoryImpl implements PlantsRepository {
   @override
   Future<Result<Plant>> waterPlant(String id) async {
     return await _dataSource.waterPlant(id);
+  }
+
+  @override
+  Future<Result<Plant>> waterPlantWithDate(String id, int daysAgo) async {
+    return await _dataSource.waterPlantWithDate(id, daysAgo);
   }
 
   @override

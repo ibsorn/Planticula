@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:planticula/features/marketplace/presentation/bloc/marketplace_bloc.dart';
-import 'package:planticula/features/marketplace/presentation/widgets/marketplace_empty_message.dart';
-import 'package:planticula/features/marketplace/presentation/widgets/marketplace_error_message.dart';
+import 'package:planticula/shared/widgets/empty_state.dart';
 import 'package:planticula/features/marketplace/presentation/widgets/marketplace_listing_card.dart';
 import 'package:planticula/features/marketplace/presentation/widgets/marketplace_location_required.dart';
 
@@ -24,15 +23,15 @@ class MarketplaceNearbyTab extends StatelessWidget {
         }
 
         if (state.isNearbyEmpty) {
-          return const MarketplaceEmptyMessage(
+          return const EmptyState(
             icon: Icons.storefront,
             title: 'No hay anuncios cercanos',
-            subtitle: 'Sé el primero en publicar en tu zona',
+            message: 'Sé el primero en publicar en tu zona',
           );
         }
 
         if (state.hasError && state.nearbyStatus == MarketplaceStatus.error) {
-          return MarketplaceErrorMessage(
+          return EmptyState.error(
             message: state.errorMessage!,
             onRetry: () => context.read<MarketplaceBloc>().add(MarketplaceLoadNearby()),
           );

@@ -10,7 +10,7 @@ class WateringCalculator {
   static WateringRecommendation calculate({
     required PlantSpecies species,
     required PlantEnvironment environment,
-    GrowthStage growthStage = GrowthStage.adult,
+    GrowthStage growthStage = GrowthStage.development,
     PotSize potSize = PotSize.medium,
     WeatherData? weather,
   }) {
@@ -127,14 +127,18 @@ class WateringCalculator {
   }) {
     double ml = potSize.baseWaterMl.toDouble();
 
-    // Growth stage multiplier for water amount
+    // Growth stage multiplier for water amount (nuevo sistema de 5 etapas)
     switch (growthStage) {
+      case GrowthStage.germination:
+        ml *= 0.3; // Muy poca agua para germinación
       case GrowthStage.seedling:
         ml *= AppConstants.seedlingWaterMultiplier;
-      case GrowthStage.juvenile:
-        ml *= AppConstants.juvenileWaterMultiplier;
-      case GrowthStage.adult:
-        ml *= 1.0;
+      case GrowthStage.development:
+        ml *= AppConstants.juvenileWaterMultiplier; // Legacy constant
+      case GrowthStage.mature:
+        ml *= 1.0; // Base adulta
+      case GrowthStage.flowering:
+        ml *= 1.15; // Más agua en floración
     }
 
     // Species characteristics

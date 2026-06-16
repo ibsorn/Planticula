@@ -248,6 +248,55 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
   }
 
   @override
+  Future<Result<PlantModel>> waterPlantWithDate(String id, int daysAgo) async {
+    try {
+      Logger.d('💧 Watering plant: $id with date $daysAgo days ago');
+
+      if (_userId == null) {
+        return const Failure('Usuario no autenticado');
+      }
+
+      // Obtener la planta actual
+      final plantResult = await getPlantById(id);
+      if (plantResult is! Success<PlantModel>) {
+        return plantResult;
+      }
+
+      final plant = plantResult.data;
+
+      if (plant.wateringFrequency == null || plant.wateringFrequency! <= 0) {
+        return const Failure('La planta no tiene configurada frecuencia de riego');
+      }
+
+      // Calcular fecha de riego (hoy - daysAgo días)
+      final lastWatered = DateTime.now().subtract(Duration(days: daysAgo));
+      // Calcular siguiente riego: desde el último riego + frecuencia
+      final nextWatering = lastWatered.add(Duration(days: plant.wateringFrequency!));
+
+      // Actualizar fechas de riego
+      final updateData = {
+        'last_watered': lastWatered.toIso8601String(),
+        'next_watering': nextWatering.toIso8601String(),
+      };
+
+      final response = await _client
+          .from(_table)
+          .update(updateData)
+          .eq('id', id)
+          .eq('user_id', _userId!)
+          .select()
+          .single();
+
+      final updatedPlant = PlantModel.fromJson(response);
+      Logger.i('✅ Watered plant: ${updatedPlant.name} with date $daysAgo days ago. Next: $nextWatering');
+      return Success(updatedPlant);
+    } catch (e, stackTrace) {
+      Logger.e('❌ Error watering plant $id with date', error: e, stackTrace: stackTrace);
+      return Failure('Error al registrar riego: ${e.toString()}');
+    }
+  }
+
+  @override
   Future<Result<PlantModel>> transplantPlant(String id, String newPotSize) async {
     try {
       Logger.d('🪴 Transplanting plant: $id to pot size: $newPotSize');

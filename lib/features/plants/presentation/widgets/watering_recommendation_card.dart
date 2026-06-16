@@ -20,10 +20,10 @@ class WateringRecommendationCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: theme.colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.water_drop, color: Colors.blue.shade600),
+                  child: Icon(Icons.water_drop, color: theme.colorScheme.primary),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -48,10 +48,10 @@ class WateringRecommendationCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.cyan.shade50,
+                    color: theme.colorScheme.secondary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.local_drink, color: Colors.cyan.shade600),
+                  child: Icon(Icons.local_drink, color: theme.colorScheme.secondary),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -76,10 +76,10 @@ class WateringRecommendationCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
+                    color: theme.colorScheme.tertiary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.wb_sunny, color: Colors.orange.shade600),
+                  child: Icon(Icons.wb_sunny, color: theme.colorScheme.tertiary),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

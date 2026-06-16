@@ -5,6 +5,7 @@ class PlantModel extends domain.Plant {
   const PlantModel({
     required super.id,
     required super.name,
+    super.customName,
     super.scientificName,
     super.speciesId,
     super.speciesCategory,
@@ -30,6 +31,7 @@ class PlantModel extends domain.Plant {
     return PlantModel(
       id: json['id'] as String,
       name: json['name'] as String,
+      customName: json['custom_name'] as String?,
       scientificName: json['scientific_name'] as String?,
       speciesId: json['species_id'] as String?,
       speciesCategory: json['species_category'] as String?,
@@ -68,6 +70,7 @@ class PlantModel extends domain.Plant {
     return {
       'id': id,
       'name': name,
+      'custom_name': customName,
       'scientific_name': scientificName,
       'species_id': speciesId,
       'species_category': speciesCategory,
@@ -94,6 +97,7 @@ class PlantModel extends domain.Plant {
     return PlantModel(
       id: plant.id,
       name: plant.name,
+      customName: plant.customName,
       scientificName: plant.scientificName,
       speciesId: plant.speciesId,
       speciesCategory: plant.speciesCategory,
@@ -119,6 +123,7 @@ class PlantModel extends domain.Plant {
   PlantModel copyWithModel({
     String? id,
     String? name,
+    String? customName,
     String? scientificName,
     String? speciesId,
     String? speciesCategory,
@@ -141,6 +146,7 @@ class PlantModel extends domain.Plant {
     return PlantModel(
       id: id ?? this.id,
       name: name ?? this.name,
+      customName: customName ?? this.customName,
       scientificName: scientificName ?? this.scientificName,
       speciesId: speciesId ?? this.speciesId,
       speciesCategory: speciesCategory ?? this.speciesCategory,
@@ -165,6 +171,7 @@ class PlantModel extends domain.Plant {
   /// Crea modelo para nueva planta (sin ID, timestamps se generan en DB)
   factory PlantModel.create({
     required String name,
+    String? customName,
     String? scientificName,
     String? speciesId,
     String? speciesCategory,
@@ -182,6 +189,7 @@ class PlantModel extends domain.Plant {
     return PlantModel(
       id: '', // Se generará en Supabase
       name: name,
+      customName: customName,
       scientificName: scientificName,
       speciesId: speciesId,
       speciesCategory: speciesCategory,
