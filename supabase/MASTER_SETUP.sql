@@ -416,6 +416,145 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
 -- ============================================================================
+-- SECCIÓN 4b: TABLA plant_identifications
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS plant_identifications (
+    id                   UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id              UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+
+    image_url            TEXT NOT NULL,
+    thumbnail_url        TEXT,
+
+    status               TEXT NOT NULL DEFAULT 'pending'
+                             CHECK (status IN ('pending', 'processing', 'completed', 'error')),
+    analyzed_at          TIMESTAMPTZ,
+
+    common_name          TEXT,
+    scientific_name      TEXT,
+    family               TEXT,
+
+    care_level           TEXT CHECK (care_level IN ('easy', 'moderate', 'expert')),
+    watering_frequency   TEXT CHECK (watering_frequency IN ('daily', 'twiceAWeek', 'weekly', 'biweekly', 'monthly')),
+    light_requirement    TEXT CHECK (light_requirement IN ('lowLight', 'indirectLight', 'brightIndirect', 'directSunlight')),
+    humidity_requirement TEXT CHECK (humidity_requirement IN ('low', 'moderate', 'high')),
+
+    toxic_to_pets        BOOLEAN,
+    toxic_to_humans      BOOLEAN,
+    confidence_score     DECIMAL(5,4) CHECK (confidence_score IS NULL OR (confidence_score >= 0 AND confidence_score <= 1)),
+
+    description          TEXT,
+    characteristics      TEXT[],
+    care_tips            TEXT[],
+    analysis_notes       TEXT,
+
+    created_at           TIMESTAMPTZ DEFAULT now(),
+    updated_at           TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_plant_id_user_id  ON plant_identifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_plant_id_status   ON plant_identifications(status);
+CREATE INDEX IF NOT EXISTS idx_plant_id_created  ON plant_identifications(created_at DESC);
+
+DROP TRIGGER IF EXISTS update_plant_identifications_updated_at ON plant_identifications;
+CREATE TRIGGER update_plant_identifications_updated_at
+    BEFORE UPDATE ON plant_identifications
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE plant_identifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own plant identifications"   ON plant_identifications;
+CREATE POLICY "Users can view own plant identifications" ON plant_identifications
+    FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own plant identifications" ON plant_identifications;
+CREATE POLICY "Users can insert own plant identifications" ON plant_identifications
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own plant identifications" ON plant_identifications;
+CREATE POLICY "Users can update own plant identifications" ON plant_identifications
+    FOR UPDATE
+    USING     (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own plant identifications" ON plant_identifications;
+CREATE POLICY "Users can delete own plant identifications" ON plant_identifications
+    FOR DELETE USING (auth.uid() = user_id);
+
+
+-- ============================================================================
+-- SECCIÓN 4c: TABLA seed_identifications
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS seed_identifications (
+    id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id                 UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+
+    image_url               TEXT NOT NULL,
+    thumbnail_url           TEXT,
+
+    status                  TEXT NOT NULL DEFAULT 'pending'
+                                CHECK (status IN ('pending', 'processing', 'completed', 'error')),
+    analyzed_at             TIMESTAMPTZ,
+
+    common_name             TEXT,
+    scientific_name         TEXT,
+    family                  TEXT,
+
+    germination_difficulty  TEXT CHECK (germination_difficulty IN ('easy', 'moderate', 'difficult', 'veryDifficult')),
+    germination_time        TEXT CHECK (germination_time IN (
+        'oneToTwoWeeks', 'twoToFourWeeks', 'oneToTwoMonths', 'twoToThreeMonths', 'moreThanThreeMonths'
+    )),
+    sowing_depth            TEXT CHECK (sowing_depth IN (
+        'surfaceSow', 'shallow', 'medium', 'deep'
+    )),
+    best_sowing_season      TEXT CHECK (best_sowing_season IN (
+        'spring', 'summer', 'autumn', 'winter', 'yearRound'
+    )),
+
+    confidence_score        DECIMAL(5,4) CHECK (confidence_score IS NULL OR (confidence_score >= 0 AND confidence_score <= 1)),
+    description             TEXT,
+    germination_tips        TEXT[],
+    soil_recommendation     TEXT,
+    analysis_notes          TEXT,
+
+    created_at              TIMESTAMPTZ DEFAULT now(),
+    updated_at              TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_seed_id_user_id  ON seed_identifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_seed_id_status   ON seed_identifications(status);
+CREATE INDEX IF NOT EXISTS idx_seed_id_created  ON seed_identifications(created_at DESC);
+
+DROP TRIGGER IF EXISTS update_seed_identifications_updated_at ON seed_identifications;
+CREATE TRIGGER update_seed_identifications_updated_at
+    BEFORE UPDATE ON seed_identifications
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE seed_identifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own seed identifications"   ON seed_identifications;
+CREATE POLICY "Users can view own seed identifications" ON seed_identifications
+    FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own seed identifications" ON seed_identifications;
+CREATE POLICY "Users can insert own seed identifications" ON seed_identifications
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own seed identifications" ON seed_identifications;
+CREATE POLICY "Users can update own seed identifications" ON seed_identifications
+    FOR UPDATE
+    USING     (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own seed identifications" ON seed_identifications;
+CREATE POLICY "Users can delete own seed identifications" ON seed_identifications
+    FOR DELETE USING (auth.uid() = user_id);
+
+
+-- ============================================================================
 -- SECCIÓN 5: VISTAS de plantas
 -- ============================================================================
 
@@ -1080,7 +1219,9 @@ VALUES
     ('soil-images',        'soil-images',        TRUE),
     ('pest-photos',        'pest-photos',        TRUE),
     ('marketplace-photos', 'marketplace-photos', TRUE),
-    ('disease-photos',     'disease-photos',     TRUE)
+    ('disease-photos',     'disease-photos',     TRUE),
+    ('plant-id-photos',    'plant-id-photos',    TRUE),
+    ('seed-id-photos',     'seed-id-photos',     TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- ---- plant-images ----
@@ -1157,6 +1298,36 @@ CREATE POLICY "Users update own disease photos" ON storage.objects
     FOR UPDATE USING (bucket_id = 'disease-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
 CREATE POLICY "Users delete own disease photos" ON storage.objects
     FOR DELETE USING (bucket_id = 'disease-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ---- plant-id-photos ----
+DROP POLICY IF EXISTS "Public read plant id photos"       ON storage.objects;
+DROP POLICY IF EXISTS "Auth users upload plant id photos" ON storage.objects;
+DROP POLICY IF EXISTS "Users update own plant id photos"  ON storage.objects;
+DROP POLICY IF EXISTS "Users delete own plant id photos"  ON storage.objects;
+
+CREATE POLICY "Public read plant id photos" ON storage.objects
+    FOR SELECT USING (bucket_id = 'plant-id-photos');
+CREATE POLICY "Auth users upload plant id photos" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'plant-id-photos' AND auth.role() = 'authenticated');
+CREATE POLICY "Users update own plant id photos" ON storage.objects
+    FOR UPDATE USING (bucket_id = 'plant-id-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Users delete own plant id photos" ON storage.objects
+    FOR DELETE USING (bucket_id = 'plant-id-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ---- seed-id-photos ----
+DROP POLICY IF EXISTS "Public read seed id photos"       ON storage.objects;
+DROP POLICY IF EXISTS "Auth users upload seed id photos" ON storage.objects;
+DROP POLICY IF EXISTS "Users update own seed id photos"  ON storage.objects;
+DROP POLICY IF EXISTS "Users delete own seed id photos"  ON storage.objects;
+
+CREATE POLICY "Public read seed id photos" ON storage.objects
+    FOR SELECT USING (bucket_id = 'seed-id-photos');
+CREATE POLICY "Auth users upload seed id photos" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'seed-id-photos' AND auth.role() = 'authenticated');
+CREATE POLICY "Users update own seed id photos" ON storage.objects
+    FOR UPDATE USING (bucket_id = 'seed-id-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Users delete own seed id photos" ON storage.objects
+    FOR DELETE USING (bucket_id = 'seed-id-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
 
 
 -- ============================================================================
