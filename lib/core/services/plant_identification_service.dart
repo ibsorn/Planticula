@@ -4,10 +4,10 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
 import 'package:planticula/core/data/species/plant_species.dart';
+import 'package:planticula/core/services/ai_provider_config.dart';
 import 'package:planticula/core/services/species_service.dart';
 
 /// Etapas del proceso de identificación para mostrar progreso al usuario
@@ -158,23 +158,9 @@ class PlantIdentificationResult {
 class PlantIdentificationService {
   final SpeciesService _speciesService;
 
-  static const String _openRouterBaseUrl = 'https://openrouter.ai/api/v1';
-
   PlantIdentificationService(this._speciesService);
 
-  /// Obtiene la API key de OpenRouter desde las variables de entorno
-  String? get _apiKey => dotenv.env['OPENROUTER_API_KEY'];
-
-  /// Obtiene el modelo de OpenRouter desde las variables de entorno
-  /// Valor por defecto: qwen/qwen3-vl-8b-instruct (económico y efectivo)
-  String get _model {
-    final model = dotenv.env['OPENROUTER_MODEL'];
-    if (model != null && model.isNotEmpty) {
-      return model;
-    }
-    // Modelo por defecto si no está configurado
-    return 'qwen/qwen3-vl-8b-instruct';
-  }
+  AiProviderConfig get _cfg => AiProviderConfig.plantIdentification();
 
   /// Identifica una planta desde una imagen usando OpenRouter
   ///
@@ -190,12 +176,12 @@ class PlantIdentificationService {
   }) async {
     try {
       // Verificar que tenemos API key
-      if (_apiKey == null || _apiKey!.isEmpty) {
+      if (!_cfg.hasApiKey) {
         // Fallback a simulación si no hay API key configurada
         return await _simulateIdentification(imageFile, location, onProgress);
       }
 
-      // Procesar con OpenRouter
+      // Procesar con el proveedor de IA configurado
       return await _identifyWithOpenRouter(
         imageFile,
         location,
@@ -246,18 +232,19 @@ class PlantIdentificationService {
     final client = http.Client();
     try {
       // Crear la petición
+      final cfg = _cfg;
       final request = http.Request(
         'POST',
-        Uri.parse('$_openRouterBaseUrl/chat/completions'),
+        Uri.parse(cfg.chatCompletionsUrl),
       );
       request.headers.addAll({
-        'Authorization': 'Bearer $_apiKey',
+        'Authorization': 'Bearer ${cfg.apiKey}',
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://planticula.app',
         'X-Title': 'Planticula Plant Identification',
       });
       request.body = jsonEncode({
-        'model': _model,
+        'model': cfg.model,
         'messages': [
           {
             'role': 'user',
@@ -326,7 +313,7 @@ class PlantIdentificationService {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('OpenRouter API error: ${response.statusCode} - ${response.body}');
+        throw Exception('AI API error: ${response.statusCode} - ${response.body}');
       }
 
       final jsonResponse = jsonDecode(response.body);

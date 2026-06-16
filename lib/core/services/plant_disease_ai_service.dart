@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
+import 'package:planticula/core/services/ai_provider_config.dart';
 import 'package:planticula/features/plant_disease/domain/entities/plant_disease_diagnosis.dart';
 
 /// Stages of the disease diagnosis process for UI progress feedback.
@@ -71,23 +71,16 @@ class PlantDiseaseAIResult {
 }
 
 /// Diagnoses plant health problems (pests, diseases, deficiencies) from images
-/// using OpenRouter vision models.
+/// using a configurable AI vision model.
 ///
-/// Reuses the same API key and model configured in .env:
-/// - OPENROUTER_API_KEY
-/// - OPENROUTER_MODEL (default: qwen/qwen3-vl-8b-instruct)
+/// Provider and model are resolved via [AiProviderConfig.plantDisease]:
+/// - DISEASE_AI_API_KEY / DISEASE_AI_BASE_URL / DISEASE_AI_MODEL
+/// Fallback to shared OPENROUTER_* keys if per-function keys are absent.
 ///
 /// The AI is instructed to prioritise homemade remedies over commercial products.
 class PlantDiseaseAIService {
-  static const String _openRouterBaseUrl = 'https://openrouter.ai/api/v1';
+  AiProviderConfig get _cfg => AiProviderConfig.plantDisease();
 
-  String? get _apiKey => dotenv.env['OPENROUTER_API_KEY'];
-
-  String get _model {
-    final model = dotenv.env['OPENROUTER_MODEL'];
-    if (model != null && model.isNotEmpty) return model;
-    return 'qwen/qwen3-vl-8b-instruct';
-  }
 
   /// Analyses [imageBytes] for plant health problems.
   ///
@@ -97,7 +90,7 @@ class PlantDiseaseAIService {
     DiagnosisProgressCallback? onProgress,
   }) async {
     try {
-      if (_apiKey == null || _apiKey!.isEmpty) {
+      if (!_cfg.hasApiKey) {
         return _stubResult();
       }
       return await _analyzeWithOpenRouter(imageBytes, onProgress);
@@ -125,18 +118,19 @@ class PlantDiseaseAIService {
 
     final client = http.Client();
     try {
+      final cfg = _cfg;
       final request = http.Request(
         'POST',
-        Uri.parse('$_openRouterBaseUrl/chat/completions'),
+        Uri.parse(cfg.chatCompletionsUrl),
       );
       request.headers.addAll({
-        'Authorization': 'Bearer $_apiKey',
+        'Authorization': 'Bearer ${cfg.apiKey}',
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://planticula.app',
         'X-Title': 'Planticula Plant Disease Diagnosis',
       });
       request.body = jsonEncode({
-        'model': _model,
+        'model': cfg.model,
         'messages': [
           {
             'role': 'user',
@@ -182,7 +176,7 @@ class PlantDiseaseAIService {
       final response = await http.Response.fromStream(streamed);
       if (response.statusCode != 200) {
         throw Exception(
-          'OpenRouter API error ${response.statusCode}: ${response.body}',
+          'AI API error ${response.statusCode}: ${response.body}',
         );
       }
 

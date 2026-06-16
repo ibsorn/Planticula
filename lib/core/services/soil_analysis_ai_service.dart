@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
+import 'package:planticula/core/services/ai_provider_config.dart';
 import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.dart';
 
 /// Stages of the soil analysis process for UI progress feedback.
@@ -71,15 +71,8 @@ class SoilAnalysisAIResult {
 /// call to OpenRouter, reusing the same API key and model configuration
 /// already used by [PlantIdentificationService].
 class SoilAnalysisAIService {
-  static const String _openRouterBaseUrl = 'https://openrouter.ai/api/v1';
+  AiProviderConfig get _cfg => AiProviderConfig.soilAnalysis();
 
-  String? get _apiKey => dotenv.env['OPENROUTER_API_KEY'];
-
-  String get _model {
-    final model = dotenv.env['OPENROUTER_MODEL'];
-    if (model != null && model.isNotEmpty) return model;
-    return 'qwen/qwen3-vl-8b-instruct';
-  }
 
   /// Analyses [imageBytes] and returns a structured [SoilAnalysisAIResult].
   ///
@@ -90,7 +83,7 @@ class SoilAnalysisAIService {
     SoilAnalysisProgressCallback? onProgress,
   }) async {
     try {
-      if (_apiKey == null || _apiKey!.isEmpty) {
+      if (!_cfg.hasApiKey) {
         return _stubResult();
       }
       return await _analyzeWithOpenRouter(imageBytes, onProgress);
@@ -118,18 +111,19 @@ class SoilAnalysisAIService {
 
     final client = http.Client();
     try {
+      final cfg = _cfg;
       final request = http.Request(
         'POST',
-        Uri.parse('$_openRouterBaseUrl/chat/completions'),
+        Uri.parse(cfg.chatCompletionsUrl),
       );
       request.headers.addAll({
-        'Authorization': 'Bearer $_apiKey',
+        'Authorization': 'Bearer ${cfg.apiKey}',
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://planticula.app',
         'X-Title': 'Planticula Soil Analysis',
       });
       request.body = jsonEncode({
-        'model': _model,
+        'model': cfg.model,
         'messages': [
           {
             'role': 'user',
@@ -176,7 +170,7 @@ class SoilAnalysisAIService {
       final response = await http.Response.fromStream(streamed);
       if (response.statusCode != 200) {
         throw Exception(
-          'OpenRouter API error ${response.statusCode}: ${response.body}',
+          'AI API error ${response.statusCode}: ${response.body}',
         );
       }
 
