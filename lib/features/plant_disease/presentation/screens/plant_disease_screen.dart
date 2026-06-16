@@ -85,19 +85,8 @@ class _PlantDiseaseScreenState extends State<PlantDiseaseScreen> {
             );
           }
 
-          if (state.isAnalyzing) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Diagnosticando con IA... puede tardar unos segundos'),
-                behavior: SnackBarBehavior.floating,
-                duration: Duration(seconds: 45),
-              ),
-            );
-          }
-
           // Navigate to result screen when analysis completes
           if (state.isSuccess && state.lastDiagnosis != null) {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
             context.push(
               AppConstants.routePlantDiagnosisResult,
               extra: state.lastDiagnosis,
@@ -192,42 +181,87 @@ class _PlantDiseaseScreenState extends State<PlantDiseaseScreen> {
             ],
           ),
           child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  '¿Diagnosticar esta imagen?',
-                  style: theme.textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppDimens.xs),
-                Text(
-                  'La IA analizará la imagen en busca de plagas, enfermedades o deficiencias.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+            child: state.isAnalyzing
+                ? _buildProgress(theme, state)
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        '¿Diagnosticar esta imagen?',
+                        style: theme.textTheme.titleMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppDimens.xs),
+                      Text(
+                        'La IA analizará la imagen en busca de plagas, enfermedades o deficiencias.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppDimens.lg),
+                      AppButton(
+                        text: 'Analizar con IA',
+                        onPressed: _onSubmit,
+                        icon: Icons.bug_report_outlined,
+                        backgroundColor: AppColors.pest,
+                      ),
+                      const SizedBox(height: AppDimens.sm),
+                      TextButton(
+                        onPressed: () => context
+                            .read<PlantDiseaseBloc>()
+                            .add(PlantDiseaseClearImage()),
+                        child: const Text('Cancelar'),
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppDimens.lg),
-                AppButton(
-                  text: state.isAnalyzing
-                      ? 'Analizando con IA...'
-                      : 'Analizar con IA',
-                  onPressed: state.isAnalyzing ? null : _onSubmit,
-                  isLoading: state.isAnalyzing,
-                  icon: Icons.bug_report_outlined,
-                  backgroundColor: AppColors.pest,
-                ),
-                const SizedBox(height: AppDimens.sm),
-                TextButton(
-                  onPressed: () =>
-                      context.read<PlantDiseaseBloc>().add(PlantDiseaseClearImage()),
-                  child: const Text('Cancelar'),
-                ),
-              ],
-            ),
           ),
+        ),
+      ],
+    );
+  }
+
+  /// Progress UI shown while the AI is analysing the image.
+  Widget _buildProgress(ThemeData theme, PlantDiseaseState state) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppDimens.sm),
+          child: LinearProgressIndicator(
+            value: state.progress > 0 ? state.progress : null,
+            minHeight: 6,
+            backgroundColor: AppColors.pestSoft,
+            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.pest),
+          ),
+        ),
+        const SizedBox(height: AppDimens.md),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.pest),
+              ),
+            ),
+            const SizedBox(width: AppDimens.md),
+            Flexible(
+              child: Text(
+                state.progressMessage.isNotEmpty
+                    ? state.progressMessage
+                    : 'Preparando...',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ),
       ],
     );

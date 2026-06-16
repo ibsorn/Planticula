@@ -2,6 +2,9 @@ import 'dart:typed_data';
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/features/soil_analysis/data/models/soil_analysis_model.dart';
 
+/// Reports analysis progress: [progress] in 0..1, [message] human-readable.
+typedef SoilAnalysisProgress = void Function(double progress, String message);
+
 /// Contrato para la fuente de datos de análisis de sustrato
 abstract class SoilAnalysisRemoteDataSource {
   /// Obtiene todos los análisis del usuario
@@ -33,7 +36,10 @@ abstract class SoilAnalysisRemoteDataSource {
   /// Elimina imagen de Supabase Storage
   Future<Result<void>> deleteImage(String filePath);
 
-  /// Invoca Edge Function para analizar imagen
-  /// Retorna el análisis completado con los resultados
-  Future<Result<SoilAnalysisModel>> analyzeImage(String analysisId);
+  /// Analiza la imagen con IA y retorna el análisis completado.
+  /// [onProgress] reporta el avance del análisis (0..1).
+  Future<Result<SoilAnalysisModel>> analyzeImage(
+    String analysisId, {
+    SoilAnalysisProgress? onProgress,
+  });
 }

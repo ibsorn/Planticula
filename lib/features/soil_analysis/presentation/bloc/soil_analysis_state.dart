@@ -37,6 +37,10 @@ class SoilAnalysisState extends Equatable {
   final Uint8List? selectedImageBytes;
   final String? selectedImageName;
 
+  // Analysis progress (0..1) and current stage message
+  final double progress;
+  final String progressMessage;
+
   const SoilAnalysisState({
     this.status = SoilAnalysisStatus.initial,
     this.imageSelectionStatus = ImageSelectionStatus.initial,
@@ -47,6 +51,8 @@ class SoilAnalysisState extends Equatable {
     this.lastCreatedAnalysis,
     this.selectedImageBytes,
     this.selectedImageName,
+    this.progress = 0.0,
+    this.progressMessage = '',
   });
 
   bool get isLoading => status == SoilAnalysisStatus.loading;
@@ -78,6 +84,8 @@ class SoilAnalysisState extends Equatable {
     SoilAnalysis? lastCreatedAnalysis,
     Uint8List? selectedImageBytes,
     String? selectedImageName,
+    double? progress,
+    String? progressMessage,
   }) {
     return SoilAnalysisState(
       status: status ?? this.status,
@@ -89,6 +97,8 @@ class SoilAnalysisState extends Equatable {
       lastCreatedAnalysis: lastCreatedAnalysis ?? this.lastCreatedAnalysis,
       selectedImageBytes: selectedImageBytes ?? this.selectedImageBytes,
       selectedImageName: selectedImageName ?? this.selectedImageName,
+      progress: progress ?? this.progress,
+      progressMessage: progressMessage ?? this.progressMessage,
     );
   }
 
@@ -103,5 +113,7 @@ class SoilAnalysisState extends Equatable {
         lastCreatedAnalysis,
         selectedImageBytes,
         selectedImageName,
+        progress,
+        progressMessage,
       ];
 }

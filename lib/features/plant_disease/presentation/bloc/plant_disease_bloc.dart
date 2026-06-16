@@ -126,12 +126,24 @@ class PlantDiseaseBloc extends Bloc<PlantDiseaseEvent, PlantDiseaseState> {
       return;
     }
 
-    emit(state.copyWith(submitStatus: PlantDiseaseSubmitStatus.analyzing));
+    emit(state.copyWith(
+      submitStatus: PlantDiseaseSubmitStatus.analyzing,
+      progress: 0.0,
+      progressMessage: 'Preparando...',
+    ));
 
     final result = await _repository.createDiagnosis(
       imageBytes: state.imageBytes!,
       fileName: state.imageName ?? 'disease_${DateTime.now().millisecondsSinceEpoch}.jpg',
       plantId: event.plantId,
+      onProgress: (progress, message) {
+        if (emit.isDone) return;
+        emit(state.copyWith(
+          submitStatus: PlantDiseaseSubmitStatus.analyzing,
+          progress: progress,
+          progressMessage: message,
+        ));
+      },
     );
 
     result.when(

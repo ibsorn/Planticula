@@ -91,8 +91,11 @@ class SoilAnalysisRepositoryImpl implements SoilAnalysisRepository {
   }
 
   @override
-  Future<Result<SoilAnalysis>> requestAnalysis(String analysisId) async {
-    return await _dataSource.analyzeImage(analysisId);
+  Future<Result<SoilAnalysis>> requestAnalysis(
+    String analysisId, {
+    SoilAnalysisProgress? onProgress,
+  }) async {
+    return await _dataSource.analyzeImage(analysisId, onProgress: onProgress);
   }
 
   @override

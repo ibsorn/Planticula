@@ -277,13 +277,18 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
   }
 
   @override
-  Future<Result<SoilAnalysisModel>> analyzeImage(String analysisId) async {
+  Future<Result<SoilAnalysisModel>> analyzeImage(
+    String analysisId, {
+    SoilAnalysisProgress? onProgress,
+  }) async {
     try {
       Logger.d('🔬 Starting AI analysis for: $analysisId');
 
       if (_userId == null) {
         return const Failure('Usuario no autenticado');
       }
+
+      onProgress?.call(0.1, 'Preparando análisis...');
 
       // Get the analysis to get the image URL
       final analysisResult = await getAnalysisById(analysisId);
@@ -299,6 +304,8 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
           .eq('id', analysisId)
           .eq('user_id', _userId!);
 
+      onProgress?.call(0.25, 'Descargando imagen...');
+
       // Download the image from the public URL
       final imageResponse = await http.get(Uri.parse(analysis.imageUrl));
       if (imageResponse.statusCode != 200) {
@@ -306,8 +313,12 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
       }
       final imageBytes = imageResponse.bodyBytes;
 
-      // Call the AI service
-      final aiResult = await _aiService.analyzeFromBytes(imageBytes);
+      // Call the AI service — map its stage progress into the 0.3..0.95 band
+      final aiResult = await _aiService.analyzeFromBytes(
+        imageBytes,
+        onProgress: (stage, message, progress) =>
+            onProgress?.call(0.3 + 0.65 * progress, message),
+      );
 
       if (aiResult.isSuccessful) {
         // Update the analysis with AI results

@@ -2,6 +2,9 @@ import 'dart:typed_data';
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/features/plant_disease/domain/entities/plant_disease_diagnosis.dart';
 
+/// Reports diagnosis progress: [progress] in 0..1, [message] human-readable.
+typedef DiagnosisProgress = void Function(double progress, String message);
+
 abstract class PlantDiseaseRepository {
   /// Returns all diagnoses for the current user, ordered by date desc.
   Future<Result<List<PlantDiseaseDiagnosis>>> getDiagnoses();
@@ -11,6 +14,7 @@ abstract class PlantDiseaseRepository {
     required Uint8List imageBytes,
     required String fileName,
     String? plantId,
+    DiagnosisProgress? onProgress,
   });
 
   /// Deletes a diagnosis and its associated image.

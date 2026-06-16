@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 import 'package:planticula/core/network/result.dart';
+import 'package:planticula/features/soil_analysis/data/datasources/soil_analysis_remote_datasource.dart'
+    show SoilAnalysisProgress;
 import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.dart';
 
 /// Contrato para el repositorio de análisis de sustrato
@@ -31,8 +33,11 @@ abstract class SoilAnalysisRepository {
   /// Elimina un análisis (y su imagen asociada)
   Future<Result<void>> deleteAnalysis(String id);
 
-  /// Solicita análisis de imagen via Edge Function
-  Future<Result<SoilAnalysis>> requestAnalysis(String analysisId);
+  /// Solicita análisis de imagen con IA. [onProgress] reporta el avance (0..1).
+  Future<Result<SoilAnalysis>> requestAnalysis(
+    String analysisId, {
+    SoilAnalysisProgress? onProgress,
+  });
 
   /// Obtiene análisis pendientes (status='pending')
   Future<Result<List<SoilAnalysis>>> getPendingAnalyses();

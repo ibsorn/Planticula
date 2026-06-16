@@ -23,7 +23,10 @@ class PlantDiseaseRepositoryImpl implements PlantDiseaseRepository {
     required Uint8List imageBytes,
     required String fileName,
     String? plantId,
+    DiagnosisProgress? onProgress,
   }) async {
+    onProgress?.call(0.05, 'Subiendo imagen...');
+
     // 1. Upload image
     final uploadResult = await _datasource.uploadImage(imageBytes, fileName);
     if (uploadResult is Failure<String>) {
@@ -31,6 +34,8 @@ class PlantDiseaseRepositoryImpl implements PlantDiseaseRepository {
           code: uploadResult.code, error: uploadResult.error);
     }
     final imageUrl = (uploadResult as Success<String>).data;
+
+    onProgress?.call(0.2, 'Guardando registro...');
 
     // 2. Create pending record in DB
     final model = PlantDiseaseDiagnosisModel.create(
@@ -54,7 +59,14 @@ class PlantDiseaseRepositoryImpl implements PlantDiseaseRepository {
       final httpResponse = await http.get(Uri.parse(imageUrl));
       final downloadedBytes = httpResponse.bodyBytes;
 
-      final aiResult = await _aiService.analyzeFromBytes(downloadedBytes);
+      final aiResult = await _aiService.analyzeFromBytes(
+        downloadedBytes,
+        // Map the AI service's stage progress (0..1) into the 0.3..0.9 band
+        onProgress: (stage, message, progress) =>
+            onProgress?.call(0.3 + 0.6 * progress, message),
+      );
+
+      onProgress?.call(0.95, 'Guardando resultados...');
 
       if (aiResult.isSuccessful) {
         final updated = created.withResults(

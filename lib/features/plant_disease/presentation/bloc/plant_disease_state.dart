@@ -16,6 +16,10 @@ class PlantDiseaseState extends Equatable {
   final Uint8List? imageBytes;
   final String? imageName;
 
+  // Analysis progress (0..1) and current stage message
+  final double progress;
+  final String progressMessage;
+
   const PlantDiseaseState({
     this.status = PlantDiseaseStatus.initial,
     this.imageStatus = PlantDiseaseImageStatus.initial,
@@ -25,6 +29,8 @@ class PlantDiseaseState extends Equatable {
     this.lastDiagnosis,
     this.imageBytes,
     this.imageName,
+    this.progress = 0.0,
+    this.progressMessage = '',
   });
 
   bool get hasImage => imageBytes != null;
@@ -42,6 +48,8 @@ class PlantDiseaseState extends Equatable {
     PlantDiseaseDiagnosis? lastDiagnosis,
     Uint8List? imageBytes,
     String? imageName,
+    double? progress,
+    String? progressMessage,
   }) {
     return PlantDiseaseState(
       status: status ?? this.status,
@@ -52,6 +60,8 @@ class PlantDiseaseState extends Equatable {
       lastDiagnosis: lastDiagnosis ?? this.lastDiagnosis,
       imageBytes: imageBytes ?? this.imageBytes,
       imageName: imageName ?? this.imageName,
+      progress: progress ?? this.progress,
+      progressMessage: progressMessage ?? this.progressMessage,
     );
   }
 
@@ -66,6 +76,8 @@ class PlantDiseaseState extends Equatable {
       lastDiagnosis: lastDiagnosis,
       imageBytes: null,
       imageName: null,
+      progress: 0.0,
+      progressMessage: '',
     );
   }
 
@@ -73,6 +85,6 @@ class PlantDiseaseState extends Equatable {
   List<Object?> get props => [
         status, imageStatus, submitStatus,
         diagnoses, errorMessage, lastDiagnosis,
-        imageBytes, imageName,
+        imageBytes, imageName, progress, progressMessage,
       ];
 }

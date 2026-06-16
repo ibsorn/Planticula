@@ -202,9 +202,21 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
   ) async {
     emit(state.copyWith(
       operationStatus: OperationStatus.analyzing,
+      progress: 0.0,
+      progressMessage: 'Preparando análisis...',
     ));
 
-    final result = await _repository.requestAnalysis(event.analysisId);
+    final result = await _repository.requestAnalysis(
+      event.analysisId,
+      onProgress: (progress, message) {
+        if (emit.isDone) return;
+        emit(state.copyWith(
+          operationStatus: OperationStatus.analyzing,
+          progress: progress,
+          progressMessage: message,
+        ));
+      },
+    );
 
     result.when(
       success: (analysis) {

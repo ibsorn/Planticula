@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:planticula/core/theme/app_colors.dart';
+import 'package:planticula/core/theme/app_dimens.dart';
 import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.dart';
 import 'package:planticula/features/soil_analysis/presentation/bloc/soil_analysis_bloc.dart';
 import 'package:planticula/features/soil_analysis/presentation/screens/analysis_detail_screen.dart';
@@ -100,18 +102,7 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
             );
           }
 
-          if (state.isAnalyzing) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Analizando sustrato con IA...'),
-                behavior: SnackBarBehavior.floating,
-                duration: Duration(seconds: 30),
-              ),
-            );
-          }
-
           if (state.isOperationSuccess && state.lastCreatedAnalysis != null) {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
             final completed = state.lastCreatedAnalysis!.isCompleted;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -214,36 +205,81 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
             ],
           ),
           child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  '¿Subir esta imagen?',
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                AppButton(
-                  text: state.isAnalyzing
-                      ? 'Analizando con IA...'
-                      : 'Analizar con IA',
-                  onPressed: (state.isUploading || state.isAnalyzing)
-                      ? null
-                      : () => _onUpload(state.selectedImageBytes),
-                  isLoading: state.isUploading || state.isAnalyzing,
-                  icon: Icons.science_outlined,
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () {
-                    context.read<SoilAnalysisBloc>().add(SoilAnalysisClearError());
-                  },
-                  child: const Text('Cancelar'),
-                ),
-              ],
-            ),
+            child: (state.isUploading || state.isAnalyzing)
+                ? _buildProgress(state)
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        '¿Subir esta imagen?',
+                        style: Theme.of(context).textTheme.titleMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      AppButton(
+                        text: 'Analizar con IA',
+                        onPressed: () => _onUpload(state.selectedImageBytes),
+                        icon: Icons.science_outlined,
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () {
+                          context
+                              .read<SoilAnalysisBloc>()
+                              .add(SoilAnalysisClearError());
+                        },
+                        child: const Text('Cancelar'),
+                      ),
+                    ],
+                  ),
           ),
+        ),
+      ],
+    );
+  }
+
+  /// Progress UI shown while uploading / analysing.
+  Widget _buildProgress(SoilAnalysisState state) {
+    final theme = Theme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppDimens.sm),
+          child: LinearProgressIndicator(
+            value: state.progress > 0 ? state.progress : null,
+            minHeight: 6,
+            backgroundColor: AppColors.soilSoft,
+            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.soil),
+          ),
+        ),
+        const SizedBox(height: AppDimens.md),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.soil),
+              ),
+            ),
+            const SizedBox(width: AppDimens.md),
+            Flexible(
+              child: Text(
+                state.progressMessage.isNotEmpty
+                    ? state.progressMessage
+                    : (state.isUploading ? 'Subiendo imagen...' : 'Preparando...'),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ),
       ],
     );
