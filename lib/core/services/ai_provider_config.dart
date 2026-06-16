@@ -13,9 +13,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// OPENROUTER_MODEL=qwen/qwen3-vl-8b-instruct
 ///
 /// # Per-function overrides (optional)
-/// PLANT_ID_API_KEY=...   PLANT_ID_BASE_URL=...   PLANT_ID_MODEL=...
-/// SOIL_AI_API_KEY=...    SOIL_AI_BASE_URL=...    SOIL_AI_MODEL=...
-/// DISEASE_AI_API_KEY=... DISEASE_AI_BASE_URL=... DISEASE_AI_MODEL=...
+/// PLANT_ID_API_KEY=...      PLANT_ID_BASE_URL=...      PLANT_ID_MODEL=...
+/// SOIL_AI_API_KEY=...       SOIL_AI_BASE_URL=...       SOIL_AI_MODEL=...
+/// DISEASE_AI_API_KEY=...    DISEASE_AI_BASE_URL=...    DISEASE_AI_MODEL=...
+/// PLANT_ID_V2_API_KEY=...   PLANT_ID_V2_BASE_URL=...   PLANT_ID_V2_MODEL=...
+/// SEED_ID_API_KEY=...       SEED_ID_BASE_URL=...       SEED_ID_MODEL=...
 /// ```
 ///
 /// **Fallback chain (per field)**:
@@ -78,6 +80,20 @@ class AiProviderConfig {
   /// Fallbacks:  `OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `OPENROUTER_MODEL`
   factory AiProviderConfig.plantDisease() =>
       _fromEnv('DISEASE_AI', 'Plant Disease Diagnosis');
+
+  /// Configuration for the **Plant Identification V2** feature (standalone, saves history).
+  ///
+  /// .env keys: `PLANT_ID_V2_API_KEY`, `PLANT_ID_V2_BASE_URL`, `PLANT_ID_V2_MODEL`
+  /// Fallbacks:  `OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `OPENROUTER_MODEL`
+  factory AiProviderConfig.plantIdentificationV2() =>
+      _fromEnv('PLANT_ID_V2', 'Plant Identification V2');
+
+  /// Configuration for the **Seed Identification** feature.
+  ///
+  /// .env keys: `SEED_ID_API_KEY`, `SEED_ID_BASE_URL`, `SEED_ID_MODEL`
+  /// Fallbacks:  `OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `OPENROUTER_MODEL`
+  factory AiProviderConfig.seedIdentification() =>
+      _fromEnv('SEED_ID', 'Seed Identification');
 
   // ---------------------------------------------------------------------------
   // Internal resolver

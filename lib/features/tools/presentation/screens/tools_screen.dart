@@ -4,10 +4,12 @@ import 'package:planticula/core/constants/app_constants.dart';
 import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
 
-/// Hub screen for advanced tools: soil analysis and care guides.
+/// Hub screen for advanced AI tools.
 ///
-/// Each tool is presented as a tappable card that navigates to its
-/// own feature screen. New tools can be added here as the app grows.
+/// Layout:
+///   - [Hero card]  Identificar Planta  — más grande, destacada
+///   - [Grid 2 cols] Análisis Sustrato · Diagnóstico Plantas
+///   - [Grid 2 cols] Identificar Semilla · Guías de Cuidado
 class ToolsScreen extends StatelessWidget {
   const ToolsScreen({super.key});
 
@@ -36,38 +38,89 @@ class ToolsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppDimens.xl),
-                _ToolCard(
-                  icon: Icons.science_outlined,
-                  title: 'Análisis de Sustrato',
+
+                // ── Hero card — Identificar Planta ─────────────────────────
+                _HeroToolCard(
+                  icon: Icons.local_florist_outlined,
+                  title: 'Identificar Planta',
                   description:
-                      'Fotografía la tierra de tus plantas para obtener un análisis de pH, humedad y tipo de suelo.',
-                  accent: AppColors.soil,
-                  deep: AppColors.soilDeep,
-                  soft: AppColors.soilSoft,
-                  onTap: () => context.go(AppConstants.routeSoilAnalysis),
-                ),
-                const SizedBox(height: AppDimens.md),
-                _ToolCard(
-                  icon: Icons.bug_report_outlined,
-                  title: 'Diagnóstico de Plantas',
-                  description:
-                      'Fotografía hojas, tallos o raíces afectadas y la IA identificará plagas, enfermedades o carencias con remedios caseros.',
-                  accent: AppColors.pest,
-                  deep: AppColors.pestDeep,
-                  soft: AppColors.pestSoft,
-                  onTap: () => context.go(AppConstants.routePlantDisease),
-                ),
-                const SizedBox(height: AppDimens.md),
-                _ToolCard(
-                  icon: Icons.menu_book_outlined,
-                  title: 'Guías de Cuidado',
-                  description:
-                      'Consulta consejos sobre riego, luz, temperatura, plagas y más para mantener tus plantas sanas.',
+                      'Fotografía cualquier planta y la IA te dirá su nombre, familia botánica, cuidados, toxicidad y características en segundos.',
                   accent: AppColors.primary,
                   deep: AppColors.primaryDeep,
                   soft: AppColors.primarySoft,
-                  onTap: () => context.go(AppConstants.routeGuides),
+                  onTap: () =>
+                      context.go(AppConstants.routePlantIdentificationV2),
                 ),
+                const SizedBox(height: AppDimens.md),
+
+                // ── Grid row 1: Sustrato + Diagnóstico ─────────────────────
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _CompactToolCard(
+                        icon: Icons.science_outlined,
+                        title: 'Análisis de Sustrato',
+                        description:
+                            'Analiza la tierra de tus plantas: pH, humedad y tipo de suelo.',
+                        accent: AppColors.soil,
+                        deep: AppColors.soilDeep,
+                        soft: AppColors.soilSoft,
+                        onTap: () =>
+                            context.go(AppConstants.routeSoilAnalysis),
+                      ),
+                    ),
+                    const SizedBox(width: AppDimens.md),
+                    Expanded(
+                      child: _CompactToolCard(
+                        icon: Icons.bug_report_outlined,
+                        title: 'Diagnóstico de Plantas',
+                        description:
+                            'Detecta plagas, enfermedades y carencias con remedios caseros.',
+                        accent: AppColors.pest,
+                        deep: AppColors.pestDeep,
+                        soft: AppColors.pestSoft,
+                        onTap: () =>
+                            context.go(AppConstants.routePlantDisease),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimens.md),
+
+                // ── Grid row 2: Semilla + Guías ────────────────────────────
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _CompactToolCard(
+                        icon: Icons.grass_outlined,
+                        title: 'Identificar Semilla',
+                        description:
+                            'Identifica semillas y obtén instrucciones de germinación.',
+                        accent: AppColors.sun,
+                        deep: AppColors.sunDeep,
+                        soft: AppColors.sunSoft,
+                        onTap: () =>
+                            context.go(AppConstants.routeSeedIdentification),
+                      ),
+                    ),
+                    const SizedBox(width: AppDimens.md),
+                    Expanded(
+                      child: _CompactToolCard(
+                        icon: Icons.menu_book_outlined,
+                        title: 'Guías de Cuidado',
+                        description:
+                            'Consejos de riego, luz, temperatura y plagas.',
+                        accent: AppColors.primary,
+                        deep: AppColors.primaryDeep,
+                        soft: AppColors.primarySoft,
+                        onTap: () => context.go(AppConstants.routeGuides),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimens.xxl),
               ]),
             ),
           ),
@@ -77,7 +130,11 @@ class ToolsScreen extends StatelessWidget {
   }
 }
 
-class _ToolCard extends StatelessWidget {
+// =============================================================================
+// Hero card — large, full-width, used for the main feature
+// =============================================================================
+
+class _HeroToolCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
@@ -86,7 +143,7 @@ class _ToolCard extends StatelessWidget {
   final Color soft;
   final VoidCallback onTap;
 
-  const _ToolCard({
+  const _HeroToolCard({
     required this.icon,
     required this.title,
     required this.description,
@@ -110,44 +167,115 @@ class _ToolCard extends StatelessWidget {
         borderRadius: AppDimens.cardRadius,
         child: Padding(
           padding: const EdgeInsets.all(AppDimens.xl),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppDimens.md),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.22),
+                      borderRadius:
+                          BorderRadius.circular(AppDimens.radiusCard - 4),
+                    ),
+                    child: Icon(icon, color: fg, size: 32),
+                  ),
+                  const SizedBox(width: AppDimens.lg),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: fg,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 18,
+                    color: fg.withValues(alpha: 0.6),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimens.md),
+              Text(
+                description,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: fg.withValues(alpha: 0.85),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Compact card — used in the 2-column grid
+// =============================================================================
+
+class _CompactToolCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final Color accent;
+  final Color deep;
+  final Color soft;
+  final VoidCallback onTap;
+
+  const _CompactToolCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.accent,
+    required this.deep,
+    required this.soft,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bg = AppColors.softOf(context, accent, soft);
+    final fg = AppColors.onSoftOf(context, deep, accent);
+
+    return Material(
+      color: bg,
+      borderRadius: AppDimens.cardRadius,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppDimens.cardRadius,
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimens.lg),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(AppDimens.md),
+                padding: const EdgeInsets.all(AppDimens.sm),
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(AppDimens.radiusCard - 4),
+                  borderRadius:
+                      BorderRadius.circular(AppDimens.radiusCard - 6),
                 ),
-                child: Icon(icon, color: fg, size: 28),
+                child: Icon(icon, color: fg, size: 22),
               ),
-              const SizedBox(width: AppDimens.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: fg,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: AppDimens.xs),
-                    Text(
-                      description,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: fg.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: AppDimens.md),
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: fg,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(width: AppDimens.sm),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: fg.withValues(alpha: 0.6),
+              const SizedBox(height: AppDimens.xs),
+              Text(
+                description,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: fg.withValues(alpha: 0.75),
+                ),
               ),
             ],
           ),

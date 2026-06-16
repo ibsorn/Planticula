@@ -38,6 +38,18 @@ import 'package:planticula/features/plant_disease/data/datasources/plant_disease
 import 'package:planticula/features/plant_disease/data/repositories/plant_disease_repository_impl.dart';
 import 'package:planticula/features/plant_disease/domain/repositories/plant_disease_repository.dart';
 import 'package:planticula/features/plant_disease/presentation/bloc/plant_disease_bloc.dart';
+import 'package:planticula/core/services/plant_identification_standalone_ai_service.dart';
+import 'package:planticula/core/services/seed_identification_ai_service.dart';
+import 'package:planticula/features/plant_identification/data/datasources/plant_identification_datasource.dart';
+import 'package:planticula/features/plant_identification/data/datasources/plant_identification_datasource_impl.dart';
+import 'package:planticula/features/plant_identification/data/repositories/plant_identification_repository_impl.dart';
+import 'package:planticula/features/plant_identification/domain/repositories/plant_identification_repository.dart';
+import 'package:planticula/features/plant_identification/presentation/bloc/plant_identification_bloc.dart';
+import 'package:planticula/features/seed_identification/data/datasources/seed_identification_datasource.dart';
+import 'package:planticula/features/seed_identification/data/datasources/seed_identification_datasource_impl.dart';
+import 'package:planticula/features/seed_identification/data/repositories/seed_identification_repository_impl.dart';
+import 'package:planticula/features/seed_identification/domain/repositories/seed_identification_repository.dart';
+import 'package:planticula/features/seed_identification/presentation/bloc/seed_identification_bloc.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -70,6 +82,14 @@ Future<void> initDependencies() async {
     () => AiProviderConfig.plantDisease(),
     instanceName: 'diseaseAi',
   );
+  sl.registerLazySingleton<AiProviderConfig>(
+    () => AiProviderConfig.plantIdentificationV2(),
+    instanceName: 'plantIdV2',
+  );
+  sl.registerLazySingleton<AiProviderConfig>(
+    () => AiProviderConfig.seedIdentification(),
+    instanceName: 'seedId',
+  );
 
   // AI services — receive their config by constructor
   sl.registerLazySingleton<PlantIdentificationService>(
@@ -83,6 +103,13 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton<PlantDiseaseAIService>(
     () => PlantDiseaseAIService(sl<AiProviderConfig>(instanceName: 'diseaseAi')),
+  );
+  sl.registerLazySingleton<PlantIdentificationStandaloneAIService>(
+    () => PlantIdentificationStandaloneAIService(
+        sl<AiProviderConfig>(instanceName: 'plantIdV2')),
+  );
+  sl.registerLazySingleton<SeedIdentificationAIService>(
+    () => SeedIdentificationAIService(sl<AiProviderConfig>(instanceName: 'seedId')),
   );
 
   // Theme
@@ -158,4 +185,34 @@ Future<void> initDependencies() async {
 
   // Plant Disease - Presentation Layer
   sl.registerFactory<PlantDiseaseBloc>(() => PlantDiseaseBloc(sl()));
+
+  // Plant Identification V2 - Data Layer
+  sl.registerLazySingleton<PlantIdentificationDatasource>(
+    () => PlantIdentificationDatasourceImpl(sl()),
+  );
+
+  // Plant Identification V2 - Repository Layer
+  sl.registerLazySingleton<PlantIdentificationRepository>(
+    () => PlantIdentificationRepositoryImpl(sl(), sl()),
+  );
+
+  // Plant Identification V2 - Presentation Layer
+  sl.registerFactory<PlantIdentificationBloc>(
+    () => PlantIdentificationBloc(sl()),
+  );
+
+  // Seed Identification - Data Layer
+  sl.registerLazySingleton<SeedIdentificationDatasource>(
+    () => SeedIdentificationDatasourceImpl(sl()),
+  );
+
+  // Seed Identification - Repository Layer
+  sl.registerLazySingleton<SeedIdentificationRepository>(
+    () => SeedIdentificationRepositoryImpl(sl(), sl()),
+  );
+
+  // Seed Identification - Presentation Layer
+  sl.registerFactory<SeedIdentificationBloc>(
+    () => SeedIdentificationBloc(sl()),
+  );
 }
