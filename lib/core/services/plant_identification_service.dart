@@ -174,9 +174,8 @@ class PlantIdentificationService {
     ProgressCallback? onProgress,
   }) async {
     try {
-      // Verificar que tenemos API key
-      if (!_cfg.hasApiKey) {
-        // Fallback a simulación si no hay API key configurada
+      // Fallback a simulación si la configuración está incompleta
+      if (!_cfg.isFullyConfigured) {
         return await _simulateIdentification(imageFile, location, onProgress);
       }
 
@@ -231,19 +230,20 @@ class PlantIdentificationService {
     final client = http.Client();
     try {
       // Crear la petición
+      // isFullyConfigured checked before this point — non-null guaranteed
       final cfg = _cfg;
       final request = http.Request(
         'POST',
-        Uri.parse(cfg.chatCompletionsUrl),
+        Uri.parse(cfg.chatCompletionsUrl!),
       );
       request.headers.addAll({
-        'Authorization': 'Bearer ${cfg.apiKey}',
+        'Authorization': 'Bearer ${cfg.apiKey!}',
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://planticula.app',
         'X-Title': 'Planticula Plant Identification',
       });
       request.body = jsonEncode({
-        'model': cfg.model,
+        'model': cfg.model!,
         'messages': [
           {
             'role': 'user',

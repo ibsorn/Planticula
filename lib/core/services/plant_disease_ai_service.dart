@@ -92,7 +92,7 @@ class PlantDiseaseAIService {
     DiagnosisProgressCallback? onProgress,
   }) async {
     try {
-      if (!_cfg.hasApiKey) {
+      if (!_cfg.isFullyConfigured) {
         return _stubResult();
       }
       return await _analyzeWithOpenRouter(imageBytes, onProgress);
@@ -120,19 +120,20 @@ class PlantDiseaseAIService {
 
     final client = http.Client();
     try {
+      // isFullyConfigured checked before this point — non-null guaranteed
       final cfg = _cfg;
       final request = http.Request(
         'POST',
-        Uri.parse(cfg.chatCompletionsUrl),
+        Uri.parse(cfg.chatCompletionsUrl!),
       );
       request.headers.addAll({
-        'Authorization': 'Bearer ${cfg.apiKey}',
+        'Authorization': 'Bearer ${cfg.apiKey!}',
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://planticula.app',
         'X-Title': 'Planticula Plant Disease Diagnosis',
       });
       request.body = jsonEncode({
-        'model': cfg.model,
+        'model': cfg.model!,
         'messages': [
           {
             'role': 'user',
