@@ -1433,6 +1433,274 @@ ON CONFLICT (id) DO UPDATE SET
 
 
 -- ============================================================================
+-- SECCIÓN 9b: NUEVAS ESPECIES (batch 2 — 30 plantas)
+-- Sincronizado con local_species_catalog.dart commit 8543a5c
+-- ============================================================================
+
+-- Nuevas plantas de interior
+INSERT INTO species_catalog (id, common_name, scientific_name, category, is_edible,
+    watering_frequency_indoor, watering_frequency_outdoor,
+    sunlight_hours_min, sunlight_hours_max, sunlight_level,
+    min_temperature, max_temperature, drought_tolerant, humidity_loving,
+    hot_weather_multiplier, cold_weather_multiplier, rain_reduction_days,
+    description, growth_phases, transplant_schedule)
+VALUES
+('local_areca','Palmera areca','Dypsis lutescens','indoor',FALSE, 4,3, 4,6,'high', 10,35,FALSE,TRUE, 0.7,1.5,2,
+    'Palmera de interior muy popular, purificadora del aire, con hojas plumosas de color verde brillante.',
+    '[{"stage":"seedling","duration_months":6},{"stage":"development","duration_months":18},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":6},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":24,"notes":"Trasplanta cada 2 anos en primavera"}]'),
+
+('local_singonio','Singonio','Syngonium podophyllum','indoor',FALSE, 4,3, 3,6,'high', 12,32,FALSE,TRUE, 0.7,1.5,2,
+    'Trepadora de hojas en forma de flecha que cambian de tono al madurar. Muy facil de cuidar.',
+    '[{"stage":"seedling","duration_months":3},{"stage":"development","duration_months":9},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"extra_small","ideal_pot_size":"small","trigger_after_months":3},{"stage":"mature","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":18,"notes":"Trasplanta cuando las raices salgan por el drenaje"}]'),
+
+('local_fitonia','Fitonia','Fittonia albivenis','indoor',FALSE, 3,2, 3,5,'medium', 15,30,FALSE,TRUE, 0.6,1.5,1,
+    'Planta compacta de hojas nervadas en blanco o rosa. Ideal para terrarios por su amor a la humedad.',
+    '[{"stage":"seedling","duration_months":2},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"extra_small","ideal_pot_size":"small","trigger_after_months":3},{"stage":"mature","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":12}]'),
+
+('local_collar_corazones','Collar de corazones','Ceropegia woodii','indoor',FALSE, 10,8, 4,6,'high', 10,32,TRUE,FALSE, 0.8,1.5,2,
+    'Colgante de hojas en forma de corazon con vetas plateadas. Semisuculenta, tolera el olvido.',
+    '[{"stage":"seedling","duration_months":3},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"extra_small","ideal_pot_size":"small","trigger_after_months":4},{"stage":"mature","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":24}]'),
+
+('local_aglaonema','Aglaonema','Aglaonema commutatum','indoor',FALSE, 5,4, 2,5,'low', 13,32,FALSE,TRUE, 0.7,1.5,2,
+    'Hojas vistosas en verde, plata o rosa. Una de las plantas de interior mas tolerantes a la poca luz.',
+    '[{"stage":"seedling","duration_months":4},{"stage":"development","duration_months":12},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":6},{"stage":"mature","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":24,"notes":"Trasplanta cada 2 anos"}]'),
+
+('local_cafeto','Cafeto','Coffea arabica','indoor',TRUE, 4,3, 4,6,'high', 15,30,FALSE,TRUE, 0.7,1.6,2,
+    'Arbusto de hojas brillantes que produce granos de cafe. Necesita humedad y luz indirecta brillante.',
+    '[{"stage":"germination","duration_months":2},{"stage":"seedling","duration_months":6},{"stage":"development","duration_months":24},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":8},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":24}]')
+
+ON CONFLICT (id) DO UPDATE SET
+    common_name                = EXCLUDED.common_name,
+    scientific_name            = EXCLUDED.scientific_name,
+    category                   = EXCLUDED.category,
+    is_edible                  = EXCLUDED.is_edible,
+    watering_frequency_indoor  = EXCLUDED.watering_frequency_indoor,
+    watering_frequency_outdoor = EXCLUDED.watering_frequency_outdoor,
+    sunlight_hours_min         = EXCLUDED.sunlight_hours_min,
+    sunlight_hours_max         = EXCLUDED.sunlight_hours_max,
+    sunlight_level             = EXCLUDED.sunlight_level,
+    min_temperature            = EXCLUDED.min_temperature,
+    max_temperature            = EXCLUDED.max_temperature,
+    drought_tolerant           = EXCLUDED.drought_tolerant,
+    humidity_loving            = EXCLUDED.humidity_loving,
+    hot_weather_multiplier     = EXCLUDED.hot_weather_multiplier,
+    cold_weather_multiplier    = EXCLUDED.cold_weather_multiplier,
+    rain_reduction_days        = EXCLUDED.rain_reduction_days,
+    description                = EXCLUDED.description,
+    growth_phases              = EXCLUDED.growth_phases,
+    transplant_schedule        = EXCLUDED.transplant_schedule,
+    updated_at                 = NOW();
+
+-- Monstera adansonii (variedad de local_monstera)
+INSERT INTO species_catalog (id, parent_id, common_name, scientific_name, description,
+    category, is_edible,
+    watering_frequency_indoor, watering_frequency_outdoor,
+    sunlight_hours_min, sunlight_hours_max, sunlight_level,
+    min_temperature, max_temperature, drought_tolerant, humidity_loving,
+    hot_weather_multiplier, cold_weather_multiplier, rain_reduction_days,
+    growth_phases, transplant_schedule)
+VALUES
+('local_monstera_adansonii','local_monstera','Monstera adansonii','Monstera adansonii',
+    'Variedad del genero Monstera. Hojas mas pequenas con perforaciones internas; ideal colgante o trepadora.',
+    'indoor',FALSE, 5,4, 4,6,'high', 13,32,FALSE,TRUE, 0.7,1.5,2,
+    '[{"stage":"seedling","duration_months":4},{"stage":"development","duration_months":12},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":6},{"stage":"mature","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":24}]')
+ON CONFLICT (id) DO UPDATE SET
+    description         = EXCLUDED.description,
+    transplant_schedule = EXCLUDED.transplant_schedule,
+    updated_at          = NOW();
+
+-- Nuevas suculentas
+INSERT INTO species_catalog (id, common_name, scientific_name, category, is_edible,
+    watering_frequency_indoor, watering_frequency_outdoor,
+    sunlight_hours_min, sunlight_hours_max, sunlight_level,
+    min_temperature, max_temperature, drought_tolerant, humidity_loving,
+    hot_weather_multiplier, cold_weather_multiplier, rain_reduction_days,
+    description, growth_phases, transplant_schedule)
+VALUES
+('local_kalanchoe','Kalanchoe','Kalanchoe blossfeldiana','succulent',FALSE, 8,6, 5,8,'full_sun', 7,35,TRUE,FALSE, 0.8,1.5,3,
+    'Suculenta de floracion vistosa y duradera en racimos de colores. Muy resistente a la sequia.',
+    '[{"stage":"seedling","duration_months":3},{"stage":"development","duration_months":6},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"extra_small","ideal_pot_size":"small","trigger_after_months":4},{"stage":"mature","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":18}]'),
+
+('local_agave','Agave','Agave americana','succulent',FALSE, 14,10, 6,10,'full_sun', -5,40,TRUE,FALSE, 0.9,1.8,5,
+    'Suculenta de gran porte con hojas carnosas y espinosas. Extremadamente resistente a la sequia y al calor.',
+    '[{"stage":"seedling","duration_months":12},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":12},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":36}]'),
+
+('local_nopal','Nopal (chumbera)','Opuntia ficus-indica','succulent',TRUE, 14,10, 6,12,'full_sun', -2,42,TRUE,FALSE, 0.9,1.8,5,
+    'Cactus de palas planas comestibles que produce higos chumbos. Muy resistente a la sequia.',
+    '[{"stage":"seedling","duration_months":6},{"stage":"development","duration_months":18},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":12},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":36}]'),
+
+('local_aeonium','Aeonium','Aeonium arboreum','succulent',FALSE, 10,7, 5,8,'full_sun', 3,35,TRUE,FALSE, 0.8,1.6,3,
+    'Suculenta arbustiva con rosetas en la punta de los tallos; algunas variedades casi negras. Crece en invierno.',
+    '[{"stage":"seedling","duration_months":4},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"extra_small","ideal_pot_size":"small","trigger_after_months":6},{"stage":"mature","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":24}]')
+
+ON CONFLICT (id) DO UPDATE SET
+    common_name                = EXCLUDED.common_name,
+    scientific_name            = EXCLUDED.scientific_name,
+    description                = EXCLUDED.description,
+    growth_phases              = EXCLUDED.growth_phases,
+    transplant_schedule        = EXCLUDED.transplant_schedule,
+    updated_at                 = NOW();
+
+-- Nuevas hierbas aromaticas
+INSERT INTO species_catalog (id, common_name, scientific_name, category, is_edible,
+    watering_frequency_indoor, watering_frequency_outdoor,
+    sunlight_hours_min, sunlight_hours_max, sunlight_level,
+    min_temperature, max_temperature, drought_tolerant, humidity_loving,
+    hot_weather_multiplier, cold_weather_multiplier, rain_reduction_days,
+    description, growth_phases, transplant_schedule)
+VALUES
+('local_salvia','Salvia','Salvia officinalis','herb',TRUE, 4,3, 6,8,'full_sun', -5,35,TRUE,FALSE, 0.7,1.5,3,
+    'Hierba aromatica perenne de hojas grisaceas, usada en cocina e infusiones. Resistente y poco exigente.',
+    '[{"stage":"germination","duration_months":1},{"stage":"seedling","duration_months":2},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":3},{"stage":"mature","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":18}]'),
+
+('local_estragon','Estragon','Artemisia dracunculus','herb',TRUE, 4,3, 5,8,'full_sun', -10,33,TRUE,FALSE, 0.7,1.5,3,
+    'Hierba aromatica de sabor anisado muy apreciada en la cocina francesa. Perenne y resistente al frio.',
+    '[{"stage":"seedling","duration_months":2},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":3},{"stage":"mature","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":18}]'),
+
+('local_eneldo','Eneldo','Anethum graveolens','herb',TRUE, 3,2, 5,8,'full_sun', 2,32,FALSE,FALSE, 0.6,1.5,2,
+    'Hierba anual de hojas finas y plumosas con sabor fresco, ideal para pescados y encurtidos.',
+    '[{"stage":"germination","duration_months":1},{"stage":"seedling","duration_months":1},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":2}]'),
+
+('local_laurel','Laurel','Laurus nobilis','herb',TRUE, 6,4, 5,8,'full_sun', -5,38,TRUE,FALSE, 0.7,1.5,3,
+    'Arbol o arbusto perenne de hojas aromaticas usadas en cocina. Muy longevo y resistente.',
+    '[{"stage":"seedling","duration_months":6},{"stage":"development","duration_months":24},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":8},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":36}]')
+
+ON CONFLICT (id) DO UPDATE SET
+    common_name                = EXCLUDED.common_name,
+    scientific_name            = EXCLUDED.scientific_name,
+    description                = EXCLUDED.description,
+    growth_phases              = EXCLUDED.growth_phases,
+    transplant_schedule        = EXCLUDED.transplant_schedule,
+    updated_at                 = NOW();
+
+-- Nuevas hortalizas y verduras
+INSERT INTO species_catalog (id, common_name, scientific_name, category, is_edible,
+    watering_frequency_indoor, watering_frequency_outdoor,
+    sunlight_hours_min, sunlight_hours_max, sunlight_level,
+    min_temperature, max_temperature, drought_tolerant, humidity_loving,
+    hot_weather_multiplier, cold_weather_multiplier, rain_reduction_days,
+    description, growth_phases, transplant_schedule)
+VALUES
+('local_patata','Patata','Solanum tuberosum','vegetable',TRUE, 3,2, 6,8,'full_sun', 5,30,FALSE,FALSE, 0.7,1.4,2,
+    'Tuberculo de cultivo sencillo. Se planta a partir de patatas de siembra y se cosecha en pocos meses.',
+    '[{"stage":"germination","duration_months":1},{"stage":"development","duration_months":2},{"stage":"flowering","duration_months":1},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"development","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":1,"notes":"Cultivar en saco o maceta profunda"}]'),
+
+('local_brocoli','Brocoli','Brassica oleracea var. italica','vegetable',TRUE, 3,2, 6,8,'full_sun', 0,28,FALSE,FALSE, 0.6,1.4,2,
+    'Hortaliza de clima fresco cuyos brotes florales se cosechan antes de abrir.',
+    '[{"stage":"germination","duration_months":1},{"stage":"seedling","duration_months":1},{"stage":"development","duration_months":2},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"large","trigger_after_months":1}]'),
+
+('local_acelga','Acelga','Beta vulgaris var. cicla','vegetable',TRUE, 3,2, 5,7,'full_sun', 0,30,FALSE,FALSE, 0.6,1.4,2,
+    'Hortaliza de hoja muy productiva y resistente; se cosecha repetidamente cortando las hojas externas.',
+    '[{"stage":"germination","duration_months":1},{"stage":"development","duration_months":2},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":1}]'),
+
+('local_rucula','Rucula','Eruca vesicaria','vegetable',TRUE, 2,2, 4,6,'medium', 2,28,FALSE,FALSE, 0.6,1.4,1,
+    'Hoja de sabor picante de crecimiento muy rapido, lista para cosechar en pocas semanas.',
+    '[{"stage":"germination","duration_months":1},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":1}]'),
+
+('local_rabano','Rabano','Raphanus sativus','vegetable',TRUE, 2,2, 5,7,'full_sun', 3,28,FALSE,FALSE, 0.6,1.4,1,
+    'Raiz de cultivo rapidisimo (3-4 semanas), perfecta para iniciarse en el huerto.',
+    '[{"stage":"germination","duration_months":1},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"germination","min_pot_size":"small","ideal_pot_size":"medium","trigger_after_months":0,"notes":"Sembrar directo, no trasplantar"}]')
+
+ON CONFLICT (id) DO UPDATE SET
+    common_name                = EXCLUDED.common_name,
+    scientific_name            = EXCLUDED.scientific_name,
+    description                = EXCLUDED.description,
+    growth_phases              = EXCLUDED.growth_phases,
+    transplant_schedule        = EXCLUDED.transplant_schedule,
+    updated_at                 = NOW();
+
+-- Nuevos frutales y ornamentales de exterior
+INSERT INTO species_catalog (id, common_name, scientific_name, category, is_edible,
+    watering_frequency_indoor, watering_frequency_outdoor,
+    sunlight_hours_min, sunlight_hours_max, sunlight_level,
+    min_temperature, max_temperature, drought_tolerant, humidity_loving,
+    hot_weather_multiplier, cold_weather_multiplier, rain_reduction_days,
+    description, growth_phases, transplant_schedule)
+VALUES
+('local_naranjo','Naranjo','Citrus x sinensis','outdoor',TRUE, 5,4, 6,10,'full_sun', -2,38,FALSE,FALSE, 0.7,1.6,3,
+    'Mismo genero (Citrus) que el limonero. Arbol frutal de flores aromaticas (azahar) y naranjas dulces.',
+    '[{"stage":"seedling","duration_months":12},{"stage":"development","duration_months":24},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":12},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":36}]'),
+
+('local_higuera','Higuera','Ficus carica','outdoor',TRUE, 5,4, 6,10,'full_sun', -10,40,TRUE,FALSE, 0.8,1.6,4,
+    'Mismo genero (Ficus) que el caucho, lyrata y bonsai. Arbol caduco que produce higos; muy resistente a la sequia.',
+    '[{"stage":"seedling","duration_months":6},{"stage":"development","duration_months":24},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":12},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":36}]'),
+
+('local_granado','Granado','Punica granatum','outdoor',TRUE, 6,5, 6,10,'full_sun', -10,40,TRUE,FALSE, 0.8,1.6,4,
+    'Arbusto o arbol pequeno de flores rojas vistosas y frutos (granadas) llenos de arilos jugosos.',
+    '[{"stage":"seedling","duration_months":8},{"stage":"development","duration_months":24},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":12},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":36}]'),
+
+('local_frambueso','Frambueso','Rubus idaeus','outdoor',TRUE, 4,3, 5,8,'full_sun', -20,30,FALSE,FALSE, 0.6,1.5,3,
+    'Arbusto de canas bianuales que produce frambuesas dulces y aromaticas en verano.',
+    '[{"stage":"seedling","duration_months":4},{"stage":"development","duration_months":8},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":6},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":36}]'),
+
+('local_arandano','Arandano','Vaccinium corymbosum','outdoor',TRUE, 4,3, 5,8,'full_sun', -20,30,FALSE,TRUE, 0.6,1.5,3,
+    'Arbusto acido-amante que produce arandanos azules antioxidantes. Necesita sustrato acido (pH 4.5-5.5).',
+    '[{"stage":"seedling","duration_months":6},{"stage":"development","duration_months":18},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":12},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":48}]'),
+
+('local_caqui','Caqui','Diospyros kaki','outdoor',TRUE, 6,5, 6,10,'full_sun', -15,38,TRUE,FALSE, 0.8,1.6,4,
+    'Arbol caduco originario de Asia que produce frutos naranjas muy dulces en otono.',
+    '[{"stage":"seedling","duration_months":12},{"stage":"development","duration_months":36},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":12},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":48}]'),
+
+('local_vid','Vid (parra)','Vitis vinifera','outdoor',TRUE, 5,4, 6,10,'full_sun', -15,38,TRUE,FALSE, 0.7,1.6,4,
+    'Trepadora caduca cultivada desde la antiguedad por sus uvas. Requiere poda y tutor.',
+    '[{"stage":"seedling","duration_months":6},{"stage":"development","duration_months":24},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":12},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":48}]'),
+
+('local_dahlia','Dalia','Dahlia pinnata','outdoor',FALSE, 3,2, 6,8,'full_sun', 5,30,FALSE,FALSE, 0.6,1.5,2,
+    'Tuberculo ornamental con flores espectaculares de multiples formas y colores. Cosecha los tuberculos en otono.',
+    '[{"stage":"germination","duration_months":1},{"stage":"development","duration_months":3},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"development","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":1}]'),
+
+('local_peonia','Peonia','Paeonia lactiflora','outdoor',FALSE, 5,4, 5,8,'full_sun', -20,30,FALSE,FALSE, 0.6,1.4,3,
+    'Perenne de flores grandes y aromaticas muy vistosas. Longeva, puede vivir decadas en el mismo sitio.',
+    '[{"stage":"seedling","duration_months":12},{"stage":"development","duration_months":24},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":18},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":60,"notes":"Evita trasplantar, no le gusta que la muevan"}]'),
+
+('local_wisteria','Glicinia','Wisteria sinensis','outdoor',FALSE, 5,4, 5,8,'full_sun', -20,35,FALSE,FALSE, 0.7,1.5,3,
+    'Trepadora vigorosa con grandes racimos de flores lilas aromaticas en primavera.',
+    '[{"stage":"seedling","duration_months":12},{"stage":"development","duration_months":36},{"stage":"flowering","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":12},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":48}]'),
+
+('local_bambu','Bambu (exterior)','Phyllostachys aurea','outdoor',FALSE, 3,2, 4,8,'high', -15,38,FALSE,TRUE, 0.6,1.5,2,
+    'Bambu de exterior de crecimiento rapido, ideal para setos y mamparas naturales. Muy resistente.',
+    '[{"stage":"seedling","duration_months":6},{"stage":"development","duration_months":12},{"stage":"mature","duration_months":0}]',
+    '[{"stage":"seedling","min_pot_size":"medium","ideal_pot_size":"large","trigger_after_months":12},{"stage":"mature","min_pot_size":"large","ideal_pot_size":"extra_large","trigger_after_months":36}]')
+
+ON CONFLICT (id) DO UPDATE SET
+    common_name                = EXCLUDED.common_name,
+    scientific_name            = EXCLUDED.scientific_name,
+    description                = EXCLUDED.description,
+    growth_phases              = EXCLUDED.growth_phases,
+    transplant_schedule        = EXCLUDED.transplant_schedule,
+    updated_at                 = NOW();
+
+-- ============================================================================
 -- SECCIÓN 10: VERIFICACIÓN FINAL
 -- ============================================================================
 
