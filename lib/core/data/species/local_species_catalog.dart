@@ -1413,5 +1413,550 @@ class LocalSpeciesCatalog {
         ),
       ],
     ),
+
+    // ========================================================================
+    // NUEVAS PLANTAS DE INTERIOR
+    // ========================================================================
+    PlantSpecies(
+      id: 'local_areca', commonName: 'Palmera areca', scientificName: 'Dypsis lutescens', category: 'indoor',
+      description: 'Palmera de interior muy popular, purificadora del aire, con hojas plumosas de color verde brillante.',
+      wateringFrequencyIndoor: 4, wateringFrequencyOutdoor: 3,
+      sunlightHoursMin: 4, sunlightHoursMax: 6, sunlightLevel: SunlightLevel.high,
+      humidityLoving: true, minTemperature: 10, maxTemperature: 35,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.5, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 6, wateringMultiplier: 0.8, description: 'Planta joven, mantener sustrato ligeramente humedo'),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 18, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 24, notes: 'Trasplanta cada 2 anos en primavera'),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_singonio', commonName: 'Singonio', scientificName: 'Syngonium podophyllum', category: 'indoor',
+      description: 'Trepadora de hojas en forma de flecha que cambian de tono al madurar. Muy facil de cuidar.',
+      wateringFrequencyIndoor: 4, wateringFrequencyOutdoor: 3,
+      sunlightHoursMin: 3, sunlightHoursMax: 6, sunlightLevel: SunlightLevel.high,
+      humidityLoving: true, minTemperature: 12, maxTemperature: 32,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.5, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.7, description: 'Esqueje enraizando, mantener humedo'),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 9, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 18, notes: 'Trasplanta cuando las raices salgan por el drenaje'),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_fitonia', commonName: 'Fitonia', scientificName: 'Fittonia albivenis', category: 'indoor',
+      description: 'Planta compacta de hojas nervadas en blanco o rosa. Ideal para terrarios por su amor a la humedad.',
+      wateringFrequencyIndoor: 3, wateringFrequencyOutdoor: 2,
+      sunlightHoursMin: 3, sunlightHoursMax: 5, sunlightLevel: SunlightLevel.medium,
+      humidityLoving: true, minTemperature: 15, maxTemperature: 30,
+      hotWeatherMultiplier: 0.6, coldWeatherMultiplier: 1.5, rainReductionDays: 1,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 2, wateringMultiplier: 0.7, description: 'Esqueje joven, sustrato siempre humedo'),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 12),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_collar_corazones', commonName: 'Collar de corazones', scientificName: 'Ceropegia woodii', category: 'indoor',
+      description: 'Colgante de hojas en forma de corazon con vetas plateadas. Semisuculenta, tolera el olvido.',
+      wateringFrequencyIndoor: 10, wateringFrequencyOutdoor: 8,
+      sunlightHoursMin: 4, sunlightHoursMax: 6, sunlightLevel: SunlightLevel.high,
+      droughtTolerant: true, minTemperature: 10, maxTemperature: 32,
+      hotWeatherMultiplier: 0.8, coldWeatherMultiplier: 1.5, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.8, description: 'Esqueje enraizando'),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 4),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 24),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_aglaonema', commonName: 'Aglaonema', scientificName: 'Aglaonema commutatum', category: 'indoor',
+      description: 'Hojas vistosas en verde, plata o rosa. Una de las plantas de interior mas tolerantes a la poca luz.',
+      wateringFrequencyIndoor: 5, wateringFrequencyOutdoor: 4,
+      sunlightHoursMin: 2, sunlightHoursMax: 5, sunlightLevel: SunlightLevel.low,
+      humidityLoving: true, minTemperature: 13, maxTemperature: 32,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.5, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 4, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 12, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 24, notes: 'Trasplanta cada 2 anos'),
+      ],
+    ),
+    // Variedad del genero Monstera (parentId -> local_monstera)
+    PlantSpecies(
+      id: 'local_monstera_adansonii', parentId: 'local_monstera',
+      commonName: 'Monstera adansonii', scientificName: 'Monstera adansonii', category: 'indoor',
+      description: 'Variedad del genero Monstera. Hojas mas pequenas con perforaciones internas; ideal colgante o trepadora.',
+      wateringFrequencyIndoor: 5, wateringFrequencyOutdoor: 4,
+      sunlightHoursMin: 4, sunlightHoursMax: 6, sunlightLevel: SunlightLevel.high,
+      humidityLoving: true, minTemperature: 13, maxTemperature: 32,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.5, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 4, wateringMultiplier: 0.7, description: 'Esqueje enraizando en sustrato humedo'),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 12, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 24),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_cafeto', commonName: 'Cafeto', scientificName: 'Coffea arabica', category: 'indoor', isEdible: true,
+      description: 'Arbusto de hojas brillantes que produce granos de cafe. Necesita humedad y luz indirecta brillante.',
+      wateringFrequencyIndoor: 4, wateringFrequencyOutdoor: 3,
+      sunlightHoursMin: 4, sunlightHoursMax: 6, sunlightLevel: SunlightLevel.high,
+      humidityLoving: true, minTemperature: 15, maxTemperature: 30,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.6, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.germination, durationMonths: 2, wateringMultiplier: 0.6, description: 'Germinacion lenta, sustrato calido y humedo'),
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 6, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 24, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Floracion y fructificacion tras 3-4 anos'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 8),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 24),
+      ],
+    ),
+
+    // ========================================================================
+    // NUEVAS SUCULENTAS
+    // ========================================================================
+    PlantSpecies(
+      id: 'local_kalanchoe', commonName: 'Kalanchoe', scientificName: 'Kalanchoe blossfeldiana', category: 'succulent',
+      description: 'Suculenta de floracion vistosa y duradera en racimos de colores. Muy resistente a la sequia.',
+      wateringFrequencyIndoor: 8, wateringFrequencyOutdoor: 6,
+      sunlightHoursMin: 5, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      droughtTolerant: true, minTemperature: 7, maxTemperature: 35,
+      hotWeatherMultiplier: 0.8, coldWeatherMultiplier: 1.5, rainReductionDays: 3,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 3, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 6, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Floracion estacional, reducir riego'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 4),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 18),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_agave', commonName: 'Agave', scientificName: 'Agave americana', category: 'succulent',
+      description: 'Suculenta de gran porte con hojas carnosas y espinosas. Extremadamente resistente a la sequia y al calor.',
+      wateringFrequencyIndoor: 14, wateringFrequencyOutdoor: 10,
+      sunlightHoursMin: 6, sunlightHoursMax: 10, sunlightLevel: SunlightLevel.fullSun,
+      droughtTolerant: true, minTemperature: -5, maxTemperature: 40,
+      hotWeatherMultiplier: 0.9, coldWeatherMultiplier: 1.8, rainReductionDays: 5,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 12, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 36),
+      ],
+    ),
+    // Cactus del genero Opuntia (mismo grupo cactacea que local_cactus)
+    PlantSpecies(
+      id: 'local_nopal', commonName: 'Nopal (chumbera)', scientificName: 'Opuntia ficus-indica', category: 'succulent', isEdible: true,
+      description: 'Cactus de palas planas comestibles que produce higos chumbos. Muy resistente a la sequia.',
+      wateringFrequencyIndoor: 14, wateringFrequencyOutdoor: 10,
+      sunlightHoursMin: 6, sunlightHoursMax: 12, sunlightLevel: SunlightLevel.fullSun,
+      droughtTolerant: true, minTemperature: -2, maxTemperature: 42,
+      hotWeatherMultiplier: 0.9, coldWeatherMultiplier: 1.8, rainReductionDays: 5,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 6, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 18, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Floracion y fructificacion en verano'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 36),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_aeonium', commonName: 'Aeonium', scientificName: 'Aeonium arboreum', category: 'succulent',
+      description: 'Suculenta arbustiva con rosetas en la punta de los tallos; algunas variedades casi negras. Crece en invierno.',
+      wateringFrequencyIndoor: 10, wateringFrequencyOutdoor: 7,
+      sunlightHoursMin: 5, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      droughtTolerant: true, minTemperature: 3, maxTemperature: 35,
+      hotWeatherMultiplier: 0.8, coldWeatherMultiplier: 1.6, rainReductionDays: 3,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 4, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.extraSmall, idealPotSize: PotSize.small, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 24),
+      ],
+    ),
+
+    // ========================================================================
+    // NUEVAS HIERBAS AROMATICAS
+    // ========================================================================
+    PlantSpecies(
+      id: 'local_salvia', commonName: 'Salvia', scientificName: 'Salvia officinalis', category: 'herb', isEdible: true,
+      description: 'Hierba aromatica perenne de hojas grisaceas, usada en cocina e infusiones. Resistente y poco exigente.',
+      wateringFrequencyIndoor: 4, wateringFrequencyOutdoor: 3,
+      sunlightHoursMin: 6, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      droughtTolerant: true, minTemperature: -5, maxTemperature: 35,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.5, rainReductionDays: 3,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.germination, durationMonths: 1, wateringMultiplier: 0.7),
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 2, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 18),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_estragon', commonName: 'Estragon', scientificName: 'Artemisia dracunculus', category: 'herb', isEdible: true,
+      description: 'Hierba aromatica de sabor anisado muy apreciada en la cocina francesa. Perenne y resistente al frio.',
+      wateringFrequencyIndoor: 4, wateringFrequencyOutdoor: 3,
+      sunlightHoursMin: 5, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      droughtTolerant: true, minTemperature: -10, maxTemperature: 33,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.5, rainReductionDays: 3,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 2, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 3),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 18),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_eneldo', commonName: 'Eneldo', scientificName: 'Anethum graveolens', category: 'herb', isEdible: true,
+      description: 'Hierba anual de hojas finas y plumosas con sabor fresco, ideal para pescados y encurtidos.',
+      wateringFrequencyIndoor: 3, wateringFrequencyOutdoor: 2,
+      sunlightHoursMin: 5, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      minTemperature: 2, maxTemperature: 32,
+      hotWeatherMultiplier: 0.6, coldWeatherMultiplier: 1.5, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.germination, durationMonths: 1, wateringMultiplier: 0.7),
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 1, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 2),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_laurel', commonName: 'Laurel', scientificName: 'Laurus nobilis', category: 'herb', isEdible: true,
+      description: 'Arbol o arbusto perenne de hojas aromaticas usadas en cocina. Muy longevo y resistente.',
+      wateringFrequencyIndoor: 6, wateringFrequencyOutdoor: 4,
+      sunlightHoursMin: 5, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      droughtTolerant: true, minTemperature: -5, maxTemperature: 38,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.5, rainReductionDays: 3,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 6, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 24, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 8),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 36),
+      ],
+    ),
+
+    // ========================================================================
+    // NUEVAS HORTALIZAS Y VERDURAS
+    // ========================================================================
+    PlantSpecies(
+      id: 'local_patata', commonName: 'Patata', scientificName: 'Solanum tuberosum', category: 'vegetable', isEdible: true,
+      description: 'Tuberculo de cultivo sencillo. Se planta a partir de patatas de siembra y se cosecha en pocos meses.',
+      wateringFrequencyIndoor: 3, wateringFrequencyOutdoor: 2,
+      sunlightHoursMin: 6, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      minTemperature: 5, maxTemperature: 30,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.4, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.germination, durationMonths: 1, wateringMultiplier: 0.7, description: 'Brotacion de los tuberculos'),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 2, wateringMultiplier: 1.0, description: 'Aporcar y mantener riego constante'),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 1, wateringMultiplier: 0.9, description: 'Floracion; los tuberculos engordan'),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0, wateringMultiplier: 0.6, description: 'Reducir riego antes de la cosecha'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.development, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 1, notes: 'Cultivar en saco o maceta profunda'),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_brocoli', commonName: 'Brocoli', scientificName: 'Brassica oleracea var. italica', category: 'vegetable', isEdible: true,
+      description: 'Hortaliza de clima fresco cuyos brotes florales se cosechan antes de abrir.',
+      wateringFrequencyIndoor: 3, wateringFrequencyOutdoor: 2,
+      sunlightHoursMin: 6, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      minTemperature: 0, maxTemperature: 28,
+      hotWeatherMultiplier: 0.6, coldWeatherMultiplier: 1.4, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.germination, durationMonths: 1, wateringMultiplier: 0.7),
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 1, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 2, wateringMultiplier: 1.0),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0, description: 'Cosechar la pella antes de que florezca'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.large, triggerAfterMonths: 1),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_acelga', commonName: 'Acelga', scientificName: 'Beta vulgaris var. cicla', category: 'vegetable', isEdible: true,
+      description: 'Hortaliza de hoja muy productiva y resistente; se cosecha repetidamente cortando las hojas externas.',
+      wateringFrequencyIndoor: 3, wateringFrequencyOutdoor: 2,
+      sunlightHoursMin: 5, sunlightHoursMax: 7, sunlightLevel: SunlightLevel.fullSun,
+      minTemperature: 0, maxTemperature: 30,
+      hotWeatherMultiplier: 0.6, coldWeatherMultiplier: 1.4, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.germination, durationMonths: 1, wateringMultiplier: 0.7),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 2, wateringMultiplier: 1.0),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0, description: 'Cosecha continua de hojas'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_rucula', commonName: 'Rucula', scientificName: 'Eruca vesicaria', category: 'vegetable', isEdible: true,
+      description: 'Hoja de sabor picante de crecimiento muy rapido, lista para cosechar en pocas semanas.',
+      wateringFrequencyIndoor: 2, wateringFrequencyOutdoor: 2,
+      sunlightHoursMin: 4, sunlightHoursMax: 6, sunlightLevel: SunlightLevel.medium,
+      minTemperature: 2, maxTemperature: 28,
+      hotWeatherMultiplier: 0.6, coldWeatherMultiplier: 1.4, rainReductionDays: 1,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.germination, durationMonths: 1, wateringMultiplier: 0.7),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0, description: 'Cosecha de hojas tiernas'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 1),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_rabano', commonName: 'Rabano', scientificName: 'Raphanus sativus', category: 'vegetable', isEdible: true,
+      description: 'Raiz de cultivo rapidisimo (3-4 semanas), perfecta para iniciarse en el huerto.',
+      wateringFrequencyIndoor: 2, wateringFrequencyOutdoor: 2,
+      sunlightHoursMin: 5, sunlightHoursMax: 7, sunlightLevel: SunlightLevel.fullSun,
+      minTemperature: 3, maxTemperature: 28,
+      hotWeatherMultiplier: 0.6, coldWeatherMultiplier: 1.4, rainReductionDays: 1,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.germination, durationMonths: 1, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.germination, minPotSize: PotSize.small, idealPotSize: PotSize.medium, triggerAfterMonths: 0, notes: 'Sembrar directo, no trasplantar'),
+      ],
+    ),
+
+    // ========================================================================
+    // NUEVAS PLANTAS FRUTALES Y DE EXTERIOR
+    // ========================================================================
+    // Mismo genero Citrus que el Limonero (local_lemon)
+    PlantSpecies(
+      id: 'local_naranjo', commonName: 'Naranjo', scientificName: 'Citrus x sinensis', category: 'outdoor', isEdible: true,
+      description: 'Mismo genero (Citrus) que el limonero. Arbol frutal de flores aromaticas (azahar) y naranjas dulces.',
+      wateringFrequencyIndoor: 5, wateringFrequencyOutdoor: 4,
+      sunlightHoursMin: 6, sunlightHoursMax: 10, sunlightLevel: SunlightLevel.fullSun,
+      minTemperature: -2, maxTemperature: 38,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.6, rainReductionDays: 3,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 12, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 24, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Floracion y fructificacion tras varios anos'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 36),
+      ],
+    ),
+    // Mismo genero Ficus que los ya listados (local_ficus, local_fiddle_leaf, etc.)
+    PlantSpecies(
+      id: 'local_higuera', commonName: 'Higuera', scientificName: 'Ficus carica', category: 'outdoor', isEdible: true,
+      description: 'Mismo genero (Ficus) que el caucho, lyrata y bonsai. Arbol caduco que produce higos; muy resistente a la sequia.',
+      wateringFrequencyIndoor: 5, wateringFrequencyOutdoor: 4,
+      sunlightHoursMin: 6, sunlightHoursMax: 10, sunlightLevel: SunlightLevel.fullSun,
+      droughtTolerant: true, minTemperature: -10, maxTemperature: 40,
+      hotWeatherMultiplier: 0.8, coldWeatherMultiplier: 1.6, rainReductionDays: 4,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 6, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 24, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Fructificacion en verano'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 36),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_granado', commonName: 'Granado', scientificName: 'Punica granatum', category: 'outdoor', isEdible: true,
+      description: 'Arbusto o arbol pequeno de flores rojas vistosas y frutos (granadas) llenos de arilos jugosos.',
+      wateringFrequencyIndoor: 6, wateringFrequencyOutdoor: 5,
+      sunlightHoursMin: 6, sunlightHoursMax: 10, sunlightLevel: SunlightLevel.fullSun,
+      droughtTolerant: true, minTemperature: -10, maxTemperature: 40,
+      hotWeatherMultiplier: 0.8, coldWeatherMultiplier: 1.6, rainReductionDays: 4,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 8, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 24, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Floracion en primavera, fruto en otono'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 36),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_frambueso', commonName: 'Frambueso', scientificName: 'Rubus idaeus', category: 'outdoor', isEdible: true,
+      description: 'Arbusto de canas bianuales que produce frambuesas dulces y aromaticas en verano.',
+      wateringFrequencyIndoor: 4, wateringFrequencyOutdoor: 3,
+      sunlightHoursMin: 5, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      minTemperature: -20, maxTemperature: 30,
+      hotWeatherMultiplier: 0.6, coldWeatherMultiplier: 1.5, rainReductionDays: 3,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 4, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 8, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Fructificacion en verano del segundo ano'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 6),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 36),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_arandano', commonName: 'Arandano', scientificName: 'Vaccinium corymbosum', category: 'outdoor', isEdible: true,
+      description: 'Arbusto acido-amante que produce arandanos azules antioxidantes. Necesita sustrato acido (pH 4.5-5.5).',
+      wateringFrequencyIndoor: 4, wateringFrequencyOutdoor: 3,
+      sunlightHoursMin: 5, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      humidityLoving: true, minTemperature: -20, maxTemperature: 30,
+      hotWeatherMultiplier: 0.6, coldWeatherMultiplier: 1.5, rainReductionDays: 3,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 6, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 18, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Fructificacion en verano'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 48),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_caqui', commonName: 'Caqui', scientificName: 'Diospyros kaki', category: 'outdoor', isEdible: true,
+      description: 'Arbol caduco originario de Asia que produce frutos naranjas muy dulces en otono.',
+      wateringFrequencyIndoor: 6, wateringFrequencyOutdoor: 5,
+      sunlightHoursMin: 6, sunlightHoursMax: 10, sunlightLevel: SunlightLevel.fullSun,
+      droughtTolerant: true, minTemperature: -15, maxTemperature: 38,
+      hotWeatherMultiplier: 0.8, coldWeatherMultiplier: 1.6, rainReductionDays: 4,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 12, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 36, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Fructificacion en otono'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 48),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_vid', commonName: 'Vid (parra)', scientificName: 'Vitis vinifera', category: 'outdoor', isEdible: true,
+      description: 'Trepadora caduca cultivada desde la antiguedad por sus uvas. Requiere poda y tutor.',
+      wateringFrequencyIndoor: 5, wateringFrequencyOutdoor: 4,
+      sunlightHoursMin: 6, sunlightHoursMax: 10, sunlightLevel: SunlightLevel.fullSun,
+      droughtTolerant: true, minTemperature: -15, maxTemperature: 38,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.6, rainReductionDays: 4,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 6, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 24, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Vendimia en verano-otono'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 48),
+      ],
+    ),
+
+    // ========================================================================
+    // NUEVAS ORNAMENTALES DE EXTERIOR
+    // ========================================================================
+    PlantSpecies(
+      id: 'local_dahlia', commonName: 'Dalia', scientificName: 'Dahlia pinnata', category: 'outdoor',
+      description: 'Tuberculo ornamental con flores espectaculares de multiples formas y colores. Cosecha los tuberculos en otono.',
+      wateringFrequencyIndoor: 3, wateringFrequencyOutdoor: 2,
+      sunlightHoursMin: 6, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      minTemperature: 5, maxTemperature: 30,
+      hotWeatherMultiplier: 0.6, coldWeatherMultiplier: 1.5, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.germination, durationMonths: 1, wateringMultiplier: 0.7, description: 'Brotacion del tuberculo'),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 3, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Floracion verano-otono'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.development, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 1),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_peonía', commonName: 'Peonía', scientificName: 'Paeonia lactiflora', category: 'outdoor',
+      description: 'Perenne de flores grandes y aromaticas muy vistosas. Longeva, puede vivir decadas en el mismo sitio.',
+      wateringFrequencyIndoor: 5, wateringFrequencyOutdoor: 4,
+      sunlightHoursMin: 5, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      minTemperature: -20, maxTemperature: 30,
+      hotWeatherMultiplier: 0.6, coldWeatherMultiplier: 1.4, rainReductionDays: 3,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 12, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 24, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Floracion en primavera'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 18),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 60, notes: 'Evita trasplantar, no le gusta que la muevan'),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_wisteria', commonName: 'Glicinia', scientificName: 'Wisteria sinensis', category: 'outdoor',
+      description: 'Trepadora vigorosa con grandes racimos de flores lilas aromaticas en primavera.',
+      wateringFrequencyIndoor: 5, wateringFrequencyOutdoor: 4,
+      sunlightHoursMin: 5, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.fullSun,
+      minTemperature: -20, maxTemperature: 35,
+      hotWeatherMultiplier: 0.7, coldWeatherMultiplier: 1.5, rainReductionDays: 3,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 12, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 36, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.flowering, durationMonths: 0, description: 'Floracion en primavera; requiere poda doble al ano'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 48),
+      ],
+    ),
+    PlantSpecies(
+      id: 'local_bambu', commonName: 'Bambu (exterior)', scientificName: 'Phyllostachys aurea', category: 'outdoor',
+      description: 'Bambu de exterior de crecimiento rapido, ideal para setos y mamparas naturales. Muy resistente.',
+      wateringFrequencyIndoor: 3, wateringFrequencyOutdoor: 2,
+      sunlightHoursMin: 4, sunlightHoursMax: 8, sunlightLevel: SunlightLevel.high,
+      humidityLoving: true, minTemperature: -15, maxTemperature: 38,
+      hotWeatherMultiplier: 0.6, coldWeatherMultiplier: 1.5, rainReductionDays: 2,
+      growthPhases: [
+        GrowthPhaseInfo(stage: GrowthStage.seedling, durationMonths: 6, wateringMultiplier: 0.8),
+        GrowthPhaseInfo(stage: GrowthStage.development, durationMonths: 12, wateringMultiplier: 0.9),
+        GrowthPhaseInfo(stage: GrowthStage.mature, durationMonths: 0, description: 'Cana nueva cada primavera'),
+      ],
+      transplantSchedule: [
+        TransplantPhaseInfo(stage: GrowthStage.seedling, minPotSize: PotSize.medium, idealPotSize: PotSize.large, triggerAfterMonths: 12),
+        TransplantPhaseInfo(stage: GrowthStage.mature, minPotSize: PotSize.large, idealPotSize: PotSize.extraLarge, triggerAfterMonths: 36),
+      ],
+    ),
   ];
 }
