@@ -1,11 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planticula/core/constants/app_constants.dart';
+import 'package:planticula/core/services/plant_identification_service.dart';
 import 'package:planticula/core/navigation/main_scaffold.dart';
 import 'package:planticula/features/auth/presentation/screens/login_screen.dart';
 import 'package:planticula/features/auth/presentation/screens/register_screen.dart';
+import 'package:planticula/features/plants/presentation/screens/plant_editor_screen.dart';
+import 'package:planticula/features/plants/presentation/screens/plant_identification_screen.dart';
 import 'package:planticula/features/plants/presentation/screens/plants_screen.dart';
-import 'package:planticula/features/today/presentation/screens/today_screen.dart';
 import 'package:planticula/features/plants/presentation/screens/plant_detail_screen.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/pest_alerts/presentation/screens/pest_alerts_list_screen.dart';
@@ -18,6 +21,7 @@ import 'package:planticula/features/soil_analysis/presentation/screens/analysis_
 import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.dart';
 import 'package:planticula/features/profile/presentation/screens/profile_screen.dart';
 import 'package:planticula/features/guides/presentation/screens/guides_screen.dart';
+import 'package:planticula/features/tools/presentation/screens/tools_screen.dart';
 
 /// Notifier that GoRouter listens to for auth state changes.
 /// When auth changes, the router re-evaluates its redirect logic
@@ -48,7 +52,7 @@ class AppRouter {
   static GoRouter _createRouter() {
     return GoRouter(
       navigatorKey: _rootNavigatorKey,
-      initialLocation: AppConstants.routeLogin,
+      initialLocation: AppConstants.routePlants,
       refreshListenable: authNotifier,
       redirect: (context, state) {
         final isAuthenticated = authNotifier.isAuthenticated;
@@ -60,7 +64,7 @@ class AppRouter {
         }
 
         if (isAuthenticated && isAuthRoute) {
-          return AppConstants.routeToday;
+          return AppConstants.routePlants;
         }
 
         return null;
@@ -80,15 +84,40 @@ class AppRouter {
           navigatorKey: _shellNavigatorKey,
           builder: (context, state, child) => MainScaffold(child: child),
           routes: [
-            // Today (home)
-            GoRoute(
-              path: AppConstants.routeToday,
-              builder: (context, state) => const TodayScreen(),
-            ),
             // Plants
             GoRoute(
               path: AppConstants.routePlants,
               builder: (context, state) => const PlantsScreen(),
+            ),
+            // Plant identification (camera/AI)
+            GoRoute(
+              path: AppConstants.routePlantIdentification,
+              builder: (context, state) => const PlantIdentificationScreen(),
+            ),
+            // IMPORTANT: Editor route must come BEFORE detail route
+            // to avoid /plants/editor being captured by /plants/:id
+            GoRoute(
+              path: AppConstants.routePlantEditor,
+              builder: (context, state) {
+                final args = state.extra as Map<String, dynamic>?;
+                if (args == null) {
+                  return const PlantEditorScreen.manual();
+                }
+                final mode = args['mode'] as PlantEditorMode;
+                switch (mode) {
+                  case PlantEditorMode.manual:
+                    return const PlantEditorScreen.manual();
+                  case PlantEditorMode.aiAssisted:
+                    return PlantEditorScreen.aiAssisted(
+                      identificationResult: args['identificationResult'] as PlantIdentificationResult,
+                      imageFile: args['imageFile'] as File,
+                    );
+                  case PlantEditorMode.edit:
+                    return PlantEditorScreen.edit(
+                      existingPlant: args['existingPlant'] as Plant,
+                    );
+                }
+              },
             ),
             GoRoute(
               path: AppConstants.routePlantDetail,
@@ -104,6 +133,11 @@ class AppRouter {
                   ),
                 );
               },
+            ),
+            // Tools hub (soil analysis + guides)
+            GoRoute(
+              path: AppConstants.routeTools,
+              builder: (context, state) => const ToolsScreen(),
             ),
             // Pest Alerts
             GoRoute(

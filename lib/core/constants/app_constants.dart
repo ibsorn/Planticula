@@ -11,6 +11,8 @@ class AppConstants {
   static const String routeToday = '/today';
   static const String routePlants = '/plants';
   static const String routePlantDetail = '/plants/:id';
+  static const String routePlantEditor = '/plants/editor';
+  static const String routePlantIdentification = '/plants/identify';
   static const String routeProfile = '/profile';
   static const String routePestAlerts = '/pest-alerts';
   static const String routeReportPest = '/pest-alerts/report';
@@ -18,6 +20,7 @@ class AppConstants {
   static const String routeMarketplace = '/marketplace';
   static const String routeCreateListing = '/marketplace/create';
   static const String routeListingDetail = '/listing/:id';
+  static const String routeTools = '/tools';
   static const String routeSoilAnalysis = '/soil-analysis';
   static const String routeSoilAnalysisDetail = '/soil-analysis/:id';
   static const String routeGuides = '/guides';
