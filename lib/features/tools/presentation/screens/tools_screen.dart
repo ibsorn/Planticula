@@ -55,7 +55,7 @@ class ToolsScreen extends StatelessWidget {
 
                 // ── Grid row 1: Sustrato + Diagnóstico ─────────────────────
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
                       child: _CompactToolCard(
@@ -90,7 +90,7 @@ class ToolsScreen extends StatelessWidget {
 
                 // ── Grid row 2: Semilla + Guías ────────────────────────────
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
                       child: _CompactToolCard(
@@ -252,6 +252,7 @@ class _CompactToolCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppDimens.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.max,
             children: [
               Container(
                 padding: const EdgeInsets.all(AppDimens.sm),
