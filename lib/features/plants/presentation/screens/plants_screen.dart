@@ -7,7 +7,6 @@ import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
-import 'package:planticula/features/plants/presentation/screens/plant_detail_screen.dart';
 import 'package:planticula/shared/widgets/app_bottom_sheet.dart';
 import 'package:planticula/shared/widgets/empty_state.dart';
 import 'package:planticula/shared/widgets/status_ring.dart';
@@ -79,15 +78,14 @@ class _PlantsScreenState extends State<PlantsScreen> {
   }
 
   void _navigateToIdentification() {
-    context.push('/plants/identify');
+    context.push(AppConstants.routePlantIdentification);
   }
 
   void _onPlantTap(Plant plant) {
     context.read<PlantsBloc>().add(PlantSelectRequested(plant.id));
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PlantDetailScreen(plant: plant),
-      ),
+    context.push(
+      '/plants/${plant.id}',
+      extra: plant,
     );
   }
 

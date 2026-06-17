@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planticula/features/pest_alerts/domain/entities/pest_alert.dart';
 import 'package:planticula/features/pest_alerts/presentation/bloc/pest_alerts_bloc.dart';
-import 'package:planticula/features/pest_alerts/presentation/screens/pest_alert_detail_screen.dart';
 import 'package:planticula/features/pest_alerts/presentation/widgets/pest_alert_card.dart';
 import 'package:planticula/features/pest_alerts/presentation/widgets/pest_alerts_filter_sheet.dart';
 import 'package:geolocator/geolocator.dart';
@@ -264,11 +263,9 @@ class _PestAlertsListScreenState extends State<PestAlertsListScreen>
 
   void _showAlertDetail(PestAlert alert) {
     context.read<PestAlertsBloc>().add(PestAlertsAlertSelected(alert.id));
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PestAlertDetailScreen(alert: alert),
-      ),
+    context.push(
+      '/pest-alerts/${alert.id}',
+      extra: alert,
     );
   }
 }

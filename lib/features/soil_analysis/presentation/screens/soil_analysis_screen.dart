@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
+import 'package:go_router/go_router.dart';
 import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.dart';
 import 'package:planticula/features/soil_analysis/presentation/bloc/soil_analysis_bloc.dart';
-import 'package:planticula/features/soil_analysis/presentation/screens/analysis_detail_screen.dart';
 import 'package:planticula/shared/widgets/app_bottom_sheet.dart';
 import 'package:planticula/shared/widgets/app_button.dart';
 import 'package:planticula/shared/widgets/empty_state.dart';
@@ -77,10 +77,9 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
 
   void _onAnalysisTap(SoilAnalysis analysis) {
     context.read<SoilAnalysisBloc>().add(SoilAnalysisSelectRequested(analysis.id));
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AnalysisDetailScreen(analysis: analysis),
-      ),
+    context.push(
+      '/soil-analysis/${analysis.id}',
+      extra: analysis,
     );
   }
 
@@ -110,10 +109,9 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
             final analysis = state.lastCreatedAnalysis!;
             if (analysis.isCompleted) {
               // Navegar directamente al detalle del análisis
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => AnalysisDetailScreen(analysis: analysis),
-                ),
+              context.push(
+                '/soil-analysis/${analysis.id}',
+                extra: analysis,
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(

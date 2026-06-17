@@ -11,6 +11,8 @@ import 'package:planticula/features/plants/presentation/screens/plant_identifica
 import 'package:planticula/features/plants/presentation/screens/plants_screen.dart';
 import 'package:planticula/features/plants/presentation/screens/plant_detail_screen.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
+import 'package:planticula/features/pest_alerts/domain/entities/pest_alert.dart';
+import 'package:planticula/features/pest_alerts/presentation/screens/pest_alert_detail_screen.dart';
 import 'package:planticula/features/pest_alerts/presentation/screens/pest_alerts_list_screen.dart';
 import 'package:planticula/features/pest_alerts/presentation/screens/report_pest_screen.dart';
 import 'package:planticula/features/marketplace/presentation/screens/marketplace_list_screen.dart';
@@ -201,9 +203,19 @@ class AppRouter {
           ],
         ),
         // Full-screen routes (no bottom nav)
+        // IMPORTANT: routeReportPest ('/pest-alerts/report') must be declared
+        // BEFORE routePestAlertDetail ('/pest-alerts/:id') so GoRouter matches
+        // the static 'report' segment before the parameterised ':id' wildcard.
         GoRoute(
           path: AppConstants.routeReportPest,
           builder: (context, state) => const ReportPestScreen(),
+        ),
+        GoRoute(
+          path: AppConstants.routePestAlertDetail,
+          builder: (context, state) {
+            final alert = state.extra as PestAlert;
+            return PestAlertDetailScreen(alert: alert);
+          },
         ),
         GoRoute(
           path: AppConstants.routePlantDiagnosisResult,
