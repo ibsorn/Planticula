@@ -614,7 +614,8 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
 
   void _showSpeciesSearch() {
     final searchController = TextEditingController();
-    List<PlantSpecies> results = [];
+    // Pre-cargar con todas las especies ya cargadas (no esperar a que el usuario escriba)
+    List<PlantSpecies> results = List.from(_searchResults);
     bool isSearching = false;
 
     showModalBottomSheet(
@@ -633,6 +634,21 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
           builder: (context, scrollController) {
             return StatefulBuilder(
               builder: (context, setStateDialog) {
+                // Si al abrir el modal los resultados aún están vacíos (carga lenta),
+                // forzar carga desde el servicio.
+                if (results.isEmpty && !isSearching) {
+                  Future.microtask(() async {
+                    setStateDialog(() => isSearching = true);
+                    final loaded = await _speciesService.searchSpecies('');
+                    if (ctx.mounted) {
+                      setStateDialog(() {
+                        results = loaded;
+                        isSearching = false;
+                      });
+                    }
+                  });
+                }
+
                 return Column(
                   children: [
                     // Header
@@ -670,11 +686,17 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
                           border: OutlineInputBorder(),
                         ),
                         onChanged: (value) async {
-                          if (value.length >= 2) {
-                            setStateDialog(() => isSearching = true);
-                            results = await _speciesService.searchSpecies(value);
-                            setStateDialog(() => isSearching = false);
+                          if (value.isEmpty) {
+                            // Sin texto → restaurar lista completa
+                            setStateDialog(() => results = List.from(_searchResults));
+                            return;
                           }
+                          setStateDialog(() => isSearching = true);
+                          final found = await _speciesService.searchSpecies(value);
+                          setStateDialog(() {
+                            results = found;
+                            isSearching = false;
+                          });
                         },
                       ),
                     ),
@@ -688,9 +710,7 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
                           : results.isEmpty
                               ? Center(
                                   child: Text(
-                                    searchController.text.isEmpty
-                                        ? 'Escribe para buscar'
-                                        : 'No se encontraron especies',
+                                    'No se encontraron especies',
                                     style: TextStyle(
                                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                     ),
@@ -701,6 +721,50 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
                                   itemCount: results.length,
                                   itemBuilder: (context, index) {
                                     final species = results[index];
+
+                                    // Especie con variedades → ExpansionTile expandible
+                                    if (species.varieties.isNotEmpty) {
+                                      return ExpansionTile(
+                                        leading: species.imageUrl != null
+                                            ? CircleAvatar(
+                                                backgroundImage: NetworkImage(species.imageUrl!),
+                                              )
+                                            : const CircleAvatar(
+                                                child: Icon(Icons.local_florist)),
+                                        title: Text(
+                                          species.commonName,
+                                          style: const TextStyle(fontWeight: FontWeight.w600),
+                                        ),
+                                        subtitle: Text(
+                                          '${species.varieties.length} variedades disponibles',
+                                          style: TextStyle(
+                                            color: Theme.of(context).colorScheme.primary,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        children: species.varieties.map((variety) {
+                                          return ListTile(
+                                            contentPadding: const EdgeInsets.only(
+                                                left: 72, right: 16),
+                                            title: Text(variety.commonName),
+                                            subtitle: Text(
+                                              variety.scientificName,
+                                              style: const TextStyle(
+                                                  fontStyle: FontStyle.italic, fontSize: 12),
+                                            ),
+                                            onTap: () {
+                                              Navigator.pop(ctx);
+                                              setState(() {
+                                                _selectedSpecies = variety;
+                                                _updateRecommendation();
+                                              });
+                                            },
+                                          );
+                                        }).toList(),
+                                      );
+                                    }
+
+                                    // Especie sin variedades → ListTile seleccionable directo
                                     return ListTile(
                                       leading: species.imageUrl != null
                                           ? CircleAvatar(
@@ -709,12 +773,10 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
                                           : const CircleAvatar(
                                               child: Icon(Icons.local_florist)),
                                       title: Text(species.commonName),
-                                      subtitle: species.scientificName != null
-                                          ? Text(
-                                              species.scientificName!,
-                                              style: const TextStyle(fontStyle: FontStyle.italic),
-                                            )
-                                          : null,
+                                      subtitle: Text(
+                                        species.scientificName,
+                                        style: const TextStyle(fontStyle: FontStyle.italic),
+                                      ),
                                       onTap: () {
                                         Navigator.pop(ctx);
                                         setState(() {
