@@ -54,71 +54,77 @@ class ToolsScreen extends StatelessWidget {
                 const SizedBox(height: AppDimens.md),
 
                 // ── Grid row 1: Sustrato + Diagnóstico ─────────────────────
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _CompactToolCard(
-                        icon: Icons.science_outlined,
-                        title: 'Análisis de Sustrato',
-                        description:
-                            'Analiza la tierra de tus plantas: pH, humedad y tipo de suelo.',
-                        accent: AppColors.soil,
-                        deep: AppColors.soilDeep,
-                        soft: AppColors.soilSoft,
-                        onTap: () =>
-                            context.push(AppConstants.routeSoilAnalysis),
+                // IntrinsicHeight makes both cards the same height regardless
+                // of text length, without breaking scroll layout.
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _CompactToolCard(
+                          icon: Icons.science_outlined,
+                          title: 'Análisis de Sustrato',
+                          description:
+                              'Analiza la tierra de tus plantas: pH, humedad y tipo de suelo.',
+                          accent: AppColors.soil,
+                          deep: AppColors.soilDeep,
+                          soft: AppColors.soilSoft,
+                          onTap: () =>
+                              context.push(AppConstants.routeSoilAnalysis),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: AppDimens.md),
-                    Expanded(
-                      child: _CompactToolCard(
-                        icon: Icons.bug_report_outlined,
-                        title: 'Diagnóstico de Plantas',
-                        description:
-                            'Detecta plagas, enfermedades y carencias con remedios caseros.',
-                        accent: AppColors.pest,
-                        deep: AppColors.pestDeep,
-                        soft: AppColors.pestSoft,
-                        onTap: () =>
-                            context.push(AppConstants.routePlantDisease),
+                      const SizedBox(width: AppDimens.md),
+                      Expanded(
+                        child: _CompactToolCard(
+                          icon: Icons.bug_report_outlined,
+                          title: 'Diagnóstico de Plantas',
+                          description:
+                              'Detecta plagas, enfermedades y carencias con remedios caseros.',
+                          accent: AppColors.pest,
+                          deep: AppColors.pestDeep,
+                          soft: AppColors.pestSoft,
+                          onTap: () =>
+                              context.push(AppConstants.routePlantDisease),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: AppDimens.md),
 
                 // ── Grid row 2: Semilla + Guías ────────────────────────────
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _CompactToolCard(
-                        icon: Icons.grass_outlined,
-                        title: 'Identificar Semilla',
-                        description:
-                            'Identifica semillas y obtén instrucciones de germinación.',
-                        accent: AppColors.sun,
-                        deep: AppColors.sunDeep,
-                        soft: AppColors.sunSoft,
-                        onTap: () =>
-                            context.push(AppConstants.routeSeedIdentification),
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _CompactToolCard(
+                          icon: Icons.grass_outlined,
+                          title: 'Identificar Semilla',
+                          description:
+                              'Identifica semillas y obtén instrucciones de germinación.',
+                          accent: AppColors.sun,
+                          deep: AppColors.sunDeep,
+                          soft: AppColors.sunSoft,
+                          onTap: () =>
+                              context.push(AppConstants.routeSeedIdentification),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: AppDimens.md),
-                    Expanded(
-                      child: _CompactToolCard(
-                        icon: Icons.menu_book_outlined,
-                        title: 'Guías de Cuidado',
-                        description:
-                            'Consejos de riego, luz, temperatura y plagas.',
-                        accent: AppColors.primary,
-                        deep: AppColors.primaryDeep,
-                        soft: AppColors.primarySoft,
-                        onTap: () => context.push(AppConstants.routeGuides),
+                      const SizedBox(width: AppDimens.md),
+                      Expanded(
+                        child: _CompactToolCard(
+                          icon: Icons.menu_book_outlined,
+                          title: 'Guías de Cuidado',
+                          description:
+                              'Consejos de riego, luz, temperatura y plagas.',
+                          accent: AppColors.primary,
+                          deep: AppColors.primaryDeep,
+                          soft: AppColors.primarySoft,
+                          onTap: () => context.push(AppConstants.routeGuides),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: AppDimens.xxl),
               ]),
@@ -252,7 +258,6 @@ class _CompactToolCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppDimens.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.max,
             children: [
               Container(
                 padding: const EdgeInsets.all(AppDimens.sm),
