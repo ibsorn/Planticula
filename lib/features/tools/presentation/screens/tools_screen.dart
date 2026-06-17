@@ -49,7 +49,7 @@ class ToolsScreen extends StatelessWidget {
                   deep: AppColors.primaryDeep,
                   soft: AppColors.primarySoft,
                   onTap: () =>
-                      context.go(AppConstants.routePlantIdentificationV2),
+                      context.push(AppConstants.routePlantIdentificationV2),
                 ),
                 const SizedBox(height: AppDimens.md),
 
@@ -67,7 +67,7 @@ class ToolsScreen extends StatelessWidget {
                         deep: AppColors.soilDeep,
                         soft: AppColors.soilSoft,
                         onTap: () =>
-                            context.go(AppConstants.routeSoilAnalysis),
+                            context.push(AppConstants.routeSoilAnalysis),
                       ),
                     ),
                     const SizedBox(width: AppDimens.md),
@@ -81,7 +81,7 @@ class ToolsScreen extends StatelessWidget {
                         deep: AppColors.pestDeep,
                         soft: AppColors.pestSoft,
                         onTap: () =>
-                            context.go(AppConstants.routePlantDisease),
+                            context.push(AppConstants.routePlantDisease),
                       ),
                     ),
                   ],
@@ -102,7 +102,7 @@ class ToolsScreen extends StatelessWidget {
                         deep: AppColors.sunDeep,
                         soft: AppColors.sunSoft,
                         onTap: () =>
-                            context.go(AppConstants.routeSeedIdentification),
+                            context.push(AppConstants.routeSeedIdentification),
                       ),
                     ),
                     const SizedBox(width: AppDimens.md),
@@ -115,7 +115,7 @@ class ToolsScreen extends StatelessWidget {
                         accent: AppColors.primary,
                         deep: AppColors.primaryDeep,
                         soft: AppColors.primarySoft,
-                        onTap: () => context.go(AppConstants.routeGuides),
+                        onTap: () => context.push(AppConstants.routeGuides),
                       ),
                     ),
                   ],
