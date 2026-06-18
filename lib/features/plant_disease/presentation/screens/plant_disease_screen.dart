@@ -21,7 +21,10 @@ class _PlantDiseaseScreenState extends State<PlantDiseaseScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<PlantDiseaseBloc>().add(PlantDiseaseLoadRequested());
+    final bloc = context.read<PlantDiseaseBloc>();
+    if (bloc.state.status == PlantDiseaseStatus.initial) {
+      bloc.add(PlantDiseaseLoadRequested());
+    }
   }
 
   void _showImageSourceSheet() {
@@ -130,15 +133,12 @@ class _PlantDiseaseScreenState extends State<PlantDiseaseScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildEmptyState() {
-    return EmptyState(
+    return const EmptyState(
       icon: Icons.bug_report_outlined,
       iconColor: AppColors.pest,
       title: 'Sin diagnósticos',
       message:
           'Fotografía las hojas, tallos o raíces afectadas y la IA identificará el problema y te recomendará remedios.',
-      actionLabel: 'Diagnosticar',
-      actionIcon: Icons.add_a_photo_outlined,
-      onAction: _showImageSourceSheet,
     );
   }
 

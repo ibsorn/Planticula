@@ -24,7 +24,10 @@ class _PlantIdentificationV2ScreenState
   @override
   void initState() {
     super.initState();
-    context.read<PlantIdentificationBloc>().add(PlantIdentificationLoadRequested());
+    final bloc = context.read<PlantIdentificationBloc>();
+    if (bloc.state.status == PlantIdentificationStatus.initial) {
+      bloc.add(PlantIdentificationLoadRequested());
+    }
   }
 
   void _showImageSourceSheet() {
@@ -131,15 +134,12 @@ class _PlantIdentificationV2ScreenState
   // ---------------------------------------------------------------------------
 
   Widget _buildEmptyState() {
-    return EmptyState(
+    return const EmptyState(
       icon: Icons.local_florist_outlined,
       iconColor: AppColors.primary,
       title: 'Sin identificaciones',
       message:
           'Fotografía cualquier planta y la IA la identificará al instante: nombre, cuidados, toxicidad y más.',
-      actionLabel: 'Identificar planta',
-      actionIcon: Icons.add_a_photo_outlined,
-      onAction: _showImageSourceSheet,
     );
   }
 

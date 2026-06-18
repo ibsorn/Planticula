@@ -23,12 +23,13 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.plantId != null) {
-      context
-          .read<SoilAnalysisBloc>()
-          .add(SoilAnalysisLoadByPlantRequested(widget.plantId!));
-    } else {
-      context.read<SoilAnalysisBloc>().add(SoilAnalysisLoadRequested());
+    final bloc = context.read<SoilAnalysisBloc>();
+    if (bloc.state.status == SoilAnalysisStatus.initial) {
+      if (widget.plantId != null) {
+        bloc.add(SoilAnalysisLoadByPlantRequested(widget.plantId!));
+      } else {
+        bloc.add(SoilAnalysisLoadRequested());
+      }
     }
   }
 
@@ -144,10 +145,15 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
           return _buildAnalysisList(state.analyses);
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showImageSourceDialog,
-        icon: const Icon(Icons.add_a_photo),
-        label: const Text('Nuevo'),
+      floatingActionButton: BlocBuilder<SoilAnalysisBloc, SoilAnalysisState>(
+        builder: (context, state) {
+          if (state.hasImageSelected) return const SizedBox.shrink();
+          return FloatingActionButton.extended(
+            onPressed: _showImageSourceDialog,
+            icon: const Icon(Icons.add_a_photo),
+            label: const Text('Analizar'),
+          );
+        },
       ),
     );
   }
@@ -161,13 +167,10 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
   }
 
   Widget _buildEmptyState() {
-    return EmptyState(
+    return const EmptyState(
       icon: Icons.science_outlined,
       title: 'Sin análisis de sustrato',
       message: 'Toma una foto del sustrato de tu planta para analizarlo',
-      actionLabel: 'Tomar Foto',
-      actionIcon: Icons.add_a_photo,
-      onAction: _showImageSourceDialog,
     );
   }
 
@@ -279,7 +282,7 @@ class _SoilAnalysisScreenState extends State<SoilAnalysisScreen> {
               child: Text(
                 state.progressMessage.isNotEmpty
                     ? state.progressMessage
-                    : (state.isUploading ? 'Subiendo imagen...' : 'Preparando...'),
+                    : 'Preparando...',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),

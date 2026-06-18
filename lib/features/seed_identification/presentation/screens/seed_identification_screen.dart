@@ -28,9 +28,10 @@ class _SeedIdentificationScreenState extends State<SeedIdentificationScreen> {
   @override
   void initState() {
     super.initState();
-    context
-        .read<SeedIdentificationBloc>()
-        .add(SeedIdentificationLoadRequested());
+    final bloc = context.read<SeedIdentificationBloc>();
+    if (bloc.state.status == SeedIdentificationStatus.initial) {
+      bloc.add(SeedIdentificationLoadRequested());
+    }
   }
 
   void _showImageSourceSheet() {
@@ -138,15 +139,12 @@ class _SeedIdentificationScreenState extends State<SeedIdentificationScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildEmptyState() {
-    return EmptyState(
+    return const EmptyState(
       icon: Icons.grass_outlined,
       iconColor: _seedColor,
       title: 'Sin identificaciones',
       message:
           'Fotografía cualquier semilla y la IA la identificará: planta que produce, instrucciones de germinación y más.',
-      actionLabel: 'Identificar semilla',
-      actionIcon: Icons.add_a_photo_outlined,
-      onAction: _showImageSourceSheet,
     );
   }
 

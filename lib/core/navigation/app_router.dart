@@ -30,13 +30,9 @@ import 'package:planticula/features/plant_disease/domain/entities/plant_disease_
 import 'package:planticula/features/plant_identification/presentation/screens/plant_identification_screen.dart';
 import 'package:planticula/features/plant_identification/presentation/screens/plant_identification_result_screen.dart';
 import 'package:planticula/features/plant_identification/domain/entities/plant_identification_result.dart';
-import 'package:planticula/features/plant_identification/presentation/bloc/plant_identification_bloc.dart';
 import 'package:planticula/features/seed_identification/presentation/screens/seed_identification_screen.dart';
 import 'package:planticula/features/seed_identification/presentation/screens/seed_identification_result_screen.dart';
 import 'package:planticula/features/seed_identification/domain/entities/seed_identification_result.dart';
-import 'package:planticula/features/seed_identification/presentation/bloc/seed_identification_bloc.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:planticula/core/di/injection.dart';
 
 /// Notifier that GoRouter listens to for auth state changes.
 /// When auth changes, the router re-evaluates its redirect logic
@@ -182,18 +178,12 @@ class AppRouter {
             // Plant Identification V2
             GoRoute(
               path: AppConstants.routePlantIdentificationV2,
-              builder: (context, state) => BlocProvider(
-                create: (_) => sl<PlantIdentificationBloc>(),
-                child: const PlantIdentificationV2Screen(),
-              ),
+              builder: (context, state) => const PlantIdentificationV2Screen(),
             ),
             // Seed Identification
             GoRoute(
               path: AppConstants.routeSeedIdentification,
-              builder: (context, state) => BlocProvider(
-                create: (_) => sl<SeedIdentificationBloc>(),
-                child: const SeedIdentificationScreen(),
-              ),
+              builder: (context, state) => const SeedIdentificationScreen(),
             ),
             // Profile
             GoRoute(

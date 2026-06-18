@@ -244,12 +244,10 @@ class _PlantsScreenState extends State<PlantsScreen> {
                   );
                 }
                 if (state.isEmpty) {
-                  return EmptyState(
+                  return const EmptyState(
                     emoji: '🌱',
                     title: AppStrings.plantsEmptyTitle,
                     message: AppStrings.plantsEmptySubtitle,
-                    actionLabel: AppStrings.plantsAddPlantButton,
-                    onAction: _onAddPlant,
                   );
                 }
 
