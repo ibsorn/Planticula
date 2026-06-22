@@ -77,6 +77,9 @@ class _PlantDiseaseScreenState extends State<PlantDiseaseScreen> {
         centerTitle: false,
       ),
       body: BlocConsumer<PlantDiseaseBloc, PlantDiseaseState>(
+        listenWhen: (previous, current) =>
+            previous.submitStatus != current.submitStatus ||
+            previous.errorMessage != current.errorMessage,
         listener: (context, state) {
           if (state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -106,7 +109,7 @@ class _PlantDiseaseScreenState extends State<PlantDiseaseScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state.isEmpty || state.diagnoses.isEmpty) {
+          if (state.isEmpty) {
             return _buildEmptyState();
           }
 

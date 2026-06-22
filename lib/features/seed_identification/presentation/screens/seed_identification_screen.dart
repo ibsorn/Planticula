@@ -84,6 +84,9 @@ class _SeedIdentificationScreenState extends State<SeedIdentificationScreen> {
         centerTitle: false,
       ),
       body: BlocConsumer<SeedIdentificationBloc, SeedIdentificationState>(
+        listenWhen: (previous, current) =>
+            previous.submitStatus != current.submitStatus ||
+            previous.errorMessage != current.errorMessage,
         listener: (context, state) {
           if (state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -111,7 +114,7 @@ class _SeedIdentificationScreenState extends State<SeedIdentificationScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state.isEmpty || state.records.isEmpty) {
+          if (state.isEmpty) {
             return _buildEmptyState();
           }
 

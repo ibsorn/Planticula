@@ -80,6 +80,9 @@ class _PlantIdentificationV2ScreenState
         centerTitle: false,
       ),
       body: BlocConsumer<PlantIdentificationBloc, PlantIdentificationState>(
+        listenWhen: (previous, current) =>
+            previous.submitStatus != current.submitStatus ||
+            previous.errorMessage != current.errorMessage,
         listener: (context, state) {
           if (state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -107,7 +110,7 @@ class _PlantIdentificationV2ScreenState
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state.isEmpty || state.records.isEmpty) {
+          if (state.isEmpty) {
             return _buildEmptyState();
           }
 

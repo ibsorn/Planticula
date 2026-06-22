@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/features/soil_analysis/data/datasources/soil_analysis_remote_datasource.dart';
 import 'package:planticula/features/soil_analysis/data/models/soil_analysis_model.dart';
@@ -65,10 +66,10 @@ class SoilAnalysisRepositoryImpl implements SoilAnalysisRepository {
 
     final createdAnalysis = (createResult as Success<SoilAnalysisModel>).data;
 
-    // 3. Opcionalmente invocar Edge Function
+    // 3. Opcionalmente invocar análisis con IA
     if (triggerAnalysis) {
       final analysisResult =
-          await _dataSource.analyzeImage(createdAnalysis.id);
+          await _dataSource.analyzeImage(createdAnalysis.id, imageBytes);
       if (analysisResult is Success<SoilAnalysisModel>) {
         return Success(analysisResult.data);
       }
@@ -95,7 +96,25 @@ class SoilAnalysisRepositoryImpl implements SoilAnalysisRepository {
     String analysisId, {
     SoilAnalysisProgress? onProgress,
   }) async {
-    return await _dataSource.analyzeImage(analysisId, onProgress: onProgress);
+    // Obtener el análisis para descargar la imagen (re-análisis)
+    final analysisResult = await _dataSource.getAnalysisById(analysisId);
+    if (analysisResult is Failure<SoilAnalysisModel>) {
+      return Failure(analysisResult.message,
+          code: analysisResult.code, error: analysisResult.error);
+    }
+    final analysis = (analysisResult as Success<SoilAnalysisModel>).data;
+
+    // Descargar imagen del storage
+    final imageResponse = await http.get(Uri.parse(analysis.imageUrl));
+    if (imageResponse.statusCode != 200) {
+      return Failure('No se pudo descargar la imagen para re-análisis');
+    }
+
+    return await _dataSource.analyzeImage(
+      analysisId,
+      imageResponse.bodyBytes,
+      onProgress: onProgress,
+    );
   }
 
   @override

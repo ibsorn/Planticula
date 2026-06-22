@@ -148,6 +148,7 @@ class SeedIdentificationBloc
 
     result.when(
       success: (record) => emit(state.copyWith(
+        status: SeedIdentificationStatus.loaded,
         submitStatus: SeedIdentificationSubmitStatus.success,
         records: [record, ...state.records],
         lastRecord: record,

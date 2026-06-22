@@ -148,6 +148,7 @@ class PlantIdentificationBloc
 
     result.when(
       success: (record) => emit(state.copyWith(
+        status: PlantIdentificationStatus.loaded,
         submitStatus: PlantIdentificationSubmitStatus.success,
         records: [record, ...state.records],
         lastRecord: record,

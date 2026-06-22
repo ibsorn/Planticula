@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/core/network/supabase_client.dart';
@@ -278,7 +277,8 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
 
   @override
   Future<Result<SoilAnalysisModel>> analyzeImage(
-    String analysisId, {
+    String analysisId,
+    Uint8List imageBytes, {
     SoilAnalysisProgress? onProgress,
   }) async {
     try {
@@ -290,12 +290,11 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
 
       onProgress?.call(0.1, 'Preparando análisis...');
 
-      // Get the analysis to get the image URL
+      // Get the analysis to confirm it exists
       final analysisResult = await getAnalysisById(analysisId);
       if (analysisResult is Failure<SoilAnalysisModel>) {
         return analysisResult;
       }
-      final analysis = (analysisResult as Success<SoilAnalysisModel>).data;
 
       // Update status to processing
       await _client
@@ -303,15 +302,6 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
           .update({'status': 'processing'})
           .eq('id', analysisId)
           .eq('user_id', _userId!);
-
-      onProgress?.call(0.25, 'Descargando imagen...');
-
-      // Download the image from the public URL
-      final imageResponse = await http.get(Uri.parse(analysis.imageUrl));
-      if (imageResponse.statusCode != 200) {
-        throw Exception('Failed to download image: ${imageResponse.statusCode}');
-      }
-      final imageBytes = imageResponse.bodyBytes;
 
       // Call the AI service — map its stage progress into the 0.3..0.95 band
       final aiResult = await _aiService.analyzeFromBytes(

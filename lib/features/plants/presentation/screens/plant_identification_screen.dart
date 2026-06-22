@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
@@ -29,7 +29,7 @@ class _PlantIdentificationScreenState extends State<PlantIdentificationScreen> {
   final _identificationService = GetIt.instance<PlantIdentificationService>();
   final _picker = ImagePicker();
 
-  File? _selectedImage;
+  Uint8List? _selectedImageBytes;
   bool _isProcessing = false;
   String? _errorMessage;
 
@@ -52,7 +52,7 @@ class _PlantIdentificationScreenState extends State<PlantIdentificationScreen> {
       body: SafeArea(
         child: Padding(
           padding: AppDimens.screenPadding,
-          child: _selectedImage == null
+          child: _selectedImageBytes == null
               ? _buildSelectionView(theme)
               : _buildPreviewView(theme),
         ),
@@ -287,8 +287,8 @@ class _PlantIdentificationScreenState extends State<PlantIdentificationScreen> {
         Expanded(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppDimens.md),
-            child: Image.file(
-              _selectedImage!,
+            child: Image.memory(
+              _selectedImageBytes!,
               fit: BoxFit.cover,
             ),
           ),
@@ -471,10 +471,10 @@ class _PlantIdentificationScreenState extends State<PlantIdentificationScreen> {
                 leading: const Icon(Icons.delete_outline, color: AppColors.error),
                 title: const Text('Eliminar foto',
                     style: TextStyle(color: AppColors.error)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  setState(() => _selectedImage = null);
-                },
+              onTap: () {
+                Navigator.pop(ctx);
+                setState(() => _selectedImageBytes = null);
+              },
               ),
             ],
           ),
@@ -495,8 +495,9 @@ class _PlantIdentificationScreenState extends State<PlantIdentificationScreen> {
       );
 
       if (photo != null && mounted) {
+        final bytes = await photo.readAsBytes();
         setState(() {
-          _selectedImage = File(photo.path);
+          _selectedImageBytes = bytes;
           _errorMessage = null;
         });
       }
@@ -516,8 +517,9 @@ class _PlantIdentificationScreenState extends State<PlantIdentificationScreen> {
       );
 
       if (image != null && mounted) {
+        final bytes = await image.readAsBytes();
         setState(() {
-          _selectedImage = File(image.path);
+          _selectedImageBytes = bytes;
           _errorMessage = null;
         });
       }
@@ -528,7 +530,7 @@ class _PlantIdentificationScreenState extends State<PlantIdentificationScreen> {
 
   /// Procesa la imagen con el servicio de identificación
   Future<void> _processImage() async {
-    if (_selectedImage == null) return;
+    if (_selectedImageBytes == null) return;
 
     setState(() {
       _isProcessing = true;
@@ -539,7 +541,7 @@ class _PlantIdentificationScreenState extends State<PlantIdentificationScreen> {
 
     try {
       final result = await _identificationService.identifyFromImage(
-        _selectedImage!,
+        _selectedImageBytes!,
         onProgress: (stage, message, progress) {
           if (mounted) {
             setState(() {
@@ -553,13 +555,12 @@ class _PlantIdentificationScreenState extends State<PlantIdentificationScreen> {
       if (!mounted) return;
 
       if (result.isSuccessful && result.species != null) {
-        // Navegar al editor unificado con datos de IA
         context.push(
           AppConstants.routePlantEditor,
           extra: {
             'mode': PlantEditorMode.aiAssisted,
             'identificationResult': result,
-            'imageFile': _selectedImage!,
+            'imageBytes': _selectedImageBytes!,
           },
         );
       } else {

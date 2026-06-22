@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -51,22 +51,22 @@ class PlantEditorScreen extends StatefulWidget {
   final PlantIdentificationResult? identificationResult;
 
   /// Imagen capturada (solo para modo aiAssisted)
-  final File? imageFile;
+  final Uint8List? imageBytes;
 
   const PlantEditorScreen({
     super.key,
     required this.mode,
     this.existingPlant,
     this.identificationResult,
-    this.imageFile,
+    this.imageBytes,
   }) : assert(
           mode != PlantEditorMode.edit || existingPlant != null,
           'existingPlant is required for edit mode',
         ),
        assert(
           mode != PlantEditorMode.aiAssisted ||
-              (identificationResult != null && imageFile != null),
-          'identificationResult and imageFile are required for aiAssisted mode',
+              (identificationResult != null && imageBytes != null),
+          'identificationResult and imageBytes are required for aiAssisted mode',
         );
 
   /// Factory constructor para modo manual
@@ -74,13 +74,13 @@ class PlantEditorScreen extends StatefulWidget {
       : mode = PlantEditorMode.manual,
         existingPlant = null,
         identificationResult = null,
-        imageFile = null;
+        imageBytes = null;
 
   /// Factory constructor para modo IA
   const PlantEditorScreen.aiAssisted({
     super.key,
     required PlantIdentificationResult this.identificationResult,
-    required File this.imageFile,
+    required Uint8List this.imageBytes,
   })  : mode = PlantEditorMode.aiAssisted,
         existingPlant = null;
 
@@ -90,7 +90,7 @@ class PlantEditorScreen extends StatefulWidget {
     required Plant this.existingPlant,
   })  : mode = PlantEditorMode.edit,
         identificationResult = null,
-        imageFile = null;
+        imageBytes = null;
 
   @override
   State<PlantEditorScreen> createState() => _PlantEditorScreenState();
@@ -417,8 +417,8 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
   Widget _buildImagePreview() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppDimens.md),
-      child: Image.file(
-        widget.imageFile!,
+      child: Image.memory(
+        widget.imageBytes!,
         height: 200,
         width: double.infinity,
         fit: BoxFit.cover,

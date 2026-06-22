@@ -148,6 +148,7 @@ class PlantDiseaseBloc extends Bloc<PlantDiseaseEvent, PlantDiseaseState> {
 
     result.when(
       success: (diagnosis) => emit(state.copyWith(
+        status: PlantDiseaseStatus.loaded,
         submitStatus: PlantDiseaseSubmitStatus.success,
         diagnoses: [diagnosis, ...state.diagnoses],
         lastDiagnosis: diagnosis,

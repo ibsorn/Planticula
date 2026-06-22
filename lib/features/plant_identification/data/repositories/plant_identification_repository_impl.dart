@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/core/services/plant_identification_standalone_ai_service.dart';
 import 'package:planticula/features/plant_identification/data/datasources/plant_identification_datasource.dart';
@@ -53,11 +52,8 @@ class PlantIdentificationRepositoryImpl implements PlantIdentificationRepository
 
     // 3. Call AI service
     try {
-      final httpResponse = await http.get(Uri.parse(imageUrl));
-      final downloadedBytes = httpResponse.bodyBytes;
-
       final aiResult = await _aiService.analyzeFromBytes(
-        downloadedBytes,
+        imageBytes,
         onProgress: (stage, message, progress) =>
             onProgress?.call(0.3 + 0.6 * progress, message),
       );
@@ -86,6 +82,14 @@ class PlantIdentificationRepositoryImpl implements PlantIdentificationRepository
         if (updateResult is Success<PlantIdentificationModel>) {
           return Success(updateResult.data);
         }
+        // El análisis fue correcto pero NO se pudo guardar (p. ej. una
+        // constraint CHECK que no coincide). No devolvemos el registro vacío
+        // como éxito (eso mostraba "Planta desconocida"); reportamos el error.
+        return Failure(
+          (updateResult as Failure<PlantIdentificationModel>).message,
+          code: updateResult.code,
+          error: updateResult.error,
+        );
       } else {
         final errored = created.withError(aiResult.errorMessage ?? 'Error en análisis');
         await _datasource.updateRecord(errored);
@@ -96,8 +100,6 @@ class PlantIdentificationRepositoryImpl implements PlantIdentificationRepository
       await _datasource.updateRecord(errored);
       return Failure('Error al analizar imagen: $e');
     }
-
-    return Success(created);
   }
 
   @override

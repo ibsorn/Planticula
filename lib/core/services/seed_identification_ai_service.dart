@@ -1,10 +1,5 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:image/image.dart' as img;
-import 'package:planticula/core/services/ai_provider_config.dart';
+import 'package:planticula/core/ai/identification_provider.dart' as ai;
 
 /// Stages of the seed identification process for UI progress feedback.
 enum SeedIdStage {
@@ -78,125 +73,51 @@ class SeedIdAIResult {
         analysisNotes = null;
 }
 
-/// Identifies seeds from photos using a configurable AI vision model.
-///
-/// Provider and model resolved via [AiProviderConfig.seedIdentification]:
-///   SEED_ID_API_KEY / SEED_ID_BASE_URL / SEED_ID_MODEL
-/// Fallback to shared OPENROUTER_* keys if per-function keys are absent.
 class SeedIdentificationAIService {
-  final AiProviderConfig _cfg;
+  final ai.IdentificationProvider<SeedIdAIResult> _provider;
 
-  const SeedIdentificationAIService(this._cfg);
+  SeedIdentificationAIService(this._provider);
+
+  bool get isConfigured => _provider.isAvailable;
 
   Future<SeedIdAIResult> analyzeFromBytes(
     Uint8List imageBytes, {
     SeedIdProgressCallback? onProgress,
   }) async {
-    try {
-      if (!_cfg.isFullyConfigured) {
-        return _stubResult();
-      }
-      return await _analyzeWithOpenRouter(imageBytes, onProgress);
-    } catch (e) {
-      return SeedIdAIResult.failure('Error al analizar la imagen: ${e.toString()}');
+    if (!_provider.isAvailable) {
+      return const SeedIdAIResult.failure(
+        'La identificación con IA no está disponible. Revisa tu conexión a '
+        'internet y la configuración de Supabase/OpenRouter.',
+      );
     }
+
+    final result = await _provider.identify(
+      imageBytes,
+      onProgress: onProgress != null
+          ? (stage, msg, prog) => onProgress(_mapStage(stage), msg, prog)
+          : null,
+    );
+
+    if (result.isSuccessful && result.data != null) {
+      return result.data!;
+    }
+    return SeedIdAIResult.failure(
+      result.errorMessage ?? 'Error en el análisis',
+    );
   }
 
-  // ---------------------------------------------------------------------------
-  // OpenRouter call
-  // ---------------------------------------------------------------------------
-
-  Future<SeedIdAIResult> _analyzeWithOpenRouter(
-    Uint8List imageBytes,
-    SeedIdProgressCallback? onProgress,
-  ) async {
-    _emit(onProgress, SeedIdStage.preparing);
-
-    final optimized = await _optimizeImage(imageBytes);
-    final base64Image = base64Encode(optimized);
-
-    _emit(onProgress, SeedIdStage.uploading);
-
-    final client = http.Client();
-    try {
-      final cfg = _cfg;
-      final request = http.Request(
-        'POST',
-        Uri.parse(cfg.chatCompletionsUrl!),
-      );
-      request.headers.addAll({
-        'Authorization': 'Bearer ${cfg.apiKey!}',
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://planticula.app',
-        'X-Title': 'Planticula Seed Identification',
-      });
-      request.body = jsonEncode({
-        'model': cfg.model!,
-        'messages': [
-          {
-            'role': 'user',
-            'content': [
-              {'type': 'text', 'text': _buildPrompt()},
-              {
-                'type': 'image_url',
-                'image_url': {'url': 'data:image/jpeg;base64,$base64Image'},
-              },
-            ],
-          },
-        ],
-        'max_tokens': 900,
-        'temperature': 0.2,
-      });
-
-      final startTime = DateTime.now();
-      final requestFuture = request.send().timeout(
-        const Duration(seconds: 60),
-        onTimeout: () =>
-            throw Exception('Tiempo de espera agotado. La IA está tardando demasiado.'),
-      );
-
-      Timer? heartbeat;
-      if (onProgress != null) {
-        heartbeat = Timer.periodic(const Duration(milliseconds: 500), (_) {
-          final elapsed = DateTime.now().difference(startTime).inMilliseconds;
-          final ratio = (elapsed / 15000).clamp(0.0, 1.0);
-          final p = 0.35 + 0.20 * ratio;
-          onProgress(
-            SeedIdStage.analyzing,
-            'La IA está identificando la semilla${'.' * ((elapsed ~/ 1000) % 4)}',
-            p,
-          );
-        });
-      }
-
-      final streamed = await requestFuture;
-      heartbeat?.cancel();
-
-      _emit(onProgress, SeedIdStage.processing);
-
-      final response = await http.Response.fromStream(streamed);
-      if (response.statusCode != 200) {
-        throw Exception('AI API error ${response.statusCode}: ${response.body}');
-      }
-
-      final json = jsonDecode(response.body);
-      final content = json['choices']?[0]?['message']?['content'] as String?;
-      if (content == null || content.isEmpty) {
-        throw Exception('Respuesta vacía de OpenRouter');
-      }
-
-      _emit(onProgress, SeedIdStage.completed);
-      return _parseResponse(content);
-    } finally {
-      client.close();
-    }
+  static SeedIdStage _mapStage(String stage) {
+    return switch (stage) {
+      'preparing' => SeedIdStage.preparing,
+      'uploading' => SeedIdStage.uploading,
+      'analyzing' => SeedIdStage.analyzing,
+      'processing' => SeedIdStage.processing,
+      'completed' => SeedIdStage.completed,
+      _ => SeedIdStage.preparing,
+    };
   }
 
-  // ---------------------------------------------------------------------------
-  // Prompt
-  // ---------------------------------------------------------------------------
-
-  String _buildPrompt() => '''
+  static String get seedIdPrompt => '''
 Identifica la semilla de esta imagen y responde SOLO con JSON válido:
 
 {
@@ -227,119 +148,45 @@ Si no puedes identificar la semilla, usa "Semilla no identificada" en commonName
 Responde SOLO con el JSON, sin texto adicional.
 '''.trim();
 
-  // ---------------------------------------------------------------------------
-  // Parse
-  // ---------------------------------------------------------------------------
+  static SeedIdAIResult parseResult(Map<String, dynamic> data) {
+    final rawTips = data['germinationTips'];
+    final germinationTips = rawTips is List
+        ? rawTips.map((e) => e.toString()).toList()
+        : <String>[];
 
-  SeedIdAIResult _parseResponse(String content) {
-    try {
-      final jsonStr = _extractJson(content);
-      final data = jsonDecode(jsonStr) as Map<String, dynamic>;
-
-      final rawTips = data['germinationTips'];
-      final germinationTips = rawTips is List
-          ? rawTips.map((e) => e.toString()).toList()
-          : <String>[];
-
-      return SeedIdAIResult(
-        isSuccessful: true,
-        commonName: data['commonName'] as String?,
-        scientificName: data['scientificName'] as String?,
-        family: data['family'] as String?,
-        germinationDifficulty: _parseGerminationDifficulty(data['germinationDifficulty'] as String? ?? ''),
-        germinationTime: _parseGerminationTime(data['germinationTime'] as String? ?? ''),
-        sowingDepth: _parseSowingDepth(data['sowingDepth'] as String? ?? ''),
-        bestSowingSeason: _parseSowingSeason(data['bestSowingSeason'] as String? ?? ''),
-        confidenceScore: (data['confidenceScore'] as num?)?.toDouble(),
-        description: data['description'] as String?,
-        germinationTips: germinationTips,
-        soilRecommendation: data['soilRecommendation'] as String?,
-        analysisNotes: data['analysisNotes'] as String?,
-      );
-    } catch (e) {
-      debugPrint('[SeedIdAIService] Parse error: $e\nContent: $content');
-      return const SeedIdAIResult.failure('Error al procesar la respuesta de la IA');
-    }
+    return SeedIdAIResult(
+      isSuccessful: true,
+      commonName: data['commonName'] as String?,
+      scientificName: data['scientificName'] as String?,
+      family: data['family'] as String?,
+      germinationDifficulty:
+          _parseGerminationDifficulty(data['germinationDifficulty'] as String? ?? ''),
+      germinationTime:
+          _parseGerminationTime(data['germinationTime'] as String? ?? ''),
+      sowingDepth: _parseSowingDepth(data['sowingDepth'] as String? ?? ''),
+      bestSowingSeason:
+          _parseSowingSeason(data['bestSowingSeason'] as String? ?? ''),
+      confidenceScore: (data['confidenceScore'] as num?)?.toDouble(),
+      description: data['description'] as String?,
+      germinationTips: germinationTips,
+      soilRecommendation: data['soilRecommendation'] as String?,
+      analysisNotes: data['analysisNotes'] as String?,
+    );
   }
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
-
-  void _emit(SeedIdProgressCallback? cb, SeedIdStage stage) {
-    cb?.call(stage, stage.message, stage.progress);
-  }
-
-  String _extractJson(String text) {
-    final start = text.indexOf('{');
-    final end = text.lastIndexOf('}');
-    if (start >= 0 && end > start) return text.substring(start, end + 1);
-    return text;
-  }
-
-  Future<Uint8List> _optimizeImage(Uint8List bytes) async {
-    try {
-      final decoded = img.decodeImage(bytes);
-      if (decoded == null) return bytes;
-
-      img.Image resized = decoded;
-      if (decoded.width > 1024 || decoded.height > 1024) {
-        resized = img.copyResize(
-          decoded,
-          width: decoded.width > decoded.height ? 1024 : -1,
-          height: decoded.height >= decoded.width ? 1024 : -1,
-        );
-      }
-      return Uint8List.fromList(img.encodeJpg(resized, quality: 80));
-    } catch (_) {
-      return bytes;
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Enum parsers
-  // ---------------------------------------------------------------------------
-
-  SeedIdGerminationDifficulty? _parseGerminationDifficulty(String s) =>
+  static SeedIdGerminationDifficulty? _parseGerminationDifficulty(String s) =>
       SeedIdGerminationDifficulty.values.where((e) => e.name == s).firstOrNull;
 
-  SeedIdGerminationTime? _parseGerminationTime(String s) =>
+  static SeedIdGerminationTime? _parseGerminationTime(String s) =>
       SeedIdGerminationTime.values.where((e) => e.name == s).firstOrNull;
 
-  SeedIdSowingDepth? _parseSowingDepth(String s) =>
+  static SeedIdSowingDepth? _parseSowingDepth(String s) =>
       SeedIdSowingDepth.values.where((e) => e.name == s).firstOrNull;
 
-  SeedIdSowingSeason? _parseSowingSeason(String s) =>
+  static SeedIdSowingSeason? _parseSowingSeason(String s) =>
       SeedIdSowingSeason.values.where((e) => e.name == s).firstOrNull;
 
-  // ---------------------------------------------------------------------------
-  // Stub (no API key)
-  // ---------------------------------------------------------------------------
-
-  SeedIdAIResult _stubResult() => const SeedIdAIResult(
-    isSuccessful: true,
-    commonName: 'Tomate cherry (demo)',
-    scientificName: 'Solanum lycopersicum var. cerasiforme',
-    family: 'Solanaceae',
-    germinationDifficulty: SeedIdGerminationDifficulty.easy,
-    germinationTime: SeedIdGerminationTime.fast,
-    sowingDepth: SeedIdSowingDepth.shallow,
-    bestSowingSeason: SeedIdSowingSeason.spring,
-    confidenceScore: 0.88,
-    description: 'Semilla pequeña y redondeada de tomate cherry. Produce plantas productivas con frutos dulces.',
-    germinationTips: [
-      'Mantén el sustrato húmedo pero no encharcado',
-      'Temperatura ideal entre 20-25°C',
-      'Cubre ligeramente con tierra fina',
-    ],
-    soilRecommendation: 'Sustrato universal con perlita para mejorar el drenaje.',
-    analysisNotes: 'Modo demostración — configura SEED_ID_API_KEY para análisis real.',
-  );
 }
-
-// =============================================================================
-// Enums
-// =============================================================================
 
 enum SeedIdGerminationDifficulty {
   easy('Fácil'),

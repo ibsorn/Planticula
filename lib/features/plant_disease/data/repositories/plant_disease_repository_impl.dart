@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/core/services/plant_disease_ai_service.dart';
 import 'package:planticula/features/plant_disease/data/datasources/plant_disease_datasource.dart';
@@ -55,12 +54,8 @@ class PlantDiseaseRepositoryImpl implements PlantDiseaseRepository {
 
     // 3. Call AI service directly (no Edge Function needed)
     try {
-      // Download the image bytes from the public URL for AI analysis
-      final httpResponse = await http.get(Uri.parse(imageUrl));
-      final downloadedBytes = httpResponse.bodyBytes;
-
       final aiResult = await _aiService.analyzeFromBytes(
-        downloadedBytes,
+        imageBytes,
         // Map the AI service's stage progress (0..1) into the 0.3..0.9 band
         onProgress: (stage, message, progress) =>
             onProgress?.call(0.3 + 0.6 * progress, message),
@@ -85,6 +80,12 @@ class PlantDiseaseRepositoryImpl implements PlantDiseaseRepository {
         if (updateResult is Success<PlantDiseaseDiagnosisModel>) {
           return Success(updateResult.data);
         }
+        // Análisis correcto pero no se pudo guardar: reportamos el error.
+        return Failure(
+          (updateResult as Failure<PlantDiseaseDiagnosisModel>).message,
+          code: updateResult.code,
+          error: updateResult.error,
+        );
       } else {
         // Mark as error in DB but still return something useful
         final errored = created.withError(aiResult.errorMessage ?? 'Error en análisis');
@@ -96,8 +97,6 @@ class PlantDiseaseRepositoryImpl implements PlantDiseaseRepository {
       await _datasource.updateDiagnosis(errored);
       return Failure('Error al analizar imagen: $e');
     }
-
-    return Success(created);
   }
 
   @override

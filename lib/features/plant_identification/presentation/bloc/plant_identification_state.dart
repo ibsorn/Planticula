@@ -33,7 +33,7 @@ class PlantIdentificationState extends Equatable {
 
   bool get hasImage => imageBytes != null;
   bool get isLoading => status == PlantIdentificationStatus.loading;
-  bool get isEmpty => status == PlantIdentificationStatus.empty;
+  bool get isEmpty => records.isEmpty;
   bool get isAnalyzing => submitStatus == PlantIdentificationSubmitStatus.analyzing;
   bool get isSuccess => submitStatus == PlantIdentificationSubmitStatus.success;
 

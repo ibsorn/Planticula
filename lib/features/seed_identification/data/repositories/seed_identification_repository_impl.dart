@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/core/services/seed_identification_ai_service.dart';
 import 'package:planticula/features/seed_identification/data/datasources/seed_identification_datasource.dart';
@@ -53,11 +52,8 @@ class SeedIdentificationRepositoryImpl implements SeedIdentificationRepository {
 
     // 3. Call AI service
     try {
-      final httpResponse = await http.get(Uri.parse(imageUrl));
-      final downloadedBytes = httpResponse.bodyBytes;
-
       final aiResult = await _aiService.analyzeFromBytes(
-        downloadedBytes,
+        imageBytes,
         onProgress: (stage, message, progress) =>
             onProgress?.call(0.3 + 0.6 * progress, message),
       );
@@ -84,6 +80,13 @@ class SeedIdentificationRepositoryImpl implements SeedIdentificationRepository {
         if (updateResult is Success<SeedIdentificationModel>) {
           return Success(updateResult.data);
         }
+        // Análisis correcto pero no se pudo guardar: reportamos el error en
+        // lugar de devolver el registro vacío como éxito.
+        return Failure(
+          (updateResult as Failure<SeedIdentificationModel>).message,
+          code: updateResult.code,
+          error: updateResult.error,
+        );
       } else {
         final errored = created.withError(aiResult.errorMessage ?? 'Error en análisis');
         await _datasource.updateRecord(errored);
@@ -94,8 +97,6 @@ class SeedIdentificationRepositoryImpl implements SeedIdentificationRepository {
       await _datasource.updateRecord(errored);
       return Failure('Error al analizar imagen: $e');
     }
-
-    return Success(created);
   }
 
   @override

@@ -37,9 +37,11 @@ abstract class SoilAnalysisRemoteDataSource {
   Future<Result<void>> deleteImage(String filePath);
 
   /// Analiza la imagen con IA y retorna el análisis completado.
+  /// [imageBytes] son los bytes de la imagen ya en memoria.
   /// [onProgress] reporta el avance del análisis (0..1).
   Future<Result<SoilAnalysisModel>> analyzeImage(
-    String analysisId, {
+    String analysisId,
+    Uint8List imageBytes, {
     SoilAnalysisProgress? onProgress,
   });
 }

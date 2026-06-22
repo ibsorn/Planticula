@@ -33,7 +33,7 @@ class SeedIdentificationState extends Equatable {
 
   bool get hasImage => imageBytes != null;
   bool get isLoading => status == SeedIdentificationStatus.loading;
-  bool get isEmpty => status == SeedIdentificationStatus.empty;
+  bool get isEmpty => records.isEmpty;
   bool get isAnalyzing => submitStatus == SeedIdentificationSubmitStatus.analyzing;
   bool get isSuccess => submitStatus == SeedIdentificationSubmitStatus.success;
 

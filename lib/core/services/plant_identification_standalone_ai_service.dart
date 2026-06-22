@@ -1,10 +1,6 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:image/image.dart' as img;
-import 'package:planticula/core/services/ai_provider_config.dart';
+import 'package:flutter/foundation.dart';
+import 'package:planticula/core/ai/identification_provider.dart' as ai;
 
 /// Stages of the plant identification process for UI progress feedback.
 enum PlantIdStage {
@@ -84,125 +80,63 @@ class PlantIdAIResult {
         analysisNotes = null;
 }
 
-/// Identifies plants from photos using a configurable AI vision model.
-///
-/// Provider and model resolved via [AiProviderConfig.plantIdentificationV2]:
-///   PLANT_ID_V2_API_KEY / PLANT_ID_V2_BASE_URL / PLANT_ID_V2_MODEL
-/// Fallback to shared OPENROUTER_* keys if per-function keys are absent.
 class PlantIdentificationStandaloneAIService {
-  final AiProviderConfig _cfg;
+  final ai.IdentificationProvider<PlantIdAIResult> _provider;
 
-  const PlantIdentificationStandaloneAIService(this._cfg);
+  PlantIdentificationStandaloneAIService(this._provider);
+
+  bool get isConfigured => _provider.isAvailable;
 
   Future<PlantIdAIResult> analyzeFromBytes(
     Uint8List imageBytes, {
     PlantIdProgressCallback? onProgress,
   }) async {
-    try {
-      if (!_cfg.isFullyConfigured) {
-        return _stubResult();
-      }
-      return await _analyzeWithOpenRouter(imageBytes, onProgress);
-    } catch (e) {
-      return PlantIdAIResult.failure('Error al analizar la imagen: ${e.toString()}');
+    if (!_provider.isAvailable) {
+      return const PlantIdAIResult.failure(
+        'La identificación con IA no está disponible. Revisa tu conexión a '
+        'internet y la configuración de Supabase/OpenRouter.',
+      );
     }
+
+    final result = await _provider.identify(
+      imageBytes,
+      onProgress: onProgress != null
+          ? (stage, msg, prog) => onProgress(_mapStage(stage), msg, prog)
+          : null,
+    );
+
+    debugPrint('[PlantIdV2] result: success=${result.isSuccessful}, confidence=${result.confidence}, provider=${result.providerInfo.name}, error=${result.errorMessage}');
+    if (result.data != null) {
+      debugPrint('[PlantIdV2] commonName=${result.data!.commonName}, scientific=${result.data!.scientificName}');
+    }
+
+    if (result.isSuccessful && result.data != null) {
+      final data = result.data!;
+      // If commonName is null or "Planta no identificada", return failure with diagnostic info
+      if (data.commonName == null || data.commonName == 'Planta no identificada') {
+        return PlantIdAIResult.failure(
+          'No se pudo identificar la planta (provider: ${result.providerInfo.name}, confidence: ${result.confidence})',
+        );
+      }
+      return data;
+    }
+    return PlantIdAIResult.failure(
+      result.errorMessage ?? 'Error en el análisis',
+    );
   }
 
-  // ---------------------------------------------------------------------------
-  // OpenRouter call
-  // ---------------------------------------------------------------------------
-
-  Future<PlantIdAIResult> _analyzeWithOpenRouter(
-    Uint8List imageBytes,
-    PlantIdProgressCallback? onProgress,
-  ) async {
-    _emit(onProgress, PlantIdStage.preparing);
-
-    final optimized = await _optimizeImage(imageBytes);
-    final base64Image = base64Encode(optimized);
-
-    _emit(onProgress, PlantIdStage.uploading);
-
-    final client = http.Client();
-    try {
-      final cfg = _cfg;
-      final request = http.Request(
-        'POST',
-        Uri.parse(cfg.chatCompletionsUrl!),
-      );
-      request.headers.addAll({
-        'Authorization': 'Bearer ${cfg.apiKey!}',
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://planticula.app',
-        'X-Title': 'Planticula Plant Identification',
-      });
-      request.body = jsonEncode({
-        'model': cfg.model!,
-        'messages': [
-          {
-            'role': 'user',
-            'content': [
-              {'type': 'text', 'text': _buildPrompt()},
-              {
-                'type': 'image_url',
-                'image_url': {'url': 'data:image/jpeg;base64,$base64Image'},
-              },
-            ],
-          },
-        ],
-        'max_tokens': 1000,
-        'temperature': 0.2,
-      });
-
-      final startTime = DateTime.now();
-      final requestFuture = request.send().timeout(
-        const Duration(seconds: 60),
-        onTimeout: () =>
-            throw Exception('Tiempo de espera agotado. La IA está tardando demasiado.'),
-      );
-
-      Timer? heartbeat;
-      if (onProgress != null) {
-        heartbeat = Timer.periodic(const Duration(milliseconds: 500), (_) {
-          final elapsed = DateTime.now().difference(startTime).inMilliseconds;
-          final ratio = (elapsed / 15000).clamp(0.0, 1.0);
-          final p = 0.35 + 0.20 * ratio;
-          onProgress(
-            PlantIdStage.analyzing,
-            'La IA está identificando la planta${'.' * ((elapsed ~/ 1000) % 4)}',
-            p,
-          );
-        });
-      }
-
-      final streamed = await requestFuture;
-      heartbeat?.cancel();
-
-      _emit(onProgress, PlantIdStage.processing);
-
-      final response = await http.Response.fromStream(streamed);
-      if (response.statusCode != 200) {
-        throw Exception('AI API error ${response.statusCode}: ${response.body}');
-      }
-
-      final json = jsonDecode(response.body);
-      final content = json['choices']?[0]?['message']?['content'] as String?;
-      if (content == null || content.isEmpty) {
-        throw Exception('Respuesta vacía de OpenRouter');
-      }
-
-      _emit(onProgress, PlantIdStage.completed);
-      return _parseResponse(content);
-    } finally {
-      client.close();
-    }
+  static PlantIdStage _mapStage(String stage) {
+    return switch (stage) {
+      'preparing' => PlantIdStage.preparing,
+      'uploading' => PlantIdStage.uploading,
+      'analyzing' => PlantIdStage.analyzing,
+      'processing' => PlantIdStage.processing,
+      'completed' => PlantIdStage.completed,
+      _ => PlantIdStage.preparing,
+    };
   }
 
-  // ---------------------------------------------------------------------------
-  // Prompt
-  // ---------------------------------------------------------------------------
-
-  String _buildPrompt() => '''
+  static String get plantIdPrompt => '''
 Identifica la planta de esta imagen y responde SOLO con JSON válido:
 
 {
@@ -236,129 +170,57 @@ Si no puedes identificar la planta, usa "Planta no identificada" en commonName y
 Responde SOLO con el JSON, sin texto adicional.
 '''.trim();
 
-  // ---------------------------------------------------------------------------
-  // Parse
-  // ---------------------------------------------------------------------------
+  static PlantIdAIResult parseResult(Map<String, dynamic> data) {
+    final careLevel = _parseCareLevel(data['careLevel'] as String? ?? '');
+    final wateringFrequency =
+        _parseWateringFrequency(data['wateringFrequency'] as String? ?? '');
+    final lightRequirement =
+        _parseLightRequirement(data['lightRequirement'] as String? ?? '');
+    final humidityRequirement =
+        _parseHumidityRequirement(data['humidityRequirement'] as String? ?? '');
 
-  PlantIdAIResult _parseResponse(String content) {
-    try {
-      final jsonStr = _extractJson(content);
-      final data = jsonDecode(jsonStr) as Map<String, dynamic>;
+    final rawChars = data['characteristics'];
+    final characteristics = rawChars is List
+        ? rawChars.map((e) => e.toString()).toList()
+        : <String>[];
 
-      final careLevel = _parseCareLevel(data['careLevel'] as String? ?? '');
-      final wateringFrequency = _parseWateringFrequency(data['wateringFrequency'] as String? ?? '');
-      final lightRequirement = _parseLightRequirement(data['lightRequirement'] as String? ?? '');
-      final humidityRequirement = _parseHumidityRequirement(data['humidityRequirement'] as String? ?? '');
+    final rawTips = data['careTips'];
+    final careTips = rawTips is List
+        ? rawTips.map((e) => e.toString()).toList()
+        : <String>[];
 
-      final rawChars = data['characteristics'];
-      final characteristics = rawChars is List
-          ? rawChars.map((e) => e.toString()).toList()
-          : <String>[];
-
-      final rawTips = data['careTips'];
-      final careTips = rawTips is List
-          ? rawTips.map((e) => e.toString()).toList()
-          : <String>[];
-
-      return PlantIdAIResult(
-        isSuccessful: true,
-        commonName: data['commonName'] as String?,
-        scientificName: data['scientificName'] as String?,
-        family: data['family'] as String?,
-        careLevel: careLevel,
-        wateringFrequency: wateringFrequency,
-        lightRequirement: lightRequirement,
-        humidityRequirement: humidityRequirement,
-        toxicToPets: data['toxicToPets'] as bool?,
-        toxicToHumans: data['toxicToHumans'] as bool?,
-        confidenceScore: (data['confidenceScore'] as num?)?.toDouble(),
-        description: data['description'] as String?,
-        characteristics: characteristics,
-        careTips: careTips,
-        analysisNotes: data['analysisNotes'] as String?,
-      );
-    } catch (e) {
-      debugPrint('[PlantIdAIService] Parse error: $e\nContent: $content');
-      return const PlantIdAIResult.failure('Error al procesar la respuesta de la IA');
-    }
+    return PlantIdAIResult(
+      isSuccessful: true,
+      commonName: data['commonName'] as String?,
+      scientificName: data['scientificName'] as String?,
+      family: data['family'] as String?,
+      careLevel: careLevel,
+      wateringFrequency: wateringFrequency,
+      lightRequirement: lightRequirement,
+      humidityRequirement: humidityRequirement,
+      toxicToPets: data['toxicToPets'] as bool?,
+      toxicToHumans: data['toxicToHumans'] as bool?,
+      confidenceScore: (data['confidenceScore'] as num?)?.toDouble(),
+      description: data['description'] as String?,
+      characteristics: characteristics,
+      careTips: careTips,
+      analysisNotes: data['analysisNotes'] as String?,
+    );
   }
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
-
-  void _emit(PlantIdProgressCallback? cb, PlantIdStage stage) {
-    cb?.call(stage, stage.message, stage.progress);
-  }
-
-  String _extractJson(String text) {
-    final start = text.indexOf('{');
-    final end = text.lastIndexOf('}');
-    if (start >= 0 && end > start) return text.substring(start, end + 1);
-    return text;
-  }
-
-  Future<Uint8List> _optimizeImage(Uint8List bytes) async {
-    try {
-      final decoded = img.decodeImage(bytes);
-      if (decoded == null) return bytes;
-
-      img.Image resized = decoded;
-      if (decoded.width > 1024 || decoded.height > 1024) {
-        resized = img.copyResize(
-          decoded,
-          width: decoded.width > decoded.height ? 1024 : -1,
-          height: decoded.height >= decoded.width ? 1024 : -1,
-        );
-      }
-      return Uint8List.fromList(img.encodeJpg(resized, quality: 80));
-    } catch (_) {
-      return bytes;
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Enum parsers
-  // ---------------------------------------------------------------------------
-
-  PlantIdCareLevel? _parseCareLevel(String s) =>
+  static PlantIdCareLevel? _parseCareLevel(String s) =>
       PlantIdCareLevel.values.where((e) => e.name == s).firstOrNull;
 
-  PlantIdWateringFrequency? _parseWateringFrequency(String s) =>
+  static PlantIdWateringFrequency? _parseWateringFrequency(String s) =>
       PlantIdWateringFrequency.values.where((e) => e.name == s).firstOrNull;
 
-  PlantIdLightRequirement? _parseLightRequirement(String s) =>
+  static PlantIdLightRequirement? _parseLightRequirement(String s) =>
       PlantIdLightRequirement.values.where((e) => e.name == s).firstOrNull;
 
-  PlantIdHumidityRequirement? _parseHumidityRequirement(String s) =>
+  static PlantIdHumidityRequirement? _parseHumidityRequirement(String s) =>
       PlantIdHumidityRequirement.values.where((e) => e.name == s).firstOrNull;
 
-  // ---------------------------------------------------------------------------
-  // Stub (no API key)
-  // ---------------------------------------------------------------------------
-
-  PlantIdAIResult _stubResult() => const PlantIdAIResult(
-    isSuccessful: true,
-    commonName: 'Pothos dorado (demo)',
-    scientificName: 'Epipremnum aureum',
-    family: 'Araceae',
-    careLevel: PlantIdCareLevel.easy,
-    wateringFrequency: PlantIdWateringFrequency.moderate,
-    lightRequirement: PlantIdLightRequirement.indirectLight,
-    humidityRequirement: PlantIdHumidityRequirement.moderate,
-    toxicToPets: true,
-    toxicToHumans: false,
-    confidenceScore: 0.92,
-    description: 'Planta trepadora de interior muy popular por su resistencia y fácil cuidado. Sus hojas acorazonadas y brillantes pueden tener variaciones de color.',
-    characteristics: ['Hojas acorazonadas', 'Tallos trepadores', 'Fácil propagación'],
-    careTips: ['Riega cuando la tierra esté seca al tacto', 'Evita luz solar directa'],
-    analysisNotes: 'Modo demostración — configura PLANT_ID_V2_API_KEY para análisis real.',
-  );
 }
-
-// =============================================================================
-// Enums
-// =============================================================================
 
 enum PlantIdCareLevel {
   easy('Fácil'),
