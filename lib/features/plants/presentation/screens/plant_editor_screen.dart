@@ -12,6 +12,10 @@ import 'package:planticula/core/services/watering_calculator.dart';
 import 'package:planticula/core/services/weather_service.dart';
 import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
+import 'package:planticula/features/gardens/domain/entities/garden.dart';
+import 'package:planticula/features/gardens/domain/entities/garden_group.dart';
+import 'package:planticula/features/gardens/domain/repositories/garden_repository.dart';
+import 'package:planticula/features/gardens/presentation/widgets/garden_icon_mapper.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
 import 'package:planticula/features/plants/presentation/widgets/confidence_indicator.dart';
@@ -102,6 +106,7 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
   final _weatherService = GetIt.instance<WeatherService>();
   final _locationService = GetIt.instance<LocationService>();
   final _recommendationService = GetIt.instance<PlantRecommendationService>();
+  final _gardenRepository = GetIt.instance<GardenRepository>();
 
   // Controllers
   final _customNameController = TextEditingController();
@@ -112,6 +117,12 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
   PlantEnvironment _environment = PlantEnvironment.indoor;
   GrowthStage _growthStage = GrowthStage.development;
   PotSize _potSize = PotSize.medium;
+
+  // Garden / Group assignment (Stage 2)
+  List<Garden> _gardens = const [];
+  Garden? _selectedGarden;
+  List<GardenGroup> _groups = const [];
+  GardenGroup? _selectedGroup;
 
   // Search
   List<PlantSpecies> _searchResults = [];
@@ -136,6 +147,7 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
     _initializeFromMode();
     _loadSpecies();
     _getLocation();
+    _loadGardens();
   }
 
   /// Inicializa los valores según el modo
@@ -159,9 +171,58 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
         _environment = plant.plantEnvironment;
         _growthStage = plant.plantGrowthStage;
         _potSize = plant.plantPotSize;
-        // La especie se cargará en _loadSpecies
+        // El jardín/grupo se asigna en _loadGardens() una vez disponible la
+        // lista de jardines (necesitamos la entidad Garden completa).
         break;
     }
+  }
+
+  /// Carga los jardines del usuario y, en modo edición, preselecciona el
+  /// jardín/grupo de la planta existente.
+  Future<void> _loadGardens() async {
+    final result = await _gardenRepository.getGardens();
+    if (!mounted) return;
+    result.when(
+      success: (gardens) {
+        setState(() => _gardens = gardens);
+
+        // En modo edición, preseleccionar el jardín/grupo de la planta
+        if (widget.mode == PlantEditorMode.edit) {
+          final plant = widget.existingPlant!;
+          if (plant.gardenId != null) {
+            final garden = gardens.where((g) => g.id == plant.gardenId).firstOrNull;
+            if (garden != null) {
+              setState(() => _selectedGarden = garden);
+              _loadGroups(garden.id).then((_) {
+                if (plant.groupId != null && mounted) {
+                  final group = _groups.where((g) => g.id == plant.groupId).firstOrNull;
+                  if (group != null) {
+                    setState(() => _selectedGroup = group);
+                  }
+                }
+              });
+            }
+          }
+        }
+      },
+      failure: (_, __, ___) {},
+    );
+  }
+
+  /// Carga los grupos del jardín seleccionado.
+  Future<void> _loadGroups(String gardenId) async {
+    final result = await _gardenRepository.getGroupsByGarden(gardenId);
+    if (!mounted) return;
+    result.when(
+      success: (groups) => setState(() {
+        _groups = groups;
+        _selectedGroup = null;
+      }),
+      failure: (_, __, ___) => setState(() {
+        _groups = const [];
+        _selectedGroup = null;
+      }),
+    );
   }
 
   Future<void> _loadSpecies() async {
@@ -246,6 +307,8 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
             potSize: _potSize.dbValue,
             latitude: _latitude,
             longitude: _longitude,
+            gardenId: _selectedGarden?.id,
+            groupId: _selectedGroup?.id,
           ));
           break;
 
@@ -260,6 +323,10 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
             environment: _environment.name,
             growthStage: _growthStage.name,
             potSize: _potSize.dbValue,
+            gardenId: _selectedGarden?.id,
+            groupId: _selectedGroup?.id,
+            clearGardenId: _selectedGarden == null,
+            clearGroupId: _selectedGroup == null,
           );
           context.read<PlantsBloc>().add(PlantUpdateRequested(updatedPlant));
           break;
@@ -342,6 +409,16 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
             // Selector de especie
             _buildSpeciesSelector(theme),
             const SizedBox(height: AppDimens.lg),
+
+            // Selector de jardín (Stage 2)
+            _buildGardenSelector(theme),
+            const SizedBox(height: AppDimens.lg),
+
+            // Selector de grupo (solo si hay jardín seleccionado)
+            if (_selectedGarden != null) ...[
+              _buildGroupSelector(theme),
+              const SizedBox(height: AppDimens.lg),
+            ],
 
             // Selector de entorno
             _buildEnvironmentSelector(),
@@ -605,6 +682,373 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
         const SizedBox(height: AppDimens.sm),
         WateringRecommendationCard(recommendation: _recommendation!),
       ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // GARDEN / GROUP SELECTORS
+  // ---------------------------------------------------------------------------
+
+  Widget _buildGardenSelector(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Jardín (opcional)',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: AppDimens.sm),
+        Card(
+          child: _selectedGarden != null
+              ? ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Color(_selectedGarden!.colorValue)
+                          .withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      GardenIconMapper.forKey(_selectedGarden!.icon),
+                      color: Color(_selectedGarden!.colorValue),
+                      size: 22,
+                    ),
+                  ),
+                  title: Text(_selectedGarden!.name),
+                  subtitle: _selectedGarden!.isDefault
+                      ? const Text('Jardín principal')
+                      : null,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_selectedGarden != null && !_selectedGarden!.isDefault)
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          tooltip: 'Quitar del jardín',
+                          onPressed: () => setState(() {
+                            _selectedGarden = null;
+                            _selectedGroup = null;
+                            _groups = const [];
+                          }),
+                        ),
+                      TextButton(
+                        onPressed: _showGardenPicker,
+                        child: const Text('Cambiar'),
+                      ),
+                    ],
+                  ),
+                )
+              : ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor:
+                        theme.colorScheme.surfaceVariant.withValues(alpha: 0.5),
+                    child: Icon(Icons.yard_outlined,
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.5)),
+                  ),
+                  title: const Text('Sin jardín'),
+                  subtitle: const Text(
+                      'Selecciona un jardín para organizar tu planta'),
+                  onTap: _showGardenPicker,
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGroupSelector(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Grupo (opcional)',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: AppDimens.sm),
+        Card(
+          child: _selectedGroup != null
+              ? ListTile(
+                  leading: Icon(
+                    GardenIconMapper.forKey(
+                        _selectedGroup!.icon ?? _selectedGarden!.icon),
+                    color: Color(_selectedGarden!.colorValue),
+                  ),
+                  title: Text(_selectedGroup!.name),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        tooltip: 'Quitar del grupo',
+                        onPressed: () =>
+                            setState(() => _selectedGroup = null),
+                      ),
+                      if (_groups.isNotEmpty)
+                        TextButton(
+                          onPressed: _showGroupPicker,
+                          child: const Text('Cambiar'),
+                        ),
+                    ],
+                  ),
+                )
+              : ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor:
+                        theme.colorScheme.surfaceVariant.withValues(alpha: 0.5),
+                    child: Icon(Icons.folder_outlined,
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.5)),
+                  ),
+                  title: const Text('Sin grupo'),
+                  subtitle: _groups.isEmpty
+                      ? const Text('Este jardín no tiene grupos')
+                      : const Text('Selecciona un grupo (opcional)'),
+                  onTap: _groups.isEmpty ? null : _showGroupPicker,
+                ),
+        ),
+      ],
+    );
+  }
+
+  void _showGardenPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.all(AppDimens.md),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimens.md),
+                      Text(
+                        'Seleccionar jardín',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                // Lista de jardines
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    children: [
+                      // Opción "Sin jardín"
+                      ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceVariant
+                              .withValues(alpha: 0.5),
+                          child: Icon(Icons.close,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.5)),
+                        ),
+                        title: const Text('Sin jardín'),
+                        subtitle: const Text(
+                            'La planta quedará sin clasificar'),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          setState(() {
+                            _selectedGarden = null;
+                            _selectedGroup = null;
+                            _groups = const [];
+                          });
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ..._gardens.map((garden) {
+                        final color = Color(garden.colorValue);
+                        final isSelected =
+                            _selectedGarden?.id == garden.id;
+                        return ListTile(
+                          leading: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              GardenIconMapper.forKey(garden.icon),
+                              color: color,
+                              size: 22,
+                            ),
+                          ),
+                          title: Text(garden.name,
+                              style: TextStyle(
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400)),
+                          subtitle: garden.isDefault
+                              ? const Text('Jardín principal')
+                              : null,
+                          trailing: isSelected
+                              ? Icon(Icons.check,
+                                  color: Theme.of(context).colorScheme.primary)
+                              : null,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            setState(() => _selectedGarden = garden);
+                            _loadGroups(garden.id);
+                          },
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showGroupPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.all(AppDimens.md),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimens.md),
+                      Text(
+                        'Seleccionar grupo',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(height: AppDimens.xs),
+                      Text(
+                        'En ${_selectedGarden!.name}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                // Lista de grupos
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    children: [
+                      // Opción "Sin grupo"
+                      ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceVariant
+                              .withValues(alpha: 0.5),
+                          child: Icon(Icons.close,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.5)),
+                        ),
+                        title: const Text('Sin grupo'),
+                        subtitle: const Text(
+                            'La planta estará directamente en el jardín'),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          setState(() => _selectedGroup = null);
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ..._groups.map((group) {
+                        final isSelected = _selectedGroup?.id == group.id;
+                        return ListTile(
+                          leading: Icon(
+                            GardenIconMapper.forKey(
+                                group.icon ?? _selectedGarden!.icon),
+                            color: Color(_selectedGarden!.colorValue),
+                          ),
+                          title: Text(group.name,
+                              style: TextStyle(
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400)),
+                          trailing: isSelected
+                              ? Icon(Icons.check,
+                                  color: Theme.of(context).colorScheme.primary)
+                              : null,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            setState(() => _selectedGroup = group);
+                          },
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

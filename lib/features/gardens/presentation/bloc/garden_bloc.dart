@@ -39,10 +39,9 @@ class GardenBloc extends Bloc<GardenEvent, GardenState> {
       success: (gardens) => emit(state.copyWith(
         status: gardens.isEmpty ? GardenStatus.empty : GardenStatus.loaded,
         gardens: gardens,
-        // Seleccionamos el jardín por defecto automáticamente si no hay ninguno seleccionado
-        selectedGarden: state.selectedGarden ??
-            gardens.where((g) => g.isDefault).firstOrNull ??
-            gardens.firstOrNull,
+        // No auto-seleccionamos ningún jardín: el estado "Todas" (selectedGarden
+        // == null) es el filtro por defecto en la PlantsScreen. El usuario
+        // selecciona explícitamente un jardín desde la GardenFilterBar.
       )),
       failure: (msg, _, __) => emit(state.copyWith(
         status: GardenStatus.error,

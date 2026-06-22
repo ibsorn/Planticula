@@ -27,6 +27,8 @@ abstract class PlantsRepository {
     String? potSize,
     double? latitude,
     double? longitude,
+    String? gardenId,
+    String? groupId,
   });
 
   /// Actualiza una planta existente

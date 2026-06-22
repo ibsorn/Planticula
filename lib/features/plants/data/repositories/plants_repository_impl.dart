@@ -39,6 +39,8 @@ class PlantsRepositoryImpl implements PlantsRepository {
     String? potSize,
     double? latitude,
     double? longitude,
+    String? gardenId,
+    String? groupId,
   }) async {
     final plantModel = PlantModel.create(
       name: name,
@@ -56,6 +58,8 @@ class PlantsRepositoryImpl implements PlantsRepository {
       potSize: potSize,
       latitude: latitude,
       longitude: longitude,
+      gardenId: gardenId,
+      groupId: groupId,
     );
 
     return await _dataSource.createPlant(plantModel);

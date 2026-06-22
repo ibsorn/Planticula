@@ -191,12 +191,6 @@ class AppRouter {
               path: AppConstants.routeSeedIdentification,
               builder: (context, state) => const SeedIdentificationScreen(),
             ),
-            // Jardines (shell — con bottom nav)
-            // GardenBloc ya está provisto en main.dart
-            GoRoute(
-              path: AppConstants.routeGardens,
-              builder: (context, state) => const GardensScreen(),
-            ),
             // Profile
             GoRoute(
               path: AppConstants.routeProfile,
@@ -259,9 +253,17 @@ class AppRouter {
           },
         ),
         // ── Gardens ──────────────────────────────────────────────────────
-        // IMPORTANT: routeGardenEditor ('/gardens/editor') must be declared
-        // BEFORE routeGardenDetail ('/gardens/:id') so the static segment wins.
-        // GardenBloc y PlantsBloc ya están provisto en main.dart
+        // IMPORTANT: rutas estáticas deben declararse ANTES que las dinámicas
+        // para que GoRouter las matchee correctamente.
+        // Orden: /gardens → /gardens/editor → /gardens/:id
+        //
+        // /gardens ya NO es un tab del bottom nav: es una pantalla de gestión
+        // full-screen accesible desde la GardenFilterBar dentro de Plantas.
+        // GardenBloc y PlantsBloc ya están provistos en main.dart.
+        GoRoute(
+          path: AppConstants.routeGardens,
+          builder: (context, state) => const GardensScreen(),
+        ),
         GoRoute(
           path: AppConstants.routeGardenEditor,
           builder: (context, state) {

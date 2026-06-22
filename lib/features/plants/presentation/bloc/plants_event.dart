@@ -40,6 +40,8 @@ class PlantCreateRequested extends PlantsEvent {
   final String? potSize;
   final double? latitude;
   final double? longitude;
+  final String? gardenId;
+  final String? groupId;
 
   const PlantCreateRequested({
     required this.name,
@@ -57,6 +59,8 @@ class PlantCreateRequested extends PlantsEvent {
     this.potSize,
     this.latitude,
     this.longitude,
+    this.gardenId,
+    this.groupId,
   });
 
   @override
@@ -76,6 +80,8 @@ class PlantCreateRequested extends PlantsEvent {
         potSize,
         latitude,
         longitude,
+        gardenId,
+        groupId,
       ];
 }
 

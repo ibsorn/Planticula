@@ -132,6 +132,8 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
       potSize: event.potSize,
       latitude: event.latitude,
       longitude: event.longitude,
+      gardenId: event.gardenId,
+      groupId: event.groupId,
     );
 
     result.when(

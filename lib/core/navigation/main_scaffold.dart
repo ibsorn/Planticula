@@ -6,10 +6,14 @@ import 'package:planticula/core/constants/app_constants.dart';
 ///
 /// Tab layout:
 ///   0 → Plantas      (/plants)
-///   1 → Jardines     (/gardens)
-///   2 → Herramientas (/tools)
-///   3 → Comunidad    (/pest-alerts)
-///   4 → Perfil       (/profile)
+///   1 → Herramientas (/tools)
+///   2 → Comunidad    (/pest-alerts)
+///   3 → Perfil       (/profile)
+///
+/// Los jardines ya no tienen su propio tab: se gestionan como un filtro
+/// contextual dentro de Plantas (ver [GardenFilterBar]). La ruta /gardens
+/// sigue existiendo como pantalla de gestión full-screen accesible desde
+/// la barra de filtro.
 class MainScaffold extends StatelessWidget {
   final Widget child;
 
@@ -35,11 +39,6 @@ class MainScaffold extends StatelessWidget {
             label: 'Plantas',
           ),
           NavigationDestination(
-            icon: Icon(Icons.yard_outlined),
-            selectedIcon: Icon(Icons.yard),
-            label: 'Jardines',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.auto_awesome_outlined),
             selectedIcon: Icon(Icons.auto_awesome_rounded),
             label: 'Herramientas',
@@ -62,24 +61,22 @@ class MainScaffold extends StatelessWidget {
   int _getSelectedIndex(String route) {
     // Tab 0 – Plantas
     if (route.startsWith(AppConstants.routePlants)) return 0;
-    // Tab 1 – Jardines
-    if (route.startsWith(AppConstants.routeGardens)) return 1;
-    // Tab 2 – Herramientas
+    // Tab 1 – Herramientas
     if (route.startsWith(AppConstants.routeTools) ||
         route.startsWith(AppConstants.routeSoilAnalysis) ||
         route.startsWith(AppConstants.routeGuides) ||
         route.startsWith(AppConstants.routePlantDisease) ||
         route.startsWith(AppConstants.routePlantIdentificationV2) ||
         route.startsWith(AppConstants.routeSeedIdentification)) {
-      return 2;
+      return 1;
     }
-    // Tab 3 – Comunidad
+    // Tab 2 – Comunidad
     if (route.startsWith(AppConstants.routePestAlerts) ||
         route.startsWith(AppConstants.routeMarketplace)) {
-      return 3;
+      return 2;
     }
-    // Tab 4 – Perfil
-    if (route.startsWith(AppConstants.routeProfile)) return 4;
+    // Tab 3 – Perfil
+    if (route.startsWith(AppConstants.routeProfile)) return 3;
     return 0;
   }
 
@@ -89,15 +86,12 @@ class MainScaffold extends StatelessWidget {
         context.go(AppConstants.routePlants);
         break;
       case 1:
-        context.go(AppConstants.routeGardens);
-        break;
-      case 2:
         context.go(AppConstants.routeTools);
         break;
-      case 3:
+      case 2:
         context.go(AppConstants.routePestAlerts);
         break;
-      case 4:
+      case 3:
         context.go(AppConstants.routeProfile);
         break;
     }

@@ -5,6 +5,8 @@ import 'package:planticula/core/constants/app_constants.dart';
 import 'package:planticula/core/constants/app_strings.dart';
 import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
+import 'package:planticula/features/gardens/presentation/bloc/garden_bloc.dart';
+import 'package:planticula/features/gardens/presentation/widgets/garden_filter_bar.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
 import 'package:planticula/shared/widgets/app_bottom_sheet.dart';
@@ -29,7 +31,15 @@ class _PlantsScreenState extends State<PlantsScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<PlantsBloc>().add(PlantsLoadRequested());
+    // Restaurar el filtro de jardín activo (si lo hay) al reconstruir la
+    // pantalla — p.ej. al volver de otro tab. El estado del GardenBloc es
+    // global y persiste entre navegaciones.
+    final garden = context.read<GardenBloc>().state.selectedGarden;
+    if (garden != null) {
+      context.read<PlantsBloc>().add(PlantsFilterByGarden(garden.id));
+    } else {
+      context.read<PlantsBloc>().add(PlantsLoadRequested());
+    }
   }
 
   @override
@@ -167,110 +177,127 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mi Jardín 🌿'),
-        actions: [
-          IconButton(
-            icon: Icon(_searchVisible
-                ? Icons.search_off_rounded
-                : Icons.search_rounded),
-            onPressed: () {
-              setState(() => _searchVisible = !_searchVisible);
-              if (!_searchVisible && _searchController.text.isNotEmpty) {
-                _searchController.clear();
-                _onSearch('');
-              }
-            },
-          ),
-          IconButton(
-            icon: Icon(
-                _gridMode ? Icons.view_list_rounded : Icons.grid_view_rounded),
-            onPressed: () => setState(() => _gridMode = !_gridMode),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          if (_searchVisible)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  AppDimens.lg, 0, AppDimens.lg, AppDimens.sm),
-              child: TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: AppStrings.plantsSearchHint,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear_rounded),
-                          onPressed: () {
-                            _searchController.clear();
-                            _onSearch('');
-                          },
-                        )
-                      : null,
+    return BlocListener<GardenBloc, GardenState>(
+      // Reaccionar a cambios de jardín seleccionado en la GardenFilterBar:
+      // - null → cargar todas las plantas
+      // - Garden → filtrar plantas por ese jardín
+      listenWhen: (p, c) => p.selectedGarden?.id != c.selectedGarden?.id,
+      listener: (context, gState) {
+        final garden = gState.selectedGarden;
+        if (garden == null) {
+          context.read<PlantsBloc>().add(PlantsLoadRequested());
+        } else {
+          context.read<PlantsBloc>().add(PlantsFilterByGarden(garden.id));
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Mi Jardín 🌿'),
+          actions: [
+            IconButton(
+              icon: Icon(_searchVisible
+                  ? Icons.search_off_rounded
+                  : Icons.search_rounded),
+              onPressed: () {
+                setState(() => _searchVisible = !_searchVisible);
+                if (!_searchVisible && _searchController.text.isNotEmpty) {
+                  _searchController.clear();
+                  _onSearch('');
+                }
+              },
+            ),
+            IconButton(
+              icon: Icon(
+                  _gridMode ? Icons.view_list_rounded : Icons.grid_view_rounded),
+              onPressed: () => setState(() => _gridMode = !_gridMode),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            // Barra de filtro contextual por jardín/grupo.
+            // No se muestra si no hay jardines cargados.
+            const GardenFilterBar(),
+            if (_searchVisible)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppDimens.lg, 0, AppDimens.lg, AppDimens.sm),
+                child: TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.plantsSearchHint,
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear_rounded),
+                            onPressed: () {
+                              _searchController.clear();
+                              _onSearch('');
+                            },
+                          )
+                        : null,
+                  ),
+                  onChanged: _onSearch,
                 ),
-                onChanged: _onSearch,
+              ),
+            _buildFilterChips(),
+            Expanded(
+              child: BlocConsumer<PlantsBloc, PlantsState>(
+                listener: (context, state) {
+                  if (state.errorMessage != null && !state.isLoading) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(state.errorMessage!),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    );
+                  }
+                },
+                builder: (context, state) {
+                  if (state.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (state.hasError) {
+                    return EmptyState(
+                      emoji: '🥀',
+                      title: 'Algo no ha ido bien',
+                      message: state.errorMessage ?? AppStrings.unknownError,
+                      actionLabel: AppStrings.plantsErrorRetry,
+                      actionIcon: Icons.refresh_rounded,
+                      onAction: () =>
+                          context.read<PlantsBloc>().add(PlantsLoadRequested()),
+                    );
+                  }
+                  if (state.isEmpty) {
+                    return const EmptyState(
+                      emoji: '🌱',
+                      title: AppStrings.plantsEmptyTitle,
+                      message: AppStrings.plantsEmptySubtitle,
+                    );
+                  }
+
+                  final plants = _applyFilter(state.plants);
+                  if (plants.isEmpty) {
+                    return const EmptyState(
+                      emoji: '🔍',
+                      title: 'Nada por aquí',
+                      message: 'Ninguna planta coincide con este filtro.',
+                    );
+                  }
+                  return _gridMode
+                      ? _buildPlantGrid(plants)
+                      : _buildPlantList(plants);
+                },
               ),
             ),
-          _buildFilterChips(),
-          Expanded(
-            child: BlocConsumer<PlantsBloc, PlantsState>(
-              listener: (context, state) {
-                if (state.errorMessage != null && !state.isLoading) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.errorMessage!),
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                    ),
-                  );
-                }
-              },
-              builder: (context, state) {
-                if (state.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (state.hasError) {
-                  return EmptyState(
-                    emoji: '🥀',
-                    title: 'Algo no ha ido bien',
-                    message: state.errorMessage ?? AppStrings.unknownError,
-                    actionLabel: AppStrings.plantsErrorRetry,
-                    actionIcon: Icons.refresh_rounded,
-                    onAction: () =>
-                        context.read<PlantsBloc>().add(PlantsLoadRequested()),
-                  );
-                }
-                if (state.isEmpty) {
-                  return const EmptyState(
-                    emoji: '🌱',
-                    title: AppStrings.plantsEmptyTitle,
-                    message: AppStrings.plantsEmptySubtitle,
-                  );
-                }
-
-                final plants = _applyFilter(state.plants);
-                if (plants.isEmpty) {
-                  return const EmptyState(
-                    emoji: '🔍',
-                    title: 'Nada por aquí',
-                    message: 'Ninguna planta coincide con este filtro.',
-                  );
-                }
-                return _gridMode
-                    ? _buildPlantGrid(plants)
-                    : _buildPlantList(plants);
-              },
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _onAddPlant,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text(AppStrings.plantsAddButton),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _onAddPlant,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text(AppStrings.plantsAddButton),
+        ),
       ),
     );
   }

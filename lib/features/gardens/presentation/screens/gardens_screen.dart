@@ -27,7 +27,10 @@ class _GardensScreenState extends State<GardensScreen> {
   }
 
   void _openDetail(BuildContext ctx, Garden garden) {
-    ctx.read<GardenBloc>().add(GardenSelectRequested(garden));
+    // No disparamos GardenSelectRequested aquí: ese evento ahora se usa
+    // exclusivamente para el filtro contextual en PlantsScreen. La selección
+    // visual del card se gestiona por navegación (route actual), no por estado
+    // del bloc.
     Navigator.push(
       ctx,
       MaterialPageRoute(
