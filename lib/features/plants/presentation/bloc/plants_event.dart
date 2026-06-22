@@ -156,3 +156,35 @@ class PlantClearLastWateringRequested extends PlantsEvent {
   @override
   List<Object?> get props => [id];
 }
+
+/// Cargar plantas filtradas por jardín
+class PlantsFilterByGarden extends PlantsEvent {
+  final String gardenId;
+  const PlantsFilterByGarden(this.gardenId);
+  @override
+  List<Object?> get props => [gardenId];
+}
+
+/// Cargar plantas filtradas por grupo
+class PlantsFilterByGroup extends PlantsEvent {
+  final String groupId;
+  const PlantsFilterByGroup(this.groupId);
+  @override
+  List<Object?> get props => [groupId];
+}
+
+/// Asignar una planta a un jardín (y opcionalmente a un grupo)
+class PlantAssignToGardenRequested extends PlantsEvent {
+  final String plantId;
+  final String gardenId;
+  final String? groupId;
+
+  const PlantAssignToGardenRequested({
+    required this.plantId,
+    required this.gardenId,
+    this.groupId,
+  });
+
+  @override
+  List<Object?> get props => [plantId, gardenId, groupId];
+}

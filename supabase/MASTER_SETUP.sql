@@ -1,8 +1,16 @@
 -- ============================================================================
--- PLANTICULA — MASTER SETUP SCRIPT v1.0
+-- PLANTICULA — MASTER SETUP SCRIPT v1.1
 -- ============================================================================
 -- Script único, idempotente y completo para crear/recrear toda la base de datos.
--- Consolida las 9 migraciones + pest_alerts_schema + storage policies.
+-- Consolida las 10 migraciones + pest_alerts_schema + storage policies.
+--
+-- ⚠️  AVISO IMPORTANTE: la SECCIÓN 0 hace DROP TABLE ... CASCADE de plants,
+--     soil_analyses, plant_disease_diagnoses, marketplace y pest_alerts.
+--     RE-EJECUTAR ESTE SCRIPT BORRA TODOS LOS DATOS DE USUARIO de esas tablas.
+--     Úsalo solo para crear un proyecto nuevo, NUNCA en producción con datos.
+--
+-- [v1.1] Añadida SECCIÓN 7b: tabla ai_care_cache + RPC increment_care_cache_hit
+--        (migration 010). Es una caché de IA; no se borra en la SECCIÓN 0.
 --
 -- PROBLEMAS CORREGIDOS respecto a los scripts anteriores:
 --
@@ -84,7 +92,14 @@ DROP TABLE IF EXISTS marketplace_favorites CASCADE;
 DROP TABLE IF EXISTS marketplace_listings CASCADE;
 DROP TABLE IF EXISTS soil_analyses CASCADE;
 DROP TABLE IF EXISTS plant_disease_diagnoses CASCADE;
+-- IMPORTANTE: estas dos faltaban en versiones anteriores, por eso al
+-- re-ejecutar el script NO se corregían sus CHECK rotos ni se limpiaban
+-- los registros antiguos. Ahora se recrean con las constraints correctas.
+DROP TABLE IF EXISTS plant_identifications CASCADE;
+DROP TABLE IF EXISTS seed_identifications CASCADE;
 DROP TABLE IF EXISTS plants CASCADE;
+DROP TABLE IF EXISTS garden_groups CASCADE;
+DROP TABLE IF EXISTS gardens CASCADE;
 DROP TABLE IF EXISTS species_catalog CASCADE;
 
 
@@ -180,6 +195,124 @@ CREATE TRIGGER update_species_catalog_updated_at
 
 
 -- ============================================================================
+-- SECCIÓN 2b: TABLAS gardens y garden_groups
+-- ============================================================================
+-- Deben crearse ANTES que plants porque plants las referencia con FKs.
+--
+-- Jerarquía:
+--   Usuario → Jardín (gardens) → Grupo (garden_groups) → Planta (plants)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS gardens (
+    id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id     UUID        REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+
+    name        TEXT        NOT NULL
+                            CHECK (char_length(name) > 0 AND char_length(name) <= 100),
+    description TEXT
+                            CHECK (description IS NULL OR char_length(description) <= 500),
+
+    -- icon y color permiten que cada jardín tenga identidad visual propia
+    icon        TEXT        NOT NULL DEFAULT 'garden'
+                            CHECK (icon IN (
+                                'garden', 'balcony', 'terrace', 'greenhouse',
+                                'indoor', 'potted', 'vegetable', 'flower',
+                                'herb', 'forest', 'other'
+                            )),
+    color       TEXT        NOT NULL DEFAULT '#4CAF50'
+                            CHECK (color ~ '^#[0-9A-Fa-f]{6}$'),
+
+    type        TEXT        NOT NULL DEFAULT 'personal'
+                            CHECK (type IN (
+                                'personal', 'balcony', 'terrace', 'greenhouse',
+                                'indoor', 'outdoor', 'allotment', 'other'
+                            )),
+
+    is_default  BOOLEAN     NOT NULL DEFAULT false,
+    sort_order  INTEGER     NOT NULL DEFAULT 0,
+
+    created_at  TIMESTAMPTZ DEFAULT now(),
+    updated_at  TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_gardens_user_id     ON gardens(user_id);
+CREATE INDEX IF NOT EXISTS idx_gardens_user_order  ON gardens(user_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_gardens_is_default  ON gardens(user_id, is_default) WHERE is_default = true;
+
+DROP TRIGGER IF EXISTS update_gardens_updated_at ON gardens;
+CREATE TRIGGER update_gardens_updated_at
+    BEFORE UPDATE ON gardens
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE gardens ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own gardens"   ON gardens;
+CREATE POLICY "Users can view own gardens"   ON gardens FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own gardens" ON gardens;
+CREATE POLICY "Users can insert own gardens" ON gardens FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own gardens" ON gardens;
+CREATE POLICY "Users can update own gardens" ON gardens FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own gardens" ON gardens;
+CREATE POLICY "Users can delete own gardens" ON gardens FOR DELETE USING (auth.uid() = user_id);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON gardens TO authenticated;
+GRANT ALL ON gardens TO service_role;
+
+COMMENT ON TABLE  gardens            IS 'Top-level container for a user''s plants. One user can have many gardens.';
+COMMENT ON COLUMN gardens.icon       IS 'Icon key for UI: garden|balcony|terrace|greenhouse|indoor|potted|vegetable|flower|herb|forest|other';
+COMMENT ON COLUMN gardens.color      IS 'Hex color (#RRGGBB) for visual distinction';
+COMMENT ON COLUMN gardens.is_default IS 'Auto-created default garden; exactly one per user';
+
+
+CREATE TABLE IF NOT EXISTS garden_groups (
+    id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+    garden_id   UUID        REFERENCES gardens(id)    ON DELETE CASCADE  NOT NULL,
+    user_id     UUID        REFERENCES auth.users(id) ON DELETE CASCADE  NOT NULL,
+
+    name        TEXT        NOT NULL
+                            CHECK (char_length(name) > 0 AND char_length(name) <= 100),
+    description TEXT
+                            CHECK (description IS NULL OR char_length(description) <= 500),
+
+    -- Visual opcional: hereda del jardín padre si es NULL
+    icon        TEXT,
+    color       TEXT        CHECK (color IS NULL OR color ~ '^#[0-9A-Fa-f]{6}$'),
+
+    sort_order  INTEGER     NOT NULL DEFAULT 0,
+
+    created_at  TIMESTAMPTZ DEFAULT now(),
+    updated_at  TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_garden_groups_garden_id    ON garden_groups(garden_id);
+CREATE INDEX IF NOT EXISTS idx_garden_groups_user_id      ON garden_groups(user_id);
+CREATE INDEX IF NOT EXISTS idx_garden_groups_garden_order ON garden_groups(garden_id, sort_order);
+
+DROP TRIGGER IF EXISTS update_garden_groups_updated_at ON garden_groups;
+CREATE TRIGGER update_garden_groups_updated_at
+    BEFORE UPDATE ON garden_groups
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE garden_groups ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own garden groups"   ON garden_groups;
+CREATE POLICY "Users can view own garden groups"   ON garden_groups FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own garden groups" ON garden_groups;
+CREATE POLICY "Users can insert own garden groups" ON garden_groups FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own garden groups" ON garden_groups;
+CREATE POLICY "Users can update own garden groups" ON garden_groups FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own garden groups" ON garden_groups;
+CREATE POLICY "Users can delete own garden groups" ON garden_groups FOR DELETE USING (auth.uid() = user_id);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON garden_groups TO authenticated;
+GRANT ALL ON garden_groups TO service_role;
+
+COMMENT ON TABLE  garden_groups           IS 'Optional sub-groups within a garden (e.g. Tomatoes, Succulents, Shade zone).';
+COMMENT ON COLUMN garden_groups.garden_id IS 'Parent garden; cascade-deleted with it.';
+COMMENT ON COLUMN garden_groups.icon      IS 'Optional icon override; falls back to parent garden icon.';
+
+
+-- ============================================================================
 -- SECCIÓN 3: TABLA plants
 -- ============================================================================
 
@@ -231,6 +364,13 @@ CREATE TABLE IF NOT EXISTS plants (
     latitude            DOUBLE PRECISION,
     longitude           DOUBLE PRECISION,
 
+    -- Jerarquía de jardines (migración 012)
+    -- Ambas columnas nullable: plantas existentes quedan sin clasificar (garden_id = NULL)
+    -- hasta que el usuario las asigne. ON DELETE SET NULL evita borrar plantas si se
+    -- elimina un jardín o grupo.
+    garden_id           UUID REFERENCES gardens(id)       ON DELETE SET NULL,
+    group_id            UUID REFERENCES garden_groups(id) ON DELETE SET NULL,
+
     -- Fechas
     acquired_date       DATE,
     created_at          TIMESTAMPTZ DEFAULT now(),
@@ -244,6 +384,8 @@ CREATE INDEX IF NOT EXISTS idx_plants_custom_name      ON plants(custom_name) WH
 CREATE INDEX IF NOT EXISTS idx_plants_next_watering    ON plants(next_watering) WHERE next_watering IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_plants_user_next        ON plants(user_id, next_watering);
 CREATE INDEX IF NOT EXISTS idx_plants_species_category ON plants(species_category);
+CREATE INDEX IF NOT EXISTS idx_plants_garden_id        ON plants(garden_id) WHERE garden_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_plants_group_id         ON plants(group_id)  WHERE group_id  IS NOT NULL;
 
 -- Trigger: updated_at
 DROP TRIGGER IF EXISTS update_plants_updated_at ON plants;
@@ -300,6 +442,62 @@ COMMENT ON COLUMN plants.growth_stage        IS 'Current growth phase: germinati
 COMMENT ON COLUMN plants.pot_size            IS 'Pot size: extra_small(0.5-1.5L), small(1.5-5L), medium(5-15L), large(15-40L), extra_large(40L+)';
 COMMENT ON COLUMN plants.last_transplanted   IS 'Last time the user registered a pot transplant for this plant';
 COMMENT ON COLUMN plants.species_category    IS 'Cached category from species_catalog for fast filtering';
+COMMENT ON COLUMN plants.garden_id           IS 'Optional: jardín al que pertenece. NULL = sin clasificar.';
+COMMENT ON COLUMN plants.group_id            IS 'Optional: grupo dentro del jardín. NULL = directamente en el jardín sin grupo.';
+
+
+-- ============================================================================
+-- SECCIÓN 3b: RPCs de jardines
+-- ============================================================================
+
+-- Devuelve (o crea) el jardín por defecto del usuario autenticado.
+DROP FUNCTION IF EXISTS public.get_or_create_default_garden() CASCADE;
+CREATE OR REPLACE FUNCTION public.get_or_create_default_garden()
+RETURNS TABLE (
+    id UUID, user_id UUID, name TEXT, description TEXT,
+    icon TEXT, color TEXT, type TEXT, is_default BOOLEAN,
+    sort_order INTEGER, created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+    v_uid    UUID := auth.uid();
+    v_garden gardens%ROWTYPE;
+BEGIN
+    SELECT * INTO v_garden FROM gardens WHERE gardens.user_id = v_uid AND is_default = true LIMIT 1;
+    IF NOT FOUND THEN
+        INSERT INTO gardens (user_id, name, description, icon, color, type, is_default, sort_order)
+        VALUES (v_uid, 'Mi Jardín', 'Mi colección de plantas', 'garden', '#4CAF50', 'personal', true, 0)
+        RETURNING * INTO v_garden;
+    END IF;
+    RETURN QUERY SELECT
+        v_garden.id, v_garden.user_id, v_garden.name, v_garden.description,
+        v_garden.icon, v_garden.color, v_garden.type, v_garden.is_default,
+        v_garden.sort_order, v_garden.created_at, v_garden.updated_at;
+END; $$;
+
+GRANT EXECUTE ON FUNCTION public.get_or_create_default_garden() TO authenticated;
+COMMENT ON FUNCTION public.get_or_create_default_garden() IS
+    'Returns the calling user''s default garden, auto-creating "Mi Jardín" on first call.';
+
+-- Asigna todas las plantas sin jardín del usuario al jardín por defecto.
+DROP FUNCTION IF EXISTS public.assign_unclassified_plants_to_default_garden() CASCADE;
+CREATE OR REPLACE FUNCTION public.assign_unclassified_plants_to_default_garden()
+RETURNS INTEGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+    v_uid       UUID := auth.uid();
+    v_garden_id UUID;
+    v_count     INTEGER;
+BEGIN
+    SELECT id INTO v_garden_id FROM gardens WHERE user_id = v_uid AND is_default = true LIMIT 1;
+    IF v_garden_id IS NULL THEN RETURN 0; END IF;
+    UPDATE plants SET garden_id = v_garden_id WHERE user_id = v_uid AND garden_id IS NULL;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    RETURN v_count;
+END; $$;
+
+GRANT EXECUTE ON FUNCTION public.assign_unclassified_plants_to_default_garden() TO authenticated;
+COMMENT ON FUNCTION public.assign_unclassified_plants_to_default_garden() IS
+    'Assigns all unclassified plants (garden_id IS NULL) to the default garden. Returns count updated.';
 
 
 -- ============================================================================
@@ -434,10 +632,11 @@ CREATE TABLE IF NOT EXISTS plant_identifications (
     scientific_name      TEXT,
     family               TEXT,
 
-    care_level           TEXT CHECK (care_level IN ('easy', 'moderate', 'expert')),
-    watering_frequency   TEXT CHECK (watering_frequency IN ('daily', 'twiceAWeek', 'weekly', 'biweekly', 'monthly')),
-    light_requirement    TEXT CHECK (light_requirement IN ('lowLight', 'indirectLight', 'brightIndirect', 'directSunlight')),
-    humidity_requirement TEXT CHECK (humidity_requirement IN ('low', 'moderate', 'high')),
+    -- Los valores DEBEN coincidir con los enums Dart (PlantIdCareLevel, etc.)
+    care_level           TEXT CHECK (care_level IN ('easy', 'moderate', 'difficult', 'expert')),
+    watering_frequency   TEXT CHECK (watering_frequency IN ('veryRare', 'rare', 'moderate', 'frequent', 'veryFrequent')),
+    light_requirement    TEXT CHECK (light_requirement IN ('deepShade', 'shade', 'indirectLight', 'brightIndirect', 'directLight', 'fullSun')),
+    humidity_requirement TEXT CHECK (humidity_requirement IN ('veryLow', 'low', 'moderate', 'high', 'veryHigh')),
 
     toxic_to_pets        BOOLEAN,
     toxic_to_humans      BOOLEAN,
@@ -502,12 +701,13 @@ CREATE TABLE IF NOT EXISTS seed_identifications (
     scientific_name         TEXT,
     family                  TEXT,
 
-    germination_difficulty  TEXT CHECK (germination_difficulty IN ('easy', 'moderate', 'difficult', 'veryDifficult')),
+    -- Los valores DEBEN coincidir con los enums Dart (SeedIdGerminationDifficulty, etc.)
+    germination_difficulty  TEXT CHECK (germination_difficulty IN ('easy', 'moderate', 'difficult', 'expert')),
     germination_time        TEXT CHECK (germination_time IN (
-        'oneToTwoWeeks', 'twoToFourWeeks', 'oneToTwoMonths', 'twoToThreeMonths', 'moreThanThreeMonths'
+        'veryFast', 'fast', 'moderate', 'slow', 'verySlow'
     )),
     sowing_depth            TEXT CHECK (sowing_depth IN (
-        'surfaceSow', 'shallow', 'medium', 'deep'
+        'surface', 'shallow', 'medium', 'deep'
     )),
     best_sowing_season      TEXT CHECK (best_sowing_season IN (
         'spring', 'summer', 'autumn', 'winter', 'yearRound'
@@ -955,6 +1155,51 @@ CREATE TRIGGER update_plant_disease_diagnoses_updated_at
     BEFORE UPDATE ON plant_disease_diagnoses
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+
+-- ============================================================================
+-- SECCIÓN 7b: AI CARE CACHE (migration 010)
+-- ============================================================================
+-- Cachea la información de cuidados generada por la IA (texto) para cada
+-- especie, indexada por scientific_name. Reduce costes de LLM (un acierto de
+-- caché = gratis). La usa la Edge Function generate-care-info.
+-- NOTA: es solo una caché; NO se incluye en la limpieza de la SECCIÓN 0 para
+-- no perder entradas al re-ejecutar.
+
+CREATE TABLE IF NOT EXISTS ai_care_cache (
+    scientific_name TEXT PRIMARY KEY,
+    care_info       JSONB NOT NULL,
+    hit_count       INT  NOT NULL DEFAULT 1,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_care_cache_created
+    ON ai_care_cache (created_at DESC);
+
+-- RLS: las escrituras las hacen las Edge Functions con service_role (que
+-- ignora RLS). Los clientes (anon/authenticated) solo pueden LEER la caché,
+-- que no contiene datos sensibles ni por-usuario.
+ALTER TABLE ai_care_cache ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone authenticated can read care cache" ON ai_care_cache;
+CREATE POLICY "Anyone authenticated can read care cache" ON ai_care_cache
+    FOR SELECT TO authenticated USING (true);
+
+-- RPC: incrementa el contador de aciertos cuando se reutiliza una entrada.
+CREATE OR REPLACE FUNCTION increment_care_cache_hit(p_scientific_name TEXT)
+RETURNS void AS $$
+BEGIN
+    UPDATE ai_care_cache
+    SET hit_count = hit_count + 1,
+        updated_at = NOW()
+    WHERE scientific_name = p_scientific_name;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Solo lectura para clientes; las Edge Functions escriben con service_role.
+GRANT SELECT ON ai_care_cache TO authenticated;
+GRANT EXECUTE ON FUNCTION increment_care_cache_hit TO authenticated;
 
 
 -- ============================================================================

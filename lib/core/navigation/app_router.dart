@@ -1,5 +1,6 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planticula/core/constants/app_constants.dart';
 import 'package:planticula/core/services/plant_identification_service.dart';
@@ -11,6 +12,7 @@ import 'package:planticula/features/plants/presentation/screens/plant_identifica
 import 'package:planticula/features/plants/presentation/screens/plants_screen.dart';
 import 'package:planticula/features/plants/presentation/screens/plant_detail_screen.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
+
 import 'package:planticula/features/pest_alerts/domain/entities/pest_alert.dart';
 import 'package:planticula/features/pest_alerts/presentation/screens/pest_alert_detail_screen.dart';
 import 'package:planticula/features/pest_alerts/presentation/screens/pest_alerts_list_screen.dart';
@@ -33,6 +35,10 @@ import 'package:planticula/features/plant_identification/domain/entities/plant_i
 import 'package:planticula/features/seed_identification/presentation/screens/seed_identification_screen.dart';
 import 'package:planticula/features/seed_identification/presentation/screens/seed_identification_result_screen.dart';
 import 'package:planticula/features/seed_identification/domain/entities/seed_identification_result.dart';
+import 'package:planticula/features/gardens/domain/entities/garden.dart' as garden_entity;
+import 'package:planticula/features/gardens/presentation/screens/gardens_screen.dart';
+import 'package:planticula/features/gardens/presentation/screens/garden_detail_screen.dart';
+import 'package:planticula/features/gardens/presentation/screens/garden_editor_screen.dart';
 
 /// Notifier that GoRouter listens to for auth state changes.
 /// When auth changes, the router re-evaluates its redirect logic
@@ -121,7 +127,7 @@ class AppRouter {
                   case PlantEditorMode.aiAssisted:
                     return PlantEditorScreen.aiAssisted(
                       identificationResult: args['identificationResult'] as PlantIdentificationResult,
-                      imageFile: args['imageFile'] as File,
+                      imageBytes: args['imageBytes'] as Uint8List,
                     );
                   case PlantEditorMode.edit:
                     return PlantEditorScreen.edit(
@@ -185,6 +191,12 @@ class AppRouter {
               path: AppConstants.routeSeedIdentification,
               builder: (context, state) => const SeedIdentificationScreen(),
             ),
+            // Jardines (shell — con bottom nav)
+            // GardenBloc ya está provisto en main.dart
+            GoRoute(
+              path: AppConstants.routeGardens,
+              builder: (context, state) => const GardensScreen(),
+            ),
             // Profile
             GoRoute(
               path: AppConstants.routeProfile,
@@ -244,6 +256,24 @@ class AppRouter {
           builder: (context, state) {
             final id = state.pathParameters['id']!;
             return ListingDetailScreen(listingId: id);
+          },
+        ),
+        // ── Gardens ──────────────────────────────────────────────────────
+        // IMPORTANT: routeGardenEditor ('/gardens/editor') must be declared
+        // BEFORE routeGardenDetail ('/gardens/:id') so the static segment wins.
+        // GardenBloc y PlantsBloc ya están provisto en main.dart
+        GoRoute(
+          path: AppConstants.routeGardenEditor,
+          builder: (context, state) {
+            final garden = state.extra as garden_entity.Garden?;
+            return GardenEditorScreen(garden: garden);
+          },
+        ),
+        GoRoute(
+          path: AppConstants.routeGardenDetail,
+          builder: (context, state) {
+            final garden = state.extra as garden_entity.Garden;
+            return GardenDetailScreen(garden: garden);
           },
         ),
       ],

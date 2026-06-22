@@ -50,4 +50,17 @@ abstract class PlantsRepository {
 
   /// Obtiene plantas que necesitan riego
   Future<Result<List<Plant>>> getPlantsNeedingWater();
+
+  /// Obtiene las plantas de un jardín específico
+  Future<Result<List<Plant>>> getPlantsByGarden(String gardenId);
+
+  /// Obtiene las plantas de un grupo específico
+  Future<Result<List<Plant>>> getPlantsByGroup(String groupId);
+
+  /// Asigna una planta a un jardín (y opcionalmente a un grupo)
+  Future<Result<Plant>> assignPlantToGarden(
+    String plantId, {
+    required String gardenId,
+    String? groupId,
+  });
 }

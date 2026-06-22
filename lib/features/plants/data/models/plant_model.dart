@@ -24,6 +24,8 @@ class PlantModel extends domain.Plant {
     super.longitude,
     super.createdAt,
     super.updatedAt,
+    super.gardenId,
+    super.groupId,
   });
 
   /// Crea un modelo desde JSON de Supabase
@@ -62,6 +64,8 @@ class PlantModel extends domain.Plant {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
           : null,
+      gardenId: json['garden_id'] as String?,
+      groupId:  json['group_id']  as String?,
     );
   }
 
@@ -89,6 +93,8 @@ class PlantModel extends domain.Plant {
       'longitude': longitude,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'garden_id': gardenId,
+      'group_id':  groupId,
     };
   }
 
@@ -116,6 +122,8 @@ class PlantModel extends domain.Plant {
       longitude: plant.longitude,
       createdAt: plant.createdAt,
       updatedAt: plant.updatedAt,
+      gardenId: plant.gardenId,
+      groupId:  plant.groupId,
     );
   }
 
@@ -142,6 +150,8 @@ class PlantModel extends domain.Plant {
     double? longitude,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? gardenId,
+    String? groupId,
   }) {
     return PlantModel(
       id: id ?? this.id,
@@ -165,6 +175,8 @@ class PlantModel extends domain.Plant {
       longitude: longitude ?? this.longitude,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      gardenId: gardenId ?? this.gardenId,
+      groupId:  groupId  ?? this.groupId,
     );
   }
 
@@ -185,6 +197,8 @@ class PlantModel extends domain.Plant {
     String? potSize,
     double? latitude,
     double? longitude,
+    String? gardenId,
+    String? groupId,
   }) {
     return PlantModel(
       id: '', // Se generará en Supabase
@@ -203,6 +217,8 @@ class PlantModel extends domain.Plant {
       potSize: potSize,
       latitude: latitude,
       longitude: longitude,
+      gardenId: gardenId,
+      groupId:  groupId,
     );
   }
 }

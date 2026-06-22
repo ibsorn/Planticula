@@ -15,6 +15,7 @@ import 'package:planticula/features/marketplace/presentation/bloc/marketplace_bl
 import 'package:planticula/features/plant_disease/presentation/bloc/plant_disease_bloc.dart';
 import 'package:planticula/features/plant_identification/presentation/bloc/plant_identification_bloc.dart';
 import 'package:planticula/features/seed_identification/presentation/bloc/seed_identification_bloc.dart';
+import 'package:planticula/features/gardens/presentation/bloc/garden_bloc.dart';
 
 export 'core/navigation/main_scaffold.dart';
 
@@ -110,6 +111,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<PlantsBloc>(
           create: (context) => di.sl<PlantsBloc>(),
+        ),
+        BlocProvider<GardenBloc>(
+          create: (context) => di.sl<GardenBloc>(),
         ),
         BlocProvider<SoilAnalysisBloc>(
           create: (context) => di.sl<SoilAnalysisBloc>(),

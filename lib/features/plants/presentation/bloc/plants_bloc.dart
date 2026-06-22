@@ -22,6 +22,9 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     on<PlantSelectRequested>(_onSelectRequested);
     on<PlantsClearError>(_onClearError);
     on<PlantClearLastWateringRequested>(_onClearLastWateringRequested);
+    on<PlantsFilterByGarden>(_onFilterByGarden);
+    on<PlantsFilterByGroup>(_onFilterByGroup);
+    on<PlantAssignToGardenRequested>(_onAssignToGarden);
   }
 
   Future<void> _onLoadRequested(
@@ -353,6 +356,71 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
           errorMessage: message,
         ));
       },
+    );
+  }
+
+  Future<void> _onFilterByGarden(
+    PlantsFilterByGarden event,
+    Emitter<PlantsState> emit,
+  ) async {
+    emit(state.copyWith(status: PlantsStatus.loading));
+    final result = await _repository.getPlantsByGarden(event.gardenId);
+    result.when(
+      success: (plants) => emit(state.copyWith(
+        status: plants.isEmpty ? PlantsStatus.empty : PlantsStatus.loaded,
+        plants: plants,
+      )),
+      failure: (msg, _, __) => emit(state.copyWith(
+        status: PlantsStatus.error,
+        errorMessage: msg,
+      )),
+    );
+  }
+
+  Future<void> _onFilterByGroup(
+    PlantsFilterByGroup event,
+    Emitter<PlantsState> emit,
+  ) async {
+    emit(state.copyWith(status: PlantsStatus.loading));
+    final result = await _repository.getPlantsByGroup(event.groupId);
+    result.when(
+      success: (plants) => emit(state.copyWith(
+        status: plants.isEmpty ? PlantsStatus.empty : PlantsStatus.loaded,
+        plants: plants,
+      )),
+      failure: (msg, _, __) => emit(state.copyWith(
+        status: PlantsStatus.error,
+        errorMessage: msg,
+      )),
+    );
+  }
+
+  Future<void> _onAssignToGarden(
+    PlantAssignToGardenRequested event,
+    Emitter<PlantsState> emit,
+  ) async {
+    emit(state.copyWith(operationStatus: PlantsOperationStatus.loading));
+    final result = await _repository.assignPlantToGarden(
+      event.plantId,
+      gardenId: event.gardenId,
+      groupId: event.groupId,
+    );
+    result.when(
+      success: (plant) {
+        final plants = state.plants
+            .map((p) => p.id == plant.id ? plant : p)
+            .toList();
+        emit(state.copyWith(
+          plants: plants,
+          selectedPlant:
+              plant.id == state.selectedPlant?.id ? plant : state.selectedPlant,
+          operationStatus: PlantsOperationStatus.success,
+        ));
+      },
+      failure: (msg, _, __) => emit(state.copyWith(
+        operationStatus: PlantsOperationStatus.error,
+        errorMessage: msg,
+      )),
     );
   }
 }

@@ -93,6 +93,22 @@ class PlantsRepositoryImpl implements PlantsRepository {
   }
 
   @override
+  Future<Result<List<Plant>>> getPlantsByGarden(String gardenId) =>
+      _dataSource.getPlantsByGarden(gardenId);
+
+  @override
+  Future<Result<List<Plant>>> getPlantsByGroup(String groupId) =>
+      _dataSource.getPlantsByGroup(groupId);
+
+  @override
+  Future<Result<Plant>> assignPlantToGarden(
+    String plantId, {
+    required String gardenId,
+    String? groupId,
+  }) =>
+      _dataSource.assignPlantToGarden(plantId, gardenId: gardenId, groupId: groupId);
+
+  @override
   Future<Result<List<Plant>>> getPlantsNeedingWater() async {
     final result = await _dataSource.getPlants();
 

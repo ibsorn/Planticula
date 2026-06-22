@@ -30,6 +30,9 @@ class AppConstants {
   static const String routePlantIdentificationResult = '/plant-identification/result';
   static const String routeSeedIdentification = '/seed-identification';
   static const String routeSeedIdentificationResult = '/seed-identification/result';
+  static const String routeGardens = '/gardens';
+  static const String routeGardenDetail = '/gardens/:id';
+  static const String routeGardenEditor = '/gardens/editor';
 
   // Storage Keys
   static const String keyThemeMode = 'theme_mode';

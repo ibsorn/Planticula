@@ -31,4 +31,17 @@ abstract class PlantRemoteDataSource {
 
   /// Registra un trasplante (actualiza pot_size y last_transplanted)
   Future<Result<PlantModel>> transplantPlant(String id, String newPotSize);
+
+  /// Obtiene plantas filtradas por jardín
+  Future<Result<List<PlantModel>>> getPlantsByGarden(String gardenId);
+
+  /// Obtiene plantas filtradas por grupo
+  Future<Result<List<PlantModel>>> getPlantsByGroup(String groupId);
+
+  /// Asigna una planta a un jardín (y opcionalmente a un grupo)
+  Future<Result<PlantModel>> assignPlantToGarden(
+    String plantId, {
+    required String gardenId,
+    String? groupId,
+  });
 }

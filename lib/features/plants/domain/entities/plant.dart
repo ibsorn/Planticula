@@ -45,6 +45,12 @@ class Plant extends Equatable {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
+  /// Jardín al que pertenece esta planta (migración 012). Null = sin clasificar.
+  final String? gardenId;
+
+  /// Grupo dentro del jardín (migración 012). Null = directamente en el jardín sin grupo.
+  final String? groupId;
+
   const Plant({
     required this.id,
     required this.name,
@@ -67,6 +73,8 @@ class Plant extends Equatable {
     this.longitude,
     this.createdAt,
     this.updatedAt,
+    this.gardenId,
+    this.groupId,
   });
 
   /// Crea una copia con algunos campos modificados
@@ -92,6 +100,10 @@ class Plant extends Equatable {
     double? longitude,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? gardenId,
+    String? groupId,
+    bool clearGardenId = false,
+    bool clearGroupId  = false,
   }) {
     return Plant(
       id: id ?? this.id,
@@ -115,6 +127,8 @@ class Plant extends Equatable {
       longitude: longitude ?? this.longitude,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      gardenId: clearGardenId ? null : (gardenId ?? this.gardenId),
+      groupId:  clearGroupId  ? null : (groupId  ?? this.groupId),
     );
   }
 
@@ -176,5 +190,7 @@ class Plant extends Equatable {
         longitude,
         createdAt,
         updatedAt,
+        gardenId,
+        groupId,
       ];
 }

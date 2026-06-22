@@ -1,5 +1,10 @@
+import 'dart:convert';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:planticula/core/ai/edge_function_provider.dart';
+import 'package:planticula/core/ai/identification_pipeline.dart';
+import 'package:planticula/core/ai/identification_provider.dart';
+import 'package:planticula/core/ai/llm_vision_provider.dart';
 import 'package:planticula/core/network/supabase_client.dart';
 import 'package:planticula/core/services/ai_provider_config.dart';
 import 'package:planticula/core/services/location_service.dart';
@@ -50,6 +55,11 @@ import 'package:planticula/features/seed_identification/data/datasources/seed_id
 import 'package:planticula/features/seed_identification/data/repositories/seed_identification_repository_impl.dart';
 import 'package:planticula/features/seed_identification/domain/repositories/seed_identification_repository.dart';
 import 'package:planticula/features/seed_identification/presentation/bloc/seed_identification_bloc.dart';
+import 'package:planticula/features/gardens/data/datasources/garden_remote_datasource.dart';
+import 'package:planticula/features/gardens/data/datasources/garden_remote_datasource_impl.dart';
+import 'package:planticula/features/gardens/data/repositories/garden_repository_impl.dart';
+import 'package:planticula/features/gardens/domain/repositories/garden_repository.dart';
+import 'package:planticula/features/gardens/presentation/bloc/garden_bloc.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -69,7 +79,8 @@ Future<void> initDependencies() async {
     () => PlantRecommendationService(),
   );
 
-  // AI provider configs — one singleton per function, resolved from .env at startup
+  // AI provider configs — used for LlmVisionProvider fallback (development)
+  // In production, EdgeFunctionProvider is used (API keys on server)
   sl.registerLazySingleton<AiProviderConfig>(
     () => AiProviderConfig.plantIdentification(),
     instanceName: 'plantId',
@@ -91,25 +102,142 @@ Future<void> initDependencies() async {
     instanceName: 'seedId',
   );
 
-  // AI services — receive their config by constructor
+  // ── AI Identification Providers ──────────────────────────────────────
+  // Primary: EdgeFunctionProvider (production — API keys on Supabase)
+  // Fallback: LlmVisionProvider (development — API keys in .env)
+
+  // Plant ID V1 (Mi Jardín) — Edge Function with visual meta
+  sl.registerLazySingleton<IdentificationProvider<Map<String, dynamic>>>(
+    instanceName: 'plantIdV1Provider',
+    () => IdentificationPipeline<Map<String, dynamic>>(
+      providers: [
+        EdgeFunctionProvider<Map<String, dynamic>>(
+          supabase: sl(),
+          functionName: 'identify-plant',
+          parser: (data) => data,
+          bodyBuilder: (img) => {'image': base64Encode(img), 'includeVisualMeta': true},
+        ),
+        LlmVisionProvider<Map<String, dynamic>>(
+          config: sl(instanceName: 'plantId'),
+          prompt: PlantIdentificationService.plantIdV1Prompt,
+          parser: (data) => data,
+          maxTokens: 1000,
+          temperature: 0.3,
+          featureLabel: 'Plant Identification',
+        ),
+      ],
+    ),
+  );
+
+  // Plant ID V2 (Tools) — Edge Function ONLY (no LLM fallback for debugging)
+  sl.registerLazySingleton<IdentificationProvider<PlantIdAIResult>>(
+    instanceName: 'plantIdV2Provider',
+    () => IdentificationPipeline<PlantIdAIResult>(
+      providers: [
+        EdgeFunctionProvider<PlantIdAIResult>(
+          supabase: sl(),
+          functionName: 'identify-plant',
+          parser: PlantIdentificationStandaloneAIService.parseResult,
+          bodyBuilder: (img) => {'image': base64Encode(img)},
+        ),
+        // LlmVisionProvider commented out to isolate EdgeFunctionProvider
+        // LlmVisionProvider<PlantIdAIResult>(
+        //   config: sl(instanceName: 'plantIdV2'),
+        //   prompt: PlantIdentificationStandaloneAIService.plantIdPrompt,
+        //   parser: PlantIdentificationStandaloneAIService.parseResult,
+        //   maxTokens: 1000,
+        //   featureLabel: 'Plant Identification',
+        // ),
+      ],
+    ),
+  );
+
+  // Seed ID — Edge Function
+  sl.registerLazySingleton<IdentificationProvider<SeedIdAIResult>>(
+    instanceName: 'seedIdProvider',
+    () => IdentificationPipeline<SeedIdAIResult>(
+      providers: [
+        EdgeFunctionProvider<SeedIdAIResult>(
+          supabase: sl(),
+          functionName: 'identify-seed',
+          parser: SeedIdentificationAIService.parseResult,
+        ),
+        LlmVisionProvider<SeedIdAIResult>(
+          config: sl(instanceName: 'seedId'),
+          prompt: SeedIdentificationAIService.seedIdPrompt,
+          parser: SeedIdentificationAIService.parseResult,
+          maxTokens: 900,
+          featureLabel: 'Seed Identification',
+        ),
+      ],
+    ),
+  );
+
+  // Plant Disease — Edge Function
+  sl.registerLazySingleton<IdentificationProvider<PlantDiseaseAIResult>>(
+    instanceName: 'diseaseProvider',
+    () => IdentificationPipeline<PlantDiseaseAIResult>(
+      providers: [
+        EdgeFunctionProvider<PlantDiseaseAIResult>(
+          supabase: sl(),
+          functionName: 'diagnose-disease',
+          parser: PlantDiseaseAIService.parseResult,
+        ),
+        LlmVisionProvider<PlantDiseaseAIResult>(
+          config: sl(instanceName: 'diseaseAi'),
+          prompt: PlantDiseaseAIService.diseasePrompt,
+          parser: PlantDiseaseAIService.parseResult,
+          maxTokens: 1200,
+          featureLabel: 'Plant Disease Diagnosis',
+        ),
+      ],
+    ),
+  );
+
+  // Soil Analysis — Edge Function
+  sl.registerLazySingleton<IdentificationProvider<SoilAnalysisAIResult>>(
+    instanceName: 'soilProvider',
+    () => IdentificationPipeline<SoilAnalysisAIResult>(
+      providers: [
+        EdgeFunctionProvider<SoilAnalysisAIResult>(
+          supabase: sl(),
+          functionName: 'analyze-soil',
+          parser: SoilAnalysisAIService.parseResult,
+        ),
+        LlmVisionProvider<SoilAnalysisAIResult>(
+          config: sl(instanceName: 'soilAi'),
+          prompt: SoilAnalysisAIService.soilPrompt,
+          parser: SoilAnalysisAIService.parseResult,
+          maxTokens: 800,
+          featureLabel: 'Soil Analysis',
+        ),
+      ],
+    ),
+  );
+
+  // ── AI Services — receive their provider via DI ──────────────────────
   sl.registerLazySingleton<PlantIdentificationService>(
     () => PlantIdentificationService(
       sl<SpeciesService>(),
-      sl<AiProviderConfig>(instanceName: 'plantId'),
+      sl<IdentificationProvider<Map<String, dynamic>>>(
+          instanceName: 'plantIdV1Provider'),
     ),
   );
   sl.registerLazySingleton<SoilAnalysisAIService>(
-    () => SoilAnalysisAIService(sl<AiProviderConfig>(instanceName: 'soilAi')),
+    () => SoilAnalysisAIService(
+        sl<IdentificationProvider<SoilAnalysisAIResult>>(instanceName: 'soilProvider')),
   );
   sl.registerLazySingleton<PlantDiseaseAIService>(
-    () => PlantDiseaseAIService(sl<AiProviderConfig>(instanceName: 'diseaseAi')),
+    () => PlantDiseaseAIService(
+        sl<IdentificationProvider<PlantDiseaseAIResult>>(instanceName: 'diseaseProvider')),
   );
   sl.registerLazySingleton<PlantIdentificationStandaloneAIService>(
     () => PlantIdentificationStandaloneAIService(
-        sl<AiProviderConfig>(instanceName: 'plantIdV2')),
+        sl<IdentificationProvider<PlantIdAIResult>>(instanceName: 'plantIdV2Provider')),
   );
   sl.registerLazySingleton<SeedIdentificationAIService>(
-    () => SeedIdentificationAIService(sl<AiProviderConfig>(instanceName: 'seedId')),
+    () => SeedIdentificationAIService(
+        sl<IdentificationProvider<SeedIdAIResult>>(instanceName: 'seedIdProvider')),
   );
 
   // Theme
@@ -215,4 +343,19 @@ Future<void> initDependencies() async {
   sl.registerFactory<SeedIdentificationBloc>(
     () => SeedIdentificationBloc(sl()),
   );
+
+  // ── Gardens ─────────────────────────────────────────────────────────────
+
+  // Gardens - Data Layer
+  sl.registerLazySingleton<GardenRemoteDataSource>(
+    () => GardenRemoteDataSourceImpl(sl()),
+  );
+
+  // Gardens - Repository Layer
+  sl.registerLazySingleton<GardenRepository>(
+    () => GardenRepositoryImpl(sl()),
+  );
+
+  // Gardens - Presentation Layer
+  sl.registerFactory<GardenBloc>(() => GardenBloc(sl()));
 }

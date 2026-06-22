@@ -5,10 +5,11 @@ import 'package:planticula/core/constants/app_constants.dart';
 /// Main scaffold that wraps shell routes and provides the bottom navigation bar.
 ///
 /// Tab layout:
-///   0 → Mi Jardín  (/plants)
-///   1 → Herramientas (/tools)
-///   2 → Comunidad  (/pest-alerts)
-///   3 → Perfil     (/profile)
+///   0 → Plantas      (/plants)
+///   1 → Jardines     (/gardens)
+///   2 → Herramientas (/tools)
+///   3 → Comunidad    (/pest-alerts)
+///   4 → Perfil       (/profile)
 class MainScaffold extends StatelessWidget {
   final Widget child;
 
@@ -31,7 +32,12 @@ class MainScaffold extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.local_florist_outlined),
             selectedIcon: Icon(Icons.local_florist_rounded),
-            label: 'Mi Jardín',
+            label: 'Plantas',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.yard_outlined),
+            selectedIcon: Icon(Icons.yard),
+            label: 'Jardines',
           ),
           NavigationDestination(
             icon: Icon(Icons.auto_awesome_outlined),
@@ -54,24 +60,26 @@ class MainScaffold extends StatelessWidget {
   }
 
   int _getSelectedIndex(String route) {
-    // Tab 0 – Mi Jardín
+    // Tab 0 – Plantas
     if (route.startsWith(AppConstants.routePlants)) return 0;
-    // Tab 1 – Herramientas
+    // Tab 1 – Jardines
+    if (route.startsWith(AppConstants.routeGardens)) return 1;
+    // Tab 2 – Herramientas
     if (route.startsWith(AppConstants.routeTools) ||
         route.startsWith(AppConstants.routeSoilAnalysis) ||
         route.startsWith(AppConstants.routeGuides) ||
         route.startsWith(AppConstants.routePlantDisease) ||
         route.startsWith(AppConstants.routePlantIdentificationV2) ||
         route.startsWith(AppConstants.routeSeedIdentification)) {
-      return 1;
-    }
-    // Tab 2 – Comunidad
-    if (route.startsWith(AppConstants.routePestAlerts) ||
-        route.startsWith(AppConstants.routeMarketplace)) {
       return 2;
     }
-    // Tab 3 – Perfil
-    if (route.startsWith(AppConstants.routeProfile)) return 3;
+    // Tab 3 – Comunidad
+    if (route.startsWith(AppConstants.routePestAlerts) ||
+        route.startsWith(AppConstants.routeMarketplace)) {
+      return 3;
+    }
+    // Tab 4 – Perfil
+    if (route.startsWith(AppConstants.routeProfile)) return 4;
     return 0;
   }
 
@@ -81,12 +89,15 @@ class MainScaffold extends StatelessWidget {
         context.go(AppConstants.routePlants);
         break;
       case 1:
-        context.go(AppConstants.routeTools);
+        context.go(AppConstants.routeGardens);
         break;
       case 2:
-        context.go(AppConstants.routePestAlerts);
+        context.go(AppConstants.routeTools);
         break;
       case 3:
+        context.go(AppConstants.routePestAlerts);
+        break;
+      case 4:
         context.go(AppConstants.routeProfile);
         break;
     }

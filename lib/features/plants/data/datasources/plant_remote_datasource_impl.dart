@@ -329,4 +329,65 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
       return Failure('Error al registrar trasplante: ${e.toString()}');
     }
   }
+
+  @override
+  Future<Result<List<PlantModel>>> getPlantsByGarden(String gardenId) async {
+    try {
+      if (_userId == null) return const Failure('Usuario no autenticado');
+      final response = await _client
+          .from(_table)
+          .select()
+          .eq('user_id', _userId!)
+          .eq('garden_id', gardenId)
+          .order('created_at', ascending: false);
+      final plants = (response as List).map((j) => PlantModel.fromJson(j)).toList();
+      return Success(plants);
+    } catch (e, st) {
+      Logger.e('❌ Error fetching plants by garden', error: e, stackTrace: st);
+      return Failure('Error al cargar plantas del jardín: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<Result<List<PlantModel>>> getPlantsByGroup(String groupId) async {
+    try {
+      if (_userId == null) return const Failure('Usuario no autenticado');
+      final response = await _client
+          .from(_table)
+          .select()
+          .eq('user_id', _userId!)
+          .eq('group_id', groupId)
+          .order('created_at', ascending: false);
+      final plants = (response as List).map((j) => PlantModel.fromJson(j)).toList();
+      return Success(plants);
+    } catch (e, st) {
+      Logger.e('❌ Error fetching plants by group', error: e, stackTrace: st);
+      return Failure('Error al cargar plantas del grupo: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<Result<PlantModel>> assignPlantToGarden(
+    String plantId, {
+    required String gardenId,
+    String? groupId,
+  }) async {
+    try {
+      if (_userId == null) return const Failure('Usuario no autenticado');
+      final data = <String, dynamic>{'garden_id': gardenId, 'group_id': groupId};
+      final response = await _client
+          .from(_table)
+          .update(data)
+          .eq('id', plantId)
+          .eq('user_id', _userId!)
+          .select()
+          .single();
+      final plant = PlantModel.fromJson(response);
+      Logger.i('✅ Assigned plant ${plant.name} to garden $gardenId');
+      return Success(plant);
+    } catch (e, st) {
+      Logger.e('❌ Error assigning plant to garden', error: e, stackTrace: st);
+      return Failure('Error al asignar planta al jardín: ${e.toString()}');
+    }
+  }
 }
