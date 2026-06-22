@@ -211,6 +211,28 @@ class _PlantsScreenState extends State<PlantsScreen> {
                   _gridMode ? Icons.view_list_rounded : Icons.grid_view_rounded),
               onPressed: () => setState(() => _gridMode = !_gridMode),
             ),
+            // Acceso siempre disponible a la gestión de jardines (crear,
+            // editar, eliminar). La GardenFilterBar también lleva allí vía el
+            // botón ⚙, pero este menú garantiza que el usuario pueda llegar
+            // antes de que los jardines se carguen o si prefiere no filtrar.
+            PopupMenuButton<String>(
+              tooltip: 'Más opciones',
+              onSelected: (value) {
+                if (value == 'manage_gardens') {
+                  context.push(AppConstants.routeGardens);
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: 'manage_gardens',
+                  child: Row(children: [
+                    Icon(Icons.yard_outlined, size: 20),
+                    SizedBox(width: 12),
+                    Text('Gestionar jardines'),
+                  ]),
+                ),
+              ],
+            ),
           ],
         ),
         body: Column(

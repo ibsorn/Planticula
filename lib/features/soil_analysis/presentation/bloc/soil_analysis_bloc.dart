@@ -161,6 +161,8 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
 
     emit(state.copyWith(
       operationStatus: OperationStatus.uploading,
+      progress: 0.0,
+      progressMessage: 'Preparando...',
     ));
 
     final result = await _repository.createAnalysis(
@@ -168,6 +170,16 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
       fileName: state.selectedImageName ?? 'soil_analysis.jpg',
       plantId: event.plantId,
       triggerAnalysis: event.triggerAnalysis,
+      onProgress: (progress, message) {
+        if (emit.isDone) return;
+        emit(state.copyWith(
+          operationStatus: progress < 0.3
+              ? OperationStatus.uploading
+              : OperationStatus.analyzing,
+          progress: progress,
+          progressMessage: message,
+        ));
+      },
     );
 
     result.when(
@@ -175,15 +187,18 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
         final analyses = [analysis, ...state.analyses];
 
         if (event.triggerAnalysis) {
-          // El análisis IA se lanzará a continuación: mantener imagen visible
-          // durante el progreso; _onRequestAnalysis la limpiará al terminar.
+          // La IA ya se ejecutó dentro de createAnalysis (one-step):
+          // limpiar imagen y volver a la lista. No despachar
+          // SoilAnalysisRequestAnalysis — evitábamos un doble análisis.
           emit(state.copyWith(
             analyses: analyses,
             status: SoilAnalysisStatus.loaded,
-            operationStatus: OperationStatus.analyzing,
+            operationStatus: OperationStatus.success,
             lastCreatedAnalysis: analysis,
+            selectedImageBytes: null,
+            selectedImageName: null,
+            imageSelectionStatus: ImageSelectionStatus.initial,
           ));
-          add(SoilAnalysisRequestAnalysis(analysis.id));
         } else {
           // Solo subida: limpiar imagen y volver a la lista.
           emit(state.copyWith(

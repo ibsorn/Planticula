@@ -20,11 +20,18 @@ abstract class SoilAnalysisRepository {
   /// 1. Sube la imagen a Storage
   /// 2. Crea registro en tabla soil_analyses (status='pending')
   /// 3. Opcionalmente invoca Edge Function
+  ///
+  /// [onProgress] reporta el avance (0..1) en todas las etapas cuando
+  /// [triggerAnalysis] es true, igual que [PlantIdentificationRepository]
+  /// y [PlantDiseaseRepository]. Esto evita el modo indeterminado de la
+  /// barra de progreso (animación lateral) que ocurría cuando el progreso
+  /// se mantenía en 0 durante toda la subida.
   Future<Result<SoilAnalysis>> createAnalysis({
     required Uint8List imageBytes,
     required String fileName,
     String? plantId,
     bool triggerAnalysis = false,
+    SoilAnalysisProgress? onProgress,
   });
 
   /// Actualiza un análisis existente

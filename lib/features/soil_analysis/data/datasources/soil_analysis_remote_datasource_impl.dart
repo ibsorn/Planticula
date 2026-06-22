@@ -288,8 +288,6 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
         return const Failure('Usuario no autenticado');
       }
 
-      onProgress?.call(0.1, 'Preparando análisis...');
-
       // Get the analysis to confirm it exists
       final analysisResult = await getAnalysisById(analysisId);
       if (analysisResult is Failure<SoilAnalysisModel>) {
@@ -303,11 +301,13 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
           .eq('id', analysisId)
           .eq('user_id', _userId!);
 
-      // Call the AI service — map its stage progress into the 0.3..0.95 band
+      // Call the AI service — map its stage progress into the 0.3..0.9 band,
+      // same range used by Plant Identification and Plant Disease so the
+      // progress bar is always determinate and never goes backwards.
       final aiResult = await _aiService.analyzeFromBytes(
         imageBytes,
         onProgress: (stage, message, progress) =>
-            onProgress?.call(0.3 + 0.65 * progress, message),
+            onProgress?.call(0.3 + 0.6 * progress, message),
       );
 
       if (aiResult.isSuccessful) {

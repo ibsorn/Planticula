@@ -33,8 +33,11 @@ class SoilAnalysisRepositoryImpl implements SoilAnalysisRepository {
     required String fileName,
     String? plantId,
     bool triggerAnalysis = false,
+    SoilAnalysisProgress? onProgress,
   }) async {
     // 1. Subir imagen a Storage
+    onProgress?.call(0.05, 'Subiendo imagen...');
+
     final uploadResult = await _dataSource.uploadImage(
       imageBytes,
       fileName,
@@ -47,6 +50,8 @@ class SoilAnalysisRepositoryImpl implements SoilAnalysisRepository {
     }
 
     final imageUrl = (uploadResult as Success<String>).data;
+
+    onProgress?.call(0.2, 'Guardando registro...');
 
     // 2. Crear registro en tabla
     final analysisModel = SoilAnalysisModel.create(
@@ -68,9 +73,14 @@ class SoilAnalysisRepositoryImpl implements SoilAnalysisRepository {
 
     // 3. Opcionalmente invocar análisis con IA
     if (triggerAnalysis) {
-      final analysisResult =
-          await _dataSource.analyzeImage(createdAnalysis.id, imageBytes);
+      onProgress?.call(0.25, 'Preparando análisis...');
+      final analysisResult = await _dataSource.analyzeImage(
+        createdAnalysis.id,
+        imageBytes,
+        onProgress: onProgress,
+      );
       if (analysisResult is Success<SoilAnalysisModel>) {
+        onProgress?.call(0.95, 'Guardando resultados...');
         return Success(analysisResult.data);
       }
       // Si falla el análisis, aún retornamos el análisis creado
@@ -103,6 +113,8 @@ class SoilAnalysisRepositoryImpl implements SoilAnalysisRepository {
           code: analysisResult.code, error: analysisResult.error);
     }
     final analysis = (analysisResult as Success<SoilAnalysisModel>).data;
+
+    onProgress?.call(0.1, 'Descargando imagen...');
 
     // Descargar imagen del storage
     final imageResponse = await http.get(Uri.parse(analysis.imageUrl));
