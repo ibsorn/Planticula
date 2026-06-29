@@ -5,15 +5,17 @@ import 'package:planticula/core/constants/app_constants.dart';
 import 'package:planticula/core/constants/app_strings.dart';
 import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
-import 'package:planticula/features/gardens/presentation/bloc/garden_bloc.dart';
-import 'package:planticula/features/gardens/presentation/widgets/garden_filter_bar.dart';
+import 'package:planticula/features/locations/domain/entities/location.dart';
+import 'package:planticula/features/locations/presentation/bloc/location_bloc.dart';
+import 'package:planticula/features/locations/presentation/widgets/location_drawer.dart';
+import 'package:planticula/features/locations/presentation/widgets/location_icon_mapper.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
 import 'package:planticula/shared/widgets/app_bottom_sheet.dart';
 import 'package:planticula/shared/widgets/empty_state.dart';
 import 'package:planticula/shared/widgets/status_ring.dart';
 
-enum _GardenFilter { all, indoor, outdoor, thirsty }
+enum _QuickFilter { all, indoor, outdoor, thirsty }
 
 class PlantsScreen extends StatefulWidget {
   const PlantsScreen({super.key});
@@ -26,17 +28,23 @@ class _PlantsScreenState extends State<PlantsScreen> {
   final _searchController = TextEditingController();
   bool _searchVisible = false;
   bool _gridMode = true;
-  _GardenFilter _filter = _GardenFilter.all;
+  _QuickFilter _filter = _QuickFilter.all;
 
   @override
   void initState() {
     super.initState();
-    // Restaurar el filtro de jardín activo (si lo hay) al reconstruir la
-    // pantalla — p.ej. al volver de otro tab. El estado del GardenBloc es
-    // global y persiste entre navegaciones.
-    final garden = context.read<GardenBloc>().state.selectedGarden;
-    if (garden != null) {
-      context.read<PlantsBloc>().add(PlantsFilterByGarden(garden.id));
+    // Asegurar que el árbol de localización está cargado (estado global,
+    // persiste entre navegaciones). Restaurar el filtro de localización
+    // activo si lo hay.
+    final locState = context.read<LocationBloc>().state;
+    if (locState.status == LocationStatus.initial) {
+      context.read<LocationBloc>().add(LocationsLoadRequested());
+    }
+    final selected = locState.selectedLocation;
+    if (selected != null) {
+      context.read<PlantsBloc>().add(
+            PlantsFilterByLocation(locState.descendantIdsOf(selected.id)),
+          );
     } else {
       context.read<PlantsBloc>().add(PlantsLoadRequested());
     }
@@ -161,10 +169,10 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
   List<Plant> _applyFilter(List<Plant> plants) {
     final filtered = switch (_filter) {
-      _GardenFilter.all => plants,
-      _GardenFilter.indoor => plants.where((p) => !p.isOutdoor).toList(),
-      _GardenFilter.outdoor => plants.where((p) => p.isOutdoor).toList(),
-      _GardenFilter.thirsty => plants.where((p) => p.needsWatering).toList(),
+      _QuickFilter.all => plants,
+      _QuickFilter.indoor => plants.where((p) => !p.isOutdoor).toList(),
+      _QuickFilter.outdoor => plants.where((p) => p.isOutdoor).toList(),
+      _QuickFilter.thirsty => plants.where((p) => p.needsWatering).toList(),
     };
     // Most urgent watering first.
     final sorted = [...filtered]..sort((a, b) {
@@ -177,22 +185,30 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<GardenBloc, GardenState>(
-      // Reaccionar a cambios de jardín seleccionado en la GardenFilterBar:
+    return BlocListener<LocationBloc, LocationState>(
+      // Reaccionar a cambios de localización seleccionada en el LocationDrawer:
       // - null → cargar todas las plantas
-      // - Garden → filtrar plantas por ese jardín
-      listenWhen: (p, c) => p.selectedGarden?.id != c.selectedGarden?.id,
-      listener: (context, gState) {
-        final garden = gState.selectedGarden;
-        if (garden == null) {
+      // - Location → filtrar plantas por ese nodo y sus descendientes
+      listenWhen: (p, c) => p.selectedLocation?.id != c.selectedLocation?.id,
+      listener: (context, lState) {
+        final loc = lState.selectedLocation;
+        if (loc == null) {
           context.read<PlantsBloc>().add(PlantsLoadRequested());
         } else {
-          context.read<PlantsBloc>().add(PlantsFilterByGarden(garden.id));
+          context.read<PlantsBloc>().add(
+                PlantsFilterByLocation(lState.descendantIdsOf(loc.id)),
+              );
         }
       },
       child: Scaffold(
+        drawer: const LocationDrawer(),
         appBar: AppBar(
-          title: const Text('Mi Jardín 🌿'),
+          title: BlocBuilder<LocationBloc, LocationState>(
+            buildWhen: (p, c) => p.selectedLocation?.id != c.selectedLocation?.id,
+            builder: (ctx, lState) => Text(
+              lState.selectedLocation?.name ?? 'Mis plantas 🌿',
+            ),
+          ),
           actions: [
             IconButton(
               icon: Icon(_searchVisible
@@ -211,35 +227,12 @@ class _PlantsScreenState extends State<PlantsScreen> {
                   _gridMode ? Icons.view_list_rounded : Icons.grid_view_rounded),
               onPressed: () => setState(() => _gridMode = !_gridMode),
             ),
-            // Acceso siempre disponible a la gestión de jardines (crear,
-            // editar, eliminar). La GardenFilterBar también lleva allí vía el
-            // botón ⚙, pero este menú garantiza que el usuario pueda llegar
-            // antes de que los jardines se carguen o si prefiere no filtrar.
-            PopupMenuButton<String>(
-              tooltip: 'Más opciones',
-              onSelected: (value) {
-                if (value == 'manage_gardens') {
-                  context.push(AppConstants.routeGardens);
-                }
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: 'manage_gardens',
-                  child: Row(children: [
-                    Icon(Icons.yard_outlined, size: 20),
-                    SizedBox(width: 12),
-                    Text('Gestionar jardines'),
-                  ]),
-                ),
-              ],
-            ),
           ],
         ),
         body: Column(
           children: [
-            // Barra de filtro contextual por jardín/grupo.
-            // No se muestra si no hay jardines cargados.
-            const GardenFilterBar(),
+            // Migas de pan de la localización activa (ruta site › zone › bench).
+            const _LocationBreadcrumb(),
             if (_searchVisible)
               Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -326,10 +319,10 @@ class _PlantsScreenState extends State<PlantsScreen> {
 
   Widget _buildFilterChips() {
     final filters = {
-      _GardenFilter.all: 'Todas',
-      _GardenFilter.indoor: '🏠 Interior',
-      _GardenFilter.outdoor: '🌤 Exterior',
-      _GardenFilter.thirsty: '💧 Con sed',
+      _QuickFilter.all: 'Todas',
+      _QuickFilter.indoor: '🏠 Interior',
+      _QuickFilter.outdoor: '🌤 Exterior',
+      _QuickFilter.thirsty: '💧 Con sed',
     };
 
     return SizedBox(
@@ -1024,6 +1017,102 @@ class _PlantImage extends StatelessWidget {
       color: theme.colorScheme.primaryContainer,
       alignment: Alignment.center,
       child: const Text('🪴', style: TextStyle(fontSize: 40)),
+    );
+  }
+}
+
+/// Migas de pan de la localización activa (ej. "Vivero A › Invernadero 2").
+/// Tocar un ancestro lo selecciona; el icono ✕ limpia el filtro.
+/// No se muestra si no hay localización seleccionada.
+class _LocationBreadcrumb extends StatelessWidget {
+  const _LocationBreadcrumb();
+
+  List<Location> _pathTo(LocationState state, Location node) {
+    final path = <Location>[node];
+    var current = node;
+    while (current.parentId != null) {
+      final parent =
+          state.locations.where((l) => l.id == current.parentId).firstOrNull;
+      if (parent == null) break;
+      path.insert(0, parent);
+      current = parent;
+    }
+    return path;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return BlocBuilder<LocationBloc, LocationState>(
+      buildWhen: (p, c) =>
+          p.selectedLocation?.id != c.selectedLocation?.id ||
+          p.locations != c.locations,
+      builder: (ctx, state) {
+        final selected = state.selectedLocation;
+        if (selected == null) return const SizedBox.shrink();
+        final path = _pathTo(state, selected);
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppDimens.lg, vertical: AppDimens.sm),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          child: Row(
+            children: [
+              Icon(Icons.place_outlined,
+                  size: 16, color: theme.colorScheme.primary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (var i = 0; i < path.length; i++) ...[
+                        if (i > 0)
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text('›',
+                                style: theme.textTheme.bodySmall),
+                          ),
+                        InkWell(
+                          onTap: () => ctx
+                              .read<LocationBloc>()
+                              .add(LocationSelectRequested(path[i])),
+                          child: Row(
+                            children: [
+                              Icon(LocationIconMapper.forKey(path[i].icon),
+                                  size: 14, color: Color(path[i].colorValue)),
+                              const SizedBox(width: 4),
+                              Text(
+                                path[i].name,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: i == path.length - 1
+                                      ? FontWeight.w700
+                                      : FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () => ctx
+                    .read<LocationBloc>()
+                    .add(const LocationSelectRequested(null)),
+                child: const Padding(
+                  padding: EdgeInsets.all(2),
+                  child: Icon(Icons.close, size: 16),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

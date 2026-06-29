@@ -14,16 +14,20 @@ Planticula es una app Flutter (Supabase backend) que está en transición de:
 - **B2C actual**: gestión individual de plantas de un usuario.
 - **B2B objetivo**: plataforma agrícola IoT multiusuario con soporte para organizaciones, viveros, invernaderos y dispositivos de automatización.
 
-La jerarquía de datos objetivo es:
+La jerarquía de datos actual (migración 013) es:
 
 ```
-Organization (futuro)
-  └── Site (futuro)
-        └── Garden  ← implementado (migración 012)
-              └── GardenGroup  ← implementado (migración 012)
-                    └── Plant  ← existente, conectado
-                          └── SensorReading / ActuatorCommand (futuro)
+Organization  ← implementado (013) — multi-tenant
+  └── OrganizationMember (owner|admin|operator|viewer)  ← implementado (013)
+  └── Location  ← implementado (013) — tabla recursiva (parent_id), kind ∈ {site,zone,bench}
+        site (vivero) → zone (invernadero/sector) → bench (mesa/hilera)
+              └── Plant  ← conectado vía plants.location_id + plants.organization_id
+                    └── SensorReading / ActuatorCommand (futuro)
 ```
+
+> **Nota:** el antiguo modelo B2C `gardens > garden_groups` (migración 012)
+> fue migrado a `locations` y ELIMINADO en las migraciones 013/014. No existe
+> ya ninguna feature `gardens` ni tablas `gardens`/`garden_groups`.
 
 ---
 
@@ -56,7 +60,7 @@ lib/
 │
 ├── features/
 │   ├── auth/
-│   ├── gardens/         ← NUEVO (migración 012)
+│   ├── locations/       ← multi-tenant + árbol de localización (migración 013)
 │   ├── marketplace/
 │   ├── pest_alerts/
 │   ├── plant_disease/
@@ -161,9 +165,9 @@ Orden de secciones actual:
 SECCIÓN 0   — DROP CASCADE (en orden inverso a dependencias)
 SECCIÓN 1   — Función update_updated_at_column()
 SECCIÓN 2   — species_catalog
-SECCIÓN 2b  — gardens, garden_groups          ← añadido en 012
-SECCIÓN 3   — plants (con garden_id, group_id) ← modificado en 012
-SECCIÓN 3b  — RPCs de jardines                ← añadido en 012
+SECCIÓN 2b  — organizations, organization_members, locations  ← migración 013
+SECCIÓN 3   — plants (con organization_id, location_id)        ← migración 013
+SECCIÓN 3b  — RPC get_or_create_default_organization           ← migración 013
 SECCIÓN 4   — soil_analyses
 ...
 ```
@@ -174,74 +178,83 @@ SECCIÓN 4   — soil_analyses
 3. Crea también la migración incremental `NNN_nombre.sql`.
 
 ### Columnas FK nuevas en `plants`
-Las columnas `garden_id` y `group_id` son **nullable** (`ON DELETE SET NULL`).  
+Las columnas `organization_id` (`ON DELETE CASCADE`) y `location_id`
+(`ON DELETE SET NULL`, **nullable**) sustituyen a las antiguas `garden_id`/`group_id`.
 Nunca añadas FKs NOT NULL a `plants` sin una migration que rellene los datos existentes.
 
+### RLS por organización (multi-tenant)
+Las tablas `organizations`, `organization_members`, `locations` usan RLS basada
+en pertenencia vía las funciones `SECURITY DEFINER` `is_org_member(org)` y
+`has_org_role(org, roles[])` (definidas en 013). **Úsalas siempre** en las RLS de
+tablas nuevas ligadas a una organización, en vez de subconsultas a
+`organization_members` (evita recursión infinita de políticas). `plants` mantiene
+acceso por propietario (`auth.uid() = user_id`) **y** por pertenencia a su
+`organization_id`.
+
 ---
 
-## 6. La feature `gardens` — mapa de ficheros
+## 6. La feature `locations` — mapa de ficheros
 
 ```
-lib/features/gardens/
+lib/features/locations/
 ├── data/
 │   ├── datasources/
-│   │   ├── garden_remote_datasource.dart          ← contrato
-│   │   └── garden_remote_datasource_impl.dart     ← Supabase impl
+│   │   ├── organization_remote_datasource.dart(+_impl)  ← RPC get_or_create_default_organization
+│   │   └── location_remote_datasource.dart(+_impl)      ← CRUD locations
 │   ├── models/
-│   │   ├── garden_model.dart
-│   │   └── garden_group_model.dart
+│   │   ├── organization_model.dart
+│   │   └── location_model.dart
 │   └── repositories/
-│       └── garden_repository_impl.dart
+│       ├── organization_repository_impl.dart
+│       └── location_repository_impl.dart
 ├── domain/
 │   ├── entities/
-│   │   ├── garden.dart         ← GardenType enum, GardenIcon enum
-│   │   └── garden_group.dart
+│   │   ├── organization.dart
+│   │   └── location.dart        ← LocationKind enum (site|zone|bench)
 │   └── repositories/
-│       └── garden_repository.dart
+│       ├── organization_repository.dart
+│       └── location_repository.dart
 └── presentation/
     ├── bloc/
-    │   ├── garden_bloc.dart    ← part of pattern
-    │   ├── garden_event.dart   ← part of 'garden_bloc.dart'
-    │   └── garden_state.dart   ← part of 'garden_bloc.dart'
-    ├── screens/
-    │   ├── gardens_screen.dart         ← lista de jardines (tab 1)
-    │   ├── garden_detail_screen.dart   ← grupos + plantas filtradas
-    │   └── garden_editor_screen.dart   ← crear/editar jardín
+    │   ├── location_bloc.dart   ← part of pattern; org activa + árbol + nodo seleccionado
+    │   ├── location_event.dart
+    │   └── location_state.dart  ← helpers: roots, childrenOf(), descendantIdsOf()
     └── widgets/
-        ├── garden_card.dart
-        ├── garden_icon_mapper.dart     ← String key → IconData
-        └── group_chip.dart             ← onLongPress → eliminar grupo
+        ├── location_drawer.dart        ← árbol jerárquico + gestión in-place (crear/editar/borrar)
+        └── location_icon_mapper.dart   ← String key / LocationKind → IconData
 ```
 
-**`GardenBloc` está provisto en `main.dart` (nivel raíz)** — no crear instancias adicionales en el router ni en las screens. Acceder siempre con `context.read<GardenBloc>()`.
+**`LocationBloc` está provisto en `main.dart` (nivel raíz)** — no crear instancias adicionales. Acceder siempre con `context.read<LocationBloc>()`.
 
-**El router NO hace `BlocProvider`** para las rutas de gardens — el bloc ya existe en el árbol.
+**No hay rutas para localizaciones**: la navegación y gestión se hace desde el
+`LocationDrawer` dentro de la pestaña Plantas. Seleccionar un nodo fija
+`selectedLocation` en el `LocationBloc`; `PlantsScreen` reacciona con un
+`BlocListener` y dispara `PlantsFilterByLocation(descendantIds)` al `PlantsBloc`.
 
 ---
 
-## 7. La feature `plants` — qué se cambió en 012
+## 7. La feature `plants` — integración con `locations` (013)
 
 | Fichero | Cambio |
 |---|---|
-| `domain/entities/plant.dart` | `gardenId`, `groupId` nullable + `copyWith` con `clearGardenId`/`clearGroupId` |
-| `data/models/plant_model.dart` | `fromJson`, `toJson`, `fromDomain`, `copyWithModel`, `create` actualizados |
-| `data/datasources/plant_remote_datasource.dart` | Añadidos: `getPlantsByGarden`, `getPlantsByGroup`, `assignPlantToGarden` |
-| `data/datasources/plant_remote_datasource_impl.dart` | Implementados los 3 métodos nuevos |
-| `data/repositories/plants_repository_impl.dart` | Delega los 3 métodos nuevos |
-| `domain/repositories/plants_repository.dart` | Contrato ampliado con los 3 métodos nuevos |
-| `presentation/bloc/plants_event.dart` | `PlantsFilterByGarden`, `PlantsFilterByGroup`, `PlantAssignToGardenRequested` |
-| `presentation/bloc/plants_bloc.dart` | Handlers para los 3 nuevos eventos |
+| `domain/entities/plant.dart` | `organizationId`, `locationId` nullable + `copyWith` con `clearOrganizationId`/`clearLocationId` |
+| `data/models/plant_model.dart` | mapeo a `organization_id` / `location_id` |
+| `data/datasources/plant_remote_datasource.dart(+_impl)` | `getPlantsByLocationIds(List<String>)` (usa `.inFilter`), `assignPlantToLocation` |
+| `data/repositories/plants_repository.dart(+_impl)` | delega los métodos por localización |
+| `presentation/bloc/plants_event.dart` | `PlantsFilterByLocation(locationIds)`, `PlantAssignToLocationRequested` |
+| `presentation/bloc/plants_bloc.dart` | handlers `_onFilterByLocation`, `_onAssignToLocation` |
+| `presentation/screens/plant_editor_screen.dart` | selector único de localización (árbol indentado) en vez del doble selector jardín+grupo |
+| `presentation/screens/plants_screen.dart` | `LocationDrawer` + breadcrumb (`_LocationBreadcrumb`) en vez de `GardenFilterBar` |
 
 ---
 
 ## 8. Navegación — bottom nav actual
 
 ```
-Tab 0 — Plantas      /plants
-Tab 1 — Jardines     /gardens     ← NUEVO (migración 012)
-Tab 2 — Herramientas /tools
-Tab 3 — Comunidad    /pest-alerts
-Tab 4 — Perfil       /profile
+Tab 0 — Plantas      /plants        (contiene el LocationDrawer + breadcrumb)
+Tab 1 — Herramientas /tools
+Tab 2 — Comunidad    /pest-alerts
+Tab 3 — Perfil       /profile
 ```
 
 Fichero: `lib/core/navigation/main_scaffold.dart`  
@@ -251,16 +264,17 @@ La lógica de selección de tab está en `_getSelectedIndex(String route)`.
 
 ## 9. Próximos pasos previstos (no implementados)
 
-### Stage 2 — Asignación de plantas a jardines desde la UI existente
-- `PlantEditorScreen`: añadir selector de jardín + grupo en el formulario de creación/edición.
-- Al crear una planta, enviar `gardenId` y `groupId` al evento `PlantCreateRequested`.
-- `PlantsRepositoryImpl.createPlant` ya acepta estos campos en `PlantModel.create`.
+### ✅ Stage 2 — HECHO: asignación de plantas a localizaciones
+- `PlantEditorScreen` tiene un selector único de localización (árbol indentado).
+- Al crear/editar una planta se envían `organizationId` y `locationId`.
 
-### Stage 3 — Organization / Site (multitenancy B2B)
-- Nuevas tablas: `organizations`, `sites` con `organization_id` en `gardens`.
-- RLS multiorganización: las políticas pasarán de `auth.uid() = user_id` a comprobar membresía en `organization_members`.
-- Los blocs de gardens recibirán un `organizationId` de contexto.
-- **NO tocar las RLS de `plants` hasta tener roles definidos** — riesgo de exposición de datos.
+### ✅ Stage 3 — HECHO (base): multi-tenant Organization + Location
+- Tablas `organizations`, `organization_members`, `locations` (recursiva) con RLS
+  por pertenencia (`is_org_member` / `has_org_role`).
+- Cada usuario tiene una organización personal (`is_personal=true`) autocreada.
+- **Pendiente**: UI de gestión de miembros/roles e invitaciones; selector de
+  organización en el drawer (hoy se usa solo la personal); RLS de `plants`
+  endurecida (hoy mantiene también el acceso por `user_id` por compatibilidad).
 
 ### Stage 4 — Dispositivos IoT
 - Nuevas tablas: `sensor_types`, `actuator_types`, `devices`, `sensor_readings` (time-series).
@@ -296,7 +310,8 @@ El binario de Flutter está en `C:\flutter\bin\flutter.bat` en esta máquina.
 
 | ❌ No hacer | ✅ Hacer en su lugar |
 |---|---|
-| Crear un segundo `GardenBloc` en el router o en una screen | `context.read<GardenBloc>()` — ya está en el árbol |
+| Crear un segundo `LocationBloc` en el router o en una screen | `context.read<LocationBloc>()` — ya está en el árbol |
+| Hacer subconsultas a `organization_members` dentro de una RLS | Usar `is_org_member()` / `has_org_role()` (SECURITY DEFINER) para evitar recursión |
 | Registrar el mismo datasource/repo dos veces en `injection.dart` | Comprobar si ya existe `sl.isRegistered<T>()` |
 | Añadir `user_id` en el repositorio | Inyectarlo en el **datasource** con `_client.currentUser?.id` |
 | Añadir columnas NOT NULL sin default a tablas con datos existentes | Siempre nullable o con default en la migración |

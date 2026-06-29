@@ -2,7 +2,9 @@ import 'package:planticula/core/network/result.dart';
 import 'package:planticula/core/network/supabase_client.dart';
 import 'package:planticula/core/utils/logger.dart';
 import 'package:planticula/features/plants/data/datasources/plant_remote_datasource.dart';
+import 'package:planticula/features/plants/data/models/care_log_model.dart';
 import 'package:planticula/features/plants/data/models/plant_model.dart';
+import 'package:planticula/features/plants/domain/entities/care_log.dart';
 
 /// Implementación de PlantRemoteDataSource usando Supabase
 class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
@@ -13,6 +15,30 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
   String get _table => 'plants';
 
   String? get _userId => _client.currentUser?.id;
+
+  /// Inserta una entrada en care_logs (mejor esfuerzo: no rompe la operación
+  /// principal si falla el registro del historial).
+  Future<void> _logCare(
+    PlantModel plant,
+    CareLogType type, {
+    DateTime? eventDate,
+    String? note,
+    Map<String, dynamic>? metadata,
+  }) async {
+    try {
+      await _client.from('care_logs').insert({
+        'plant_id': plant.id,
+        'user_id': _userId,
+        'organization_id': plant.organizationId,
+        'type': type.name,
+        'event_date': (eventDate ?? DateTime.now()).toIso8601String(),
+        if (note != null) 'note': note,
+        if (metadata != null) 'metadata': metadata,
+      });
+    } catch (e, st) {
+      Logger.e('⚠️ Error logging care event (${type.name})', error: e, stackTrace: st);
+    }
+  }
 
   @override
   Future<Result<List<PlantModel>>> getPlants() async {
@@ -239,6 +265,7 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
           .single();
 
       final updatedPlant = PlantModel.fromJson(response);
+      await _logCare(updatedPlant, CareLogType.watering, eventDate: now);
       Logger.i('✅ Watered plant: ${updatedPlant.name}. Next: $nextWatering');
       return Success(updatedPlant);
     } catch (e, stackTrace) {
@@ -288,6 +315,7 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
           .single();
 
       final updatedPlant = PlantModel.fromJson(response);
+      await _logCare(updatedPlant, CareLogType.watering, eventDate: lastWatered);
       Logger.i('✅ Watered plant: ${updatedPlant.name} with date $daysAgo days ago. Next: $nextWatering');
       return Success(updatedPlant);
     } catch (e, stackTrace) {
@@ -322,6 +350,8 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
           .single();
 
       final updatedPlant = PlantModel.fromJson(response);
+      await _logCare(updatedPlant, CareLogType.transplant,
+          eventDate: now, metadata: {'pot_size': newPotSize});
       Logger.i('✅ Transplanted plant: ${updatedPlant.name}. New pot size: $newPotSize');
       return Success(updatedPlant);
     } catch (e, stackTrace) {
@@ -331,50 +361,34 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
   }
 
   @override
-  Future<Result<List<PlantModel>>> getPlantsByGarden(String gardenId) async {
+  Future<Result<List<PlantModel>>> getPlantsByLocationIds(
+    List<String> locationIds,
+  ) async {
     try {
       if (_userId == null) return const Failure('Usuario no autenticado');
+      if (locationIds.isEmpty) return const Success([]);
       final response = await _client
           .from(_table)
           .select()
           .eq('user_id', _userId!)
-          .eq('garden_id', gardenId)
+          .inFilter('location_id', locationIds)
           .order('created_at', ascending: false);
       final plants = (response as List).map((j) => PlantModel.fromJson(j)).toList();
       return Success(plants);
     } catch (e, st) {
-      Logger.e('❌ Error fetching plants by garden', error: e, stackTrace: st);
-      return Failure('Error al cargar plantas del jardín: ${e.toString()}');
+      Logger.e('❌ Error fetching plants by location', error: e, stackTrace: st);
+      return Failure('Error al cargar plantas de la localización: ${e.toString()}');
     }
   }
 
   @override
-  Future<Result<List<PlantModel>>> getPlantsByGroup(String groupId) async {
-    try {
-      if (_userId == null) return const Failure('Usuario no autenticado');
-      final response = await _client
-          .from(_table)
-          .select()
-          .eq('user_id', _userId!)
-          .eq('group_id', groupId)
-          .order('created_at', ascending: false);
-      final plants = (response as List).map((j) => PlantModel.fromJson(j)).toList();
-      return Success(plants);
-    } catch (e, st) {
-      Logger.e('❌ Error fetching plants by group', error: e, stackTrace: st);
-      return Failure('Error al cargar plantas del grupo: ${e.toString()}');
-    }
-  }
-
-  @override
-  Future<Result<PlantModel>> assignPlantToGarden(
+  Future<Result<PlantModel>> assignPlantToLocation(
     String plantId, {
-    required String gardenId,
-    String? groupId,
+    String? locationId,
   }) async {
     try {
       if (_userId == null) return const Failure('Usuario no autenticado');
-      final data = <String, dynamic>{'garden_id': gardenId, 'group_id': groupId};
+      final data = <String, dynamic>{'location_id': locationId};
       final response = await _client
           .from(_table)
           .update(data)
@@ -383,11 +397,76 @@ class PlantRemoteDataSourceImpl implements PlantRemoteDataSource {
           .select()
           .single();
       final plant = PlantModel.fromJson(response);
-      Logger.i('✅ Assigned plant ${plant.name} to garden $gardenId');
+      Logger.i('✅ Assigned plant ${plant.name} to location $locationId');
       return Success(plant);
     } catch (e, st) {
-      Logger.e('❌ Error assigning plant to garden', error: e, stackTrace: st);
-      return Failure('Error al asignar planta al jardín: ${e.toString()}');
+      Logger.e('❌ Error assigning plant to location', error: e, stackTrace: st);
+      return Failure('Error al asignar planta a la localización: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<Result<List<CareLogModel>>> getCareLogs(String plantId) async {
+    try {
+      if (_userId == null) return const Failure('Usuario no autenticado');
+      final response = await _client
+          .from('care_logs')
+          .select()
+          .eq('plant_id', plantId)
+          .order('event_date', ascending: false);
+      final logs = (response as List)
+          .map((j) => CareLogModel.fromJson(j as Map<String, dynamic>))
+          .toList();
+      return Success(logs);
+    } catch (e, st) {
+      Logger.e('❌ Error fetching care logs', error: e, stackTrace: st);
+      return Failure('Error al cargar el historial: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<Result<CareLogModel>> addCareLog({
+    required String plantId,
+    required CareLogType type,
+    DateTime? eventDate,
+    String? note,
+    Map<String, dynamic>? metadata,
+  }) async {
+    try {
+      if (_userId == null) return const Failure('Usuario no autenticado');
+      // organization_id se hereda de la planta para mantener el aislamiento.
+      final plantResult = await getPlantById(plantId);
+      final orgId =
+          plantResult is Success<PlantModel> ? plantResult.data.organizationId : null;
+      final response = await _client
+          .from('care_logs')
+          .insert({
+            'plant_id': plantId,
+            'user_id': _userId,
+            'organization_id': orgId,
+            'type': type.name,
+            'event_date': (eventDate ?? DateTime.now()).toIso8601String(),
+            if (note != null) 'note': note,
+            if (metadata != null) 'metadata': metadata,
+          })
+          .select()
+          .single();
+      return Success(CareLogModel.fromJson(response));
+    } catch (e, st) {
+      Logger.e('❌ Error adding care log', error: e, stackTrace: st);
+      return Failure('Error al guardar en el historial: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<Result<void>> deleteCareLog(String id) async {
+    try {
+      if (_userId == null) return const Failure('Usuario no autenticado');
+      await _client.from('care_logs').delete().eq('id', id);
+      return const Success(null);
+    } catch (e, st) {
+      Logger.e('❌ Error deleting care log', error: e, stackTrace: st);
+      return Failure('Error al eliminar del historial: ${e.toString()}');
     }
   }
 }

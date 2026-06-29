@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:planticula/core/services/notification_service.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/domain/repositories/plants_repository.dart';
 
@@ -8,8 +9,9 @@ part 'plants_state.dart';
 
 class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
   final PlantsRepository _repository;
+  final NotificationService _notifications;
 
-  PlantsBloc(this._repository) : super(const PlantsState()) {
+  PlantsBloc(this._repository, this._notifications) : super(const PlantsState()) {
     on<PlantsLoadRequested>(_onLoadRequested);
     on<PlantsLoadNeedingWaterRequested>(_onLoadNeedingWaterRequested);
     on<PlantsSearchRequested>(_onSearchRequested);
@@ -22,9 +24,8 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     on<PlantSelectRequested>(_onSelectRequested);
     on<PlantsClearError>(_onClearError);
     on<PlantClearLastWateringRequested>(_onClearLastWateringRequested);
-    on<PlantsFilterByGarden>(_onFilterByGarden);
-    on<PlantsFilterByGroup>(_onFilterByGroup);
-    on<PlantAssignToGardenRequested>(_onAssignToGarden);
+    on<PlantsFilterByLocation>(_onFilterByLocation);
+    on<PlantAssignToLocationRequested>(_onAssignToLocation);
   }
 
   Future<void> _onLoadRequested(
@@ -45,6 +46,8 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
           status: plants.isEmpty ? PlantsStatus.empty : PlantsStatus.loaded,
           plants: plants,
         ));
+        // Reprogramar todos los recordatorios de riego con la lista completa.
+        _notifications.syncForPlants(plants);
       },
       failure: (message, code, error) {
         emit(state.copyWith(
@@ -132,8 +135,8 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
       potSize: event.potSize,
       latitude: event.latitude,
       longitude: event.longitude,
-      gardenId: event.gardenId,
-      groupId: event.groupId,
+      organizationId: event.organizationId,
+      locationId: event.locationId,
     );
 
     result.when(
@@ -144,6 +147,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
           status: PlantsStatus.loaded,
           operationStatus: PlantsOperationStatus.success,
         ));
+        _notifications.schedulePlant(plant);
       },
       failure: (message, code, error) {
         emit(state.copyWith(
@@ -174,6 +178,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
           selectedPlant: plant.id == state.selectedPlant?.id ? plant : state.selectedPlant,
           operationStatus: PlantsOperationStatus.success,
         ));
+        _notifications.schedulePlant(plant);
       },
       failure: (message, code, error) {
         emit(state.copyWith(
@@ -203,6 +208,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
           selectedPlant: state.selectedPlant?.id == event.id ? null : state.selectedPlant,
           operationStatus: PlantsOperationStatus.success,
         ));
+        _notifications.cancelForPlant(event.id);
       },
       failure: (message, code, error) {
         emit(state.copyWith(
@@ -233,6 +239,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
           selectedPlant: plant.id == state.selectedPlant?.id ? plant : state.selectedPlant,
           operationStatus: PlantsOperationStatus.success,
         ));
+        _notifications.schedulePlant(plant);
       },
       failure: (message, code, error) {
         emit(state.copyWith(
@@ -263,6 +270,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
           selectedPlant: plant.id == state.selectedPlant?.id ? plant : state.selectedPlant,
           operationStatus: PlantsOperationStatus.success,
         ));
+        _notifications.schedulePlant(plant);
       },
       failure: (message, code, error) {
         emit(state.copyWith(
@@ -293,6 +301,7 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
           selectedPlant: plant.id == state.selectedPlant?.id ? plant : state.selectedPlant,
           operationStatus: PlantsOperationStatus.success,
         ));
+        _notifications.schedulePlant(plant);
       },
       failure: (message, code, error) {
         emit(state.copyWith(
@@ -361,12 +370,12 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     );
   }
 
-  Future<void> _onFilterByGarden(
-    PlantsFilterByGarden event,
+  Future<void> _onFilterByLocation(
+    PlantsFilterByLocation event,
     Emitter<PlantsState> emit,
   ) async {
     emit(state.copyWith(status: PlantsStatus.loading));
-    final result = await _repository.getPlantsByGarden(event.gardenId);
+    final result = await _repository.getPlantsByLocationIds(event.locationIds);
     result.when(
       success: (plants) => emit(state.copyWith(
         status: plants.isEmpty ? PlantsStatus.empty : PlantsStatus.loaded,
@@ -379,33 +388,14 @@ class PlantsBloc extends Bloc<PlantsEvent, PlantsState> {
     );
   }
 
-  Future<void> _onFilterByGroup(
-    PlantsFilterByGroup event,
-    Emitter<PlantsState> emit,
-  ) async {
-    emit(state.copyWith(status: PlantsStatus.loading));
-    final result = await _repository.getPlantsByGroup(event.groupId);
-    result.when(
-      success: (plants) => emit(state.copyWith(
-        status: plants.isEmpty ? PlantsStatus.empty : PlantsStatus.loaded,
-        plants: plants,
-      )),
-      failure: (msg, _, __) => emit(state.copyWith(
-        status: PlantsStatus.error,
-        errorMessage: msg,
-      )),
-    );
-  }
-
-  Future<void> _onAssignToGarden(
-    PlantAssignToGardenRequested event,
+  Future<void> _onAssignToLocation(
+    PlantAssignToLocationRequested event,
     Emitter<PlantsState> emit,
   ) async {
     emit(state.copyWith(operationStatus: PlantsOperationStatus.loading));
-    final result = await _repository.assignPlantToGarden(
+    final result = await _repository.assignPlantToLocation(
       event.plantId,
-      gardenId: event.gardenId,
-      groupId: event.groupId,
+      locationId: event.locationId,
     );
     result.when(
       success: (plant) {

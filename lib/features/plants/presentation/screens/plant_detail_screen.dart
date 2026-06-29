@@ -12,7 +12,9 @@ import 'package:planticula/core/services/watering_calculator.dart';
 import 'package:planticula/core/services/weather_service.dart';
 import 'package:planticula/core/theme/app_colors.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
+import 'package:planticula/features/plants/domain/entities/care_log.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
+import 'package:planticula/features/plants/presentation/bloc/care_log_cubit.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
 import 'package:planticula/features/plants/presentation/screens/plant_editor_screen.dart';
 import 'package:planticula/shared/widgets/domain_chip.dart';
@@ -36,6 +38,7 @@ class PlantDetailScreen extends StatefulWidget {
 
 class _PlantDetailScreenState extends State<PlantDetailScreen> {
   final _recommendationService = GetIt.instance<PlantRecommendationService>();
+  late final CareLogCubit _careLogCubit;
   WeatherData? _weather;
   WateringRecommendation? _recommendation;
   TransplantRecommendation? _transplantRecommendation;
@@ -44,8 +47,15 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _careLogCubit = GetIt.instance<CareLogCubit>()..load(widget.plant.id);
     _loadSpeciesData();
     _loadWeather();
+  }
+
+  @override
+  void dispose() {
+    _careLogCubit.close();
+    super.dispose();
   }
 
   /// Latest version of the plant from the bloc (falls back to widget.plant).
@@ -106,9 +116,18 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PlantsBloc, PlantsState>(
-      builder: (context, state) {
-        final plant = _currentPlant(state);
+    return BlocListener<PlantsBloc, PlantsState>(
+      // Recargar el historial cuando se registra un riego o trasplante.
+      listenWhen: (prev, curr) {
+        final a = _currentPlant(prev);
+        final b = _currentPlant(curr);
+        return a.lastWatered != b.lastWatered ||
+            a.lastTransplanted != b.lastTransplanted;
+      },
+      listener: (_, __) => _careLogCubit.load(widget.plant.id),
+      child: BlocBuilder<PlantsBloc, PlantsState>(
+        builder: (context, state) {
+          final plant = _currentPlant(state);
         return Scaffold(
           body: CustomScrollView(
             slivers: [
@@ -132,7 +151,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             ],
           ),
         );
-      },
+        },
+      ),
     );
   }
 
@@ -522,40 +542,151 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     );
   }
 
-  Widget _buildHistory(BuildContext context, Plant plant) {
-    final theme = Theme.of(context);
-    final events = <(String, String)>[
-      if (plant.lastWatered != null)
-        ('💧', 'Regada — ${_relativeDate(plant.lastWatered!)}'),
-      if (plant.lastTransplanted != null)
-        (
-          '🪴',
-          'Trasplantada a ${plant.plantPotSize.displayName.toLowerCase()} — ${_formatDate(plant.lastTransplanted!)}'
-        ),
-      if (plant.acquiredDate != null || plant.createdAt != null)
-        ('🌱', 'Añadida — ${_formatDate(plant.acquiredDate ?? plant.createdAt!)}'),
-    ];
-    if (events.isEmpty) return const SizedBox.shrink();
+  static String _careEmoji(CareLogType type) => switch (type) {
+        CareLogType.watering   => '💧',
+        CareLogType.transplant => '🪴',
+        CareLogType.fertilize  => '🧪',
+        CareLogType.prune      => '✂️',
+        CareLogType.note       => '📝',
+      };
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Historial', style: theme.textTheme.titleLarge),
-        const SizedBox(height: AppDimens.sm),
-        for (final (emoji, text) in events)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppDimens.xs),
-            child: Row(
-              children: [
-                Text(emoji, style: const TextStyle(fontSize: 16)),
-                const SizedBox(width: AppDimens.md),
-                Expanded(
-                  child: Text(text, style: theme.textTheme.bodyMedium),
-                ),
-              ],
-            ),
+  String _careLabel(CareLog log) {
+    final base = log.type.displayName;
+    if (log.type == CareLogType.note && (log.note?.isNotEmpty ?? false)) {
+      return log.note!;
+    }
+    if (log.type == CareLogType.transplant && log.metadata['pot_size'] != null) {
+      return '$base — maceta ${log.metadata['pot_size']}';
+    }
+    return base;
+  }
+
+  Widget _buildHistory(BuildContext context, Plant plant) {
+    return BlocProvider.value(
+      value: _careLogCubit,
+      child: BlocBuilder<CareLogCubit, CareLogState>(
+        builder: (context, state) {
+          final theme = Theme.of(context);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(child: Text('Historial', style: theme.textTheme.titleLarge)),
+                  TextButton.icon(
+                    onPressed: () => _showAddNoteDialog(context, plant),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Nota'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimens.sm),
+              // Estadísticas
+              Row(
+                children: [
+                  _StatChip(
+                    icon: Icons.water_drop_outlined,
+                    label: '${state.wateringCount} riegos',
+                  ),
+                  const SizedBox(width: AppDimens.sm),
+                  if (state.streak(plant.wateringFrequency) > 1)
+                    _StatChip(
+                      icon: Icons.local_fire_department_outlined,
+                      label: 'Racha ${state.streak(plant.wateringFrequency)}',
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppDimens.sm),
+              if (state.status == CareLogStatus.loading)
+                const Padding(
+                  padding: EdgeInsets.all(AppDimens.md),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (state.logs.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppDimens.sm),
+                  child: Text(
+                    'Aún no hay eventos. Riega tu planta o añade una nota.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                )
+              else
+                for (final log in state.logs)
+                  Dismissible(
+                    key: ValueKey(log.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: AppDimens.md),
+                      color: theme.colorScheme.errorContainer,
+                      child: Icon(Icons.delete_outline,
+                          color: theme.colorScheme.onErrorContainer),
+                    ),
+                    onDismissed: (_) => _careLogCubit.delete(log.id),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: AppDimens.xs),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_careEmoji(log.type),
+                              style: const TextStyle(fontSize: 16)),
+                          const SizedBox(width: AppDimens.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(_careLabel(log),
+                                    style: theme.textTheme.bodyMedium),
+                                Text(_relativeDate(log.eventDate),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    )),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showAddNoteDialog(BuildContext context, Plant plant) {
+    final ctrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Añadir nota'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          maxLines: 3,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(
+            hintText: 'Ej. Hojas amarillas, cambié de sitio…',
           ),
-      ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final text = ctrl.text.trim();
+              if (text.isNotEmpty) _careLogCubit.addNote(plant.id, text);
+              Navigator.pop(dialogCtx);
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1008,6 +1139,34 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         'mode': PlantEditorMode.edit,
         'existingPlant': plant,
       },
+    );
+  }
+}
+
+/// Chip compacto de estadística para el historial.
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _StatChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: theme.colorScheme.primary),
+          const SizedBox(width: 5),
+          Text(label, style: theme.textTheme.labelMedium),
+        ],
+      ),
     );
   }
 }

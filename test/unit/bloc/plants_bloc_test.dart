@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:planticula/core/network/result.dart';
+import 'package:planticula/core/services/notification_service.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/domain/repositories/plants_repository.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
@@ -10,8 +11,15 @@ class MockPlantsRepository extends Mock implements PlantsRepository {}
 
 class FakePlant extends Fake implements Plant {}
 
+/// No-op notifications para tests (no toca canales de plataforma).
+class FakeNotificationService implements NotificationService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) async {}
+}
+
 void main() {
   late MockPlantsRepository mockPlantsRepository;
+  late FakeNotificationService fakeNotifications;
 
   final testPlant1 = Plant(
     id: '1',
@@ -41,6 +49,7 @@ void main() {
 
   setUp(() {
     mockPlantsRepository = MockPlantsRepository();
+    fakeNotifications = FakeNotificationService();
   });
 
   tearDown(() {
@@ -49,7 +58,7 @@ void main() {
 
   group('PlantsBloc', () {
     test('initial state has status PlantsStatus.initial', () {
-      final bloc = PlantsBloc(mockPlantsRepository);
+      final bloc = PlantsBloc(mockPlantsRepository, fakeNotifications);
       expect(bloc.state.status, PlantsStatus.initial);
       expect(bloc.state.plants, isEmpty);
       expect(bloc.state.selectedPlant, isNull);
@@ -62,7 +71,7 @@ void main() {
         when(() => mockPlantsRepository.getPlants())
             .thenAnswer((_) async => Success(testPlants));
       },
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(PlantsLoadRequested()),
       expect: () => [
         const PlantsState(status: PlantsStatus.loading),
@@ -79,7 +88,7 @@ void main() {
         when(() => mockPlantsRepository.getPlants())
             .thenAnswer((_) async => const Success<List<Plant>>([]));
       },
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(PlantsLoadRequested()),
       expect: () => [
         const PlantsState(status: PlantsStatus.loading),
@@ -93,7 +102,7 @@ void main() {
         when(() => mockPlantsRepository.getPlants())
             .thenAnswer((_) async => const Failure('Failed to load plants'));
       },
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(PlantsLoadRequested()),
       expect: () => [
         const PlantsState(status: PlantsStatus.loading),
@@ -110,7 +119,7 @@ void main() {
         when(() => mockPlantsRepository.searchPlants('Test Plant 1'))
             .thenAnswer((_) async => Success([testPlant1]));
       },
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(const PlantsSearchRequested('Test Plant 1')),
       expect: () => [
         const PlantsState(status: PlantsStatus.loading),
@@ -127,7 +136,7 @@ void main() {
         when(() => mockPlantsRepository.getPlants())
             .thenAnswer((_) async => Success(testPlants));
       },
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(const PlantsSearchRequested('')),
       expect: () => [
         const PlantsState(status: PlantsStatus.loading),
@@ -158,7 +167,7 @@ void main() {
               longitude: any(named: 'longitude'),
             )).thenAnswer((_) async => Success(testPlant1));
       },
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(const PlantCreateRequested(name: 'Test Plant 1')),
       expect: () => [
         const PlantsState(operationStatus: PlantsOperationStatus.loading),
@@ -190,7 +199,7 @@ void main() {
               longitude: any(named: 'longitude'),
             )).thenAnswer((_) async => const Failure('Failed to create plant'));
       },
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(const PlantCreateRequested(name: 'Test Plant')),
       expect: () => [
         const PlantsState(operationStatus: PlantsOperationStatus.loading),
@@ -215,7 +224,7 @@ void main() {
         status: PlantsStatus.loaded,
         plants: testPlants,
       ),
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(const PlantWaterRequested('2')),
       expect: () => [
         PlantsState(
@@ -240,7 +249,7 @@ void main() {
         status: PlantsStatus.loaded,
         plants: testPlants,
       ),
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(const PlantDeleteRequested('1')),
       expect: () => [
         PlantsState(
@@ -266,7 +275,7 @@ void main() {
         status: PlantsStatus.loaded,
         plants: [testPlant1],
       ),
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(const PlantDeleteRequested('1')),
       expect: () => [
         PlantsState(
@@ -287,7 +296,7 @@ void main() {
         status: PlantsStatus.loaded,
         plants: testPlants,
       ),
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(const PlantSelectRequested('1')),
       expect: () => [
         PlantsState(
@@ -304,7 +313,7 @@ void main() {
         status: PlantsStatus.loaded,
         plants: testPlants,
       ),
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(const PlantSelectRequested('invalid-id')),
       expect: () => [
         PlantsState(
@@ -326,7 +335,7 @@ void main() {
         status: PlantsStatus.loaded,
         plants: testPlants,
       ),
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(PlantUpdateRequested(testPlant1.copyWith(name: 'Updated Plant 1'))),
       expect: () => [
         PlantsState(
@@ -359,7 +368,7 @@ void main() {
         status: PlantsStatus.loaded,
         plants: testPlants,
       ),
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(const PlantTransplantRequested(id: '1', newPotSize: 'large')),
       expect: () => [
         PlantsState(
@@ -384,7 +393,7 @@ void main() {
         status: PlantsStatus.error,
         errorMessage: 'Some error',
       ),
-      build: () => PlantsBloc(mockPlantsRepository),
+      build: () => PlantsBloc(mockPlantsRepository, fakeNotifications),
       act: (bloc) => bloc.add(PlantsClearError()),
       expect: () => [
         const PlantsState(),

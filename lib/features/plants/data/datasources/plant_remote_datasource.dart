@@ -1,5 +1,7 @@
 import 'package:planticula/core/network/result.dart';
+import 'package:planticula/features/plants/data/models/care_log_model.dart';
 import 'package:planticula/features/plants/data/models/plant_model.dart';
+import 'package:planticula/features/plants/domain/entities/care_log.dart';
 
 /// Contrato para la fuente de datos de plantas
 /// Define las operaciones disponibles sin importar la implementación
@@ -32,16 +34,30 @@ abstract class PlantRemoteDataSource {
   /// Registra un trasplante (actualiza pot_size y last_transplanted)
   Future<Result<PlantModel>> transplantPlant(String id, String newPotSize);
 
-  /// Obtiene plantas filtradas por jardín
-  Future<Result<List<PlantModel>>> getPlantsByGarden(String gardenId);
+  /// Obtiene plantas cuyo location_id está dentro de [locationIds]
+  /// (un nodo y sus descendientes).
+  Future<Result<List<PlantModel>>> getPlantsByLocationIds(
+    List<String> locationIds,
+  );
 
-  /// Obtiene plantas filtradas por grupo
-  Future<Result<List<PlantModel>>> getPlantsByGroup(String groupId);
-
-  /// Asigna una planta a un jardín (y opcionalmente a un grupo)
-  Future<Result<PlantModel>> assignPlantToGarden(
+  /// Asigna una planta a una localización (null = sin clasificar).
+  Future<Result<PlantModel>> assignPlantToLocation(
     String plantId, {
-    required String gardenId,
-    String? groupId,
+    String? locationId,
   });
+
+  /// Devuelve el historial de cuidados de una planta (más reciente primero).
+  Future<Result<List<CareLogModel>>> getCareLogs(String plantId);
+
+  /// Añade una entrada manual al historial (nota, abonado, poda…).
+  Future<Result<CareLogModel>> addCareLog({
+    required String plantId,
+    required CareLogType type,
+    DateTime? eventDate,
+    String? note,
+    Map<String, dynamic>? metadata,
+  });
+
+  /// Elimina una entrada del historial.
+  Future<Result<void>> deleteCareLog(String id);
 }

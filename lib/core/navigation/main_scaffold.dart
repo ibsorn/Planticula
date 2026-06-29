@@ -10,10 +10,9 @@ import 'package:planticula/core/constants/app_constants.dart';
 ///   2 → Comunidad    (/pest-alerts)
 ///   3 → Perfil       (/profile)
 ///
-/// Los jardines ya no tienen su propio tab: se gestionan como un filtro
-/// contextual dentro de Plantas (ver [GardenFilterBar]). La ruta /gardens
-/// sigue existiendo como pantalla de gestión full-screen accesible desde
-/// la barra de filtro.
+/// Las localizaciones (vivero > zona > mesa) no tienen tab propio: se navegan
+/// desde el LocationDrawer dentro de la pestaña Plantas, que filtra la lista
+/// de plantas por el nodo seleccionado.
 class MainScaffold extends StatelessWidget {
   final Widget child;
 

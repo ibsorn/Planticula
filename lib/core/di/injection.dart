@@ -12,6 +12,7 @@ import 'package:planticula/core/services/plant_disease_ai_service.dart';
 import 'package:planticula/core/services/plant_identification_service.dart';
 import 'package:planticula/core/services/plant_recommendation_service.dart';
 import 'package:planticula/core/services/soil_analysis_ai_service.dart';
+import 'package:planticula/core/services/notification_service.dart';
 import 'package:planticula/core/services/species_service.dart';
 import 'package:planticula/core/services/weather_service.dart';
 import 'package:planticula/core/theme/theme_cubit.dart';
@@ -23,6 +24,7 @@ import 'package:planticula/features/plants/data/datasources/plant_remote_datasou
 import 'package:planticula/features/plants/data/repositories/plants_repository_impl.dart';
 import 'package:planticula/features/plants/domain/repositories/plants_repository.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
+import 'package:planticula/features/plants/presentation/bloc/care_log_cubit.dart';
 import 'package:planticula/features/soil_analysis/data/datasources/soil_analysis_remote_datasource.dart';
 import 'package:planticula/features/soil_analysis/data/datasources/soil_analysis_remote_datasource_impl.dart';
 import 'package:planticula/features/soil_analysis/data/repositories/soil_analysis_repository_impl.dart';
@@ -55,11 +57,15 @@ import 'package:planticula/features/seed_identification/data/datasources/seed_id
 import 'package:planticula/features/seed_identification/data/repositories/seed_identification_repository_impl.dart';
 import 'package:planticula/features/seed_identification/domain/repositories/seed_identification_repository.dart';
 import 'package:planticula/features/seed_identification/presentation/bloc/seed_identification_bloc.dart';
-import 'package:planticula/features/gardens/data/datasources/garden_remote_datasource.dart';
-import 'package:planticula/features/gardens/data/datasources/garden_remote_datasource_impl.dart';
-import 'package:planticula/features/gardens/data/repositories/garden_repository_impl.dart';
-import 'package:planticula/features/gardens/domain/repositories/garden_repository.dart';
-import 'package:planticula/features/gardens/presentation/bloc/garden_bloc.dart';
+import 'package:planticula/features/locations/data/datasources/organization_remote_datasource.dart';
+import 'package:planticula/features/locations/data/datasources/organization_remote_datasource_impl.dart';
+import 'package:planticula/features/locations/data/datasources/location_remote_datasource.dart';
+import 'package:planticula/features/locations/data/datasources/location_remote_datasource_impl.dart';
+import 'package:planticula/features/locations/data/repositories/organization_repository_impl.dart';
+import 'package:planticula/features/locations/data/repositories/location_repository_impl.dart';
+import 'package:planticula/features/locations/domain/repositories/organization_repository.dart';
+import 'package:planticula/features/locations/domain/repositories/location_repository.dart';
+import 'package:planticula/features/locations/presentation/bloc/location_bloc.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -74,6 +80,7 @@ Future<void> initDependencies() async {
   // Core Services (singletons - share cache across the app)
   sl.registerLazySingleton<WeatherService>(() => WeatherService());
   sl.registerLazySingleton<SpeciesService>(() => SpeciesService());
+  sl.registerLazySingleton<NotificationService>(() => NotificationService());
   sl.registerLazySingleton<LocationService>(() => LocationService());
   sl.registerLazySingleton<PlantRecommendationService>(
     () => PlantRecommendationService(),
@@ -260,7 +267,8 @@ Future<void> initDependencies() async {
   );
 
   // Plants - Presentation Layer
-  sl.registerFactory<PlantsBloc>(() => PlantsBloc(sl()));
+  sl.registerFactory<PlantsBloc>(() => PlantsBloc(sl(), sl()));
+  sl.registerFactory<CareLogCubit>(() => CareLogCubit(sl()));
 
   // Soil Analysis - Data Layer
   sl.registerLazySingleton<SoilAnalysisRemoteDataSource>(
@@ -344,18 +352,24 @@ Future<void> initDependencies() async {
     () => SeedIdentificationBloc(sl()),
   );
 
-  // ── Gardens ─────────────────────────────────────────────────────────────
+  // ── Locations & Organizations ───────────────────────────────────────────
 
-  // Gardens - Data Layer
-  sl.registerLazySingleton<GardenRemoteDataSource>(
-    () => GardenRemoteDataSourceImpl(sl()),
+  // Data Layer
+  sl.registerLazySingleton<OrganizationRemoteDataSource>(
+    () => OrganizationRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<LocationRemoteDataSource>(
+    () => LocationRemoteDataSourceImpl(sl()),
   );
 
-  // Gardens - Repository Layer
-  sl.registerLazySingleton<GardenRepository>(
-    () => GardenRepositoryImpl(sl()),
+  // Repository Layer
+  sl.registerLazySingleton<OrganizationRepository>(
+    () => OrganizationRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<LocationRepository>(
+    () => LocationRepositoryImpl(sl()),
   );
 
-  // Gardens - Presentation Layer
-  sl.registerFactory<GardenBloc>(() => GardenBloc(sl()));
+  // Presentation Layer
+  sl.registerFactory<LocationBloc>(() => LocationBloc(sl(), sl()));
 }

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:planticula/core/constants/app_constants.dart';
 import 'package:planticula/core/di/injection.dart' as di;
 import 'package:planticula/core/network/supabase_client.dart';
+import 'package:planticula/core/services/notification_service.dart';
 import 'package:planticula/core/navigation/app_router.dart';
 import 'package:planticula/core/theme/app_theme.dart';
 import 'package:planticula/core/theme/theme_cubit.dart';
@@ -15,7 +16,7 @@ import 'package:planticula/features/marketplace/presentation/bloc/marketplace_bl
 import 'package:planticula/features/plant_disease/presentation/bloc/plant_disease_bloc.dart';
 import 'package:planticula/features/plant_identification/presentation/bloc/plant_identification_bloc.dart';
 import 'package:planticula/features/seed_identification/presentation/bloc/seed_identification_bloc.dart';
-import 'package:planticula/features/gardens/presentation/bloc/garden_bloc.dart';
+import 'package:planticula/features/locations/presentation/bloc/location_bloc.dart';
 
 export 'core/navigation/main_scaffold.dart';
 
@@ -24,6 +25,15 @@ void main() async {
 
   // Initialize dependencies (SharedPreferences, etc.)
   await di.initDependencies();
+
+  // Initialize local notifications (watering reminders) and ask permission.
+  try {
+    final notifications = di.sl<NotificationService>();
+    await notifications.init();
+    await notifications.requestPermissions();
+  } catch (e) {
+    debugPrint('⚠️ Notification init failed: $e');
+  }
 
   // Initialize Supabase - continue even if it fails (will show error screen)
   bool supabaseInitialized = false;
@@ -112,8 +122,8 @@ class MyApp extends StatelessWidget {
         BlocProvider<PlantsBloc>(
           create: (context) => di.sl<PlantsBloc>(),
         ),
-        BlocProvider<GardenBloc>(
-          create: (context) => di.sl<GardenBloc>(),
+        BlocProvider<LocationBloc>(
+          create: (context) => di.sl<LocationBloc>(),
         ),
         BlocProvider<SoilAnalysisBloc>(
           create: (context) => di.sl<SoilAnalysisBloc>(),

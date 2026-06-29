@@ -1,6 +1,7 @@
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/features/plants/data/datasources/plant_remote_datasource.dart';
 import 'package:planticula/features/plants/data/models/plant_model.dart';
+import 'package:planticula/features/plants/domain/entities/care_log.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/domain/repositories/plants_repository.dart';
 
@@ -39,8 +40,8 @@ class PlantsRepositoryImpl implements PlantsRepository {
     String? potSize,
     double? latitude,
     double? longitude,
-    String? gardenId,
-    String? groupId,
+    String? organizationId,
+    String? locationId,
   }) async {
     final plantModel = PlantModel.create(
       name: name,
@@ -58,8 +59,8 @@ class PlantsRepositoryImpl implements PlantsRepository {
       potSize: potSize,
       latitude: latitude,
       longitude: longitude,
-      gardenId: gardenId,
-      groupId: groupId,
+      organizationId: organizationId,
+      locationId: locationId,
     );
 
     return await _dataSource.createPlant(plantModel);
@@ -97,20 +98,39 @@ class PlantsRepositoryImpl implements PlantsRepository {
   }
 
   @override
-  Future<Result<List<Plant>>> getPlantsByGarden(String gardenId) =>
-      _dataSource.getPlantsByGarden(gardenId);
+  Future<Result<List<Plant>>> getPlantsByLocationIds(List<String> locationIds) =>
+      _dataSource.getPlantsByLocationIds(locationIds);
 
   @override
-  Future<Result<List<Plant>>> getPlantsByGroup(String groupId) =>
-      _dataSource.getPlantsByGroup(groupId);
-
-  @override
-  Future<Result<Plant>> assignPlantToGarden(
+  Future<Result<Plant>> assignPlantToLocation(
     String plantId, {
-    required String gardenId,
-    String? groupId,
+    String? locationId,
   }) =>
-      _dataSource.assignPlantToGarden(plantId, gardenId: gardenId, groupId: groupId);
+      _dataSource.assignPlantToLocation(plantId, locationId: locationId);
+
+  @override
+  Future<Result<List<CareLog>>> getCareLogs(String plantId) =>
+      _dataSource.getCareLogs(plantId);
+
+  @override
+  Future<Result<CareLog>> addCareLog({
+    required String plantId,
+    required CareLogType type,
+    DateTime? eventDate,
+    String? note,
+    Map<String, dynamic>? metadata,
+  }) =>
+      _dataSource.addCareLog(
+        plantId: plantId,
+        type: type,
+        eventDate: eventDate,
+        note: note,
+        metadata: metadata,
+      );
+
+  @override
+  Future<Result<void>> deleteCareLog(String id) =>
+      _dataSource.deleteCareLog(id);
 
   @override
   Future<Result<List<Plant>>> getPlantsNeedingWater() async {

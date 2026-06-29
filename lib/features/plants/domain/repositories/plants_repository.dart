@@ -1,4 +1,5 @@
 import 'package:planticula/core/network/result.dart';
+import 'package:planticula/features/plants/domain/entities/care_log.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 
 /// Contrato para el repositorio de plantas
@@ -27,8 +28,8 @@ abstract class PlantsRepository {
     String? potSize,
     double? latitude,
     double? longitude,
-    String? gardenId,
-    String? groupId,
+    String? organizationId,
+    String? locationId,
   });
 
   /// Actualiza una planta existente
@@ -53,16 +54,28 @@ abstract class PlantsRepository {
   /// Obtiene plantas que necesitan riego
   Future<Result<List<Plant>>> getPlantsNeedingWater();
 
-  /// Obtiene las plantas de un jardín específico
-  Future<Result<List<Plant>>> getPlantsByGarden(String gardenId);
+  /// Obtiene las plantas cuyo location_id está dentro de [locationIds]
+  /// (un nodo y sus descendientes).
+  Future<Result<List<Plant>>> getPlantsByLocationIds(List<String> locationIds);
 
-  /// Obtiene las plantas de un grupo específico
-  Future<Result<List<Plant>>> getPlantsByGroup(String groupId);
-
-  /// Asigna una planta a un jardín (y opcionalmente a un grupo)
-  Future<Result<Plant>> assignPlantToGarden(
+  /// Asigna una planta a una localización (null = sin clasificar).
+  Future<Result<Plant>> assignPlantToLocation(
     String plantId, {
-    required String gardenId,
-    String? groupId,
+    String? locationId,
   });
+
+  /// Historial de cuidados de una planta (más reciente primero).
+  Future<Result<List<CareLog>>> getCareLogs(String plantId);
+
+  /// Añade una entrada manual al historial.
+  Future<Result<CareLog>> addCareLog({
+    required String plantId,
+    required CareLogType type,
+    DateTime? eventDate,
+    String? note,
+    Map<String, dynamic>? metadata,
+  });
+
+  /// Elimina una entrada del historial.
+  Future<Result<void>> deleteCareLog(String id);
 }

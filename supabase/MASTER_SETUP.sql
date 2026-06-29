@@ -78,6 +78,10 @@ DROP FUNCTION IF EXISTS public.mark_soil_analysis_error(UUID, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.calculate_next_watering() CASCADE;
 DROP FUNCTION IF EXISTS public.update_updated_at_column() CASCADE;
 DROP FUNCTION IF EXISTS public.increment_alert_confirmations() CASCADE;
+-- Organizaciones / localización (migración 013)
+DROP FUNCTION IF EXISTS public.get_or_create_default_organization() CASCADE;
+DROP FUNCTION IF EXISTS public.has_org_role(UUID, TEXT[]) CASCADE;
+DROP FUNCTION IF EXISTS public.is_org_member(UUID) CASCADE;
 
 -- Vistas
 DROP VIEW IF EXISTS pending_soil_analyses CASCADE;
@@ -97,9 +101,11 @@ DROP TABLE IF EXISTS plant_disease_diagnoses CASCADE;
 -- los registros antiguos. Ahora se recrean con las constraints correctas.
 DROP TABLE IF EXISTS plant_identifications CASCADE;
 DROP TABLE IF EXISTS seed_identifications CASCADE;
+DROP TABLE IF EXISTS care_logs CASCADE;
 DROP TABLE IF EXISTS plants CASCADE;
-DROP TABLE IF EXISTS garden_groups CASCADE;
-DROP TABLE IF EXISTS gardens CASCADE;
+DROP TABLE IF EXISTS locations CASCADE;
+DROP TABLE IF EXISTS organization_members CASCADE;
+DROP TABLE IF EXISTS organizations CASCADE;
 DROP TABLE IF EXISTS species_catalog CASCADE;
 
 
@@ -195,121 +201,171 @@ CREATE TRIGGER update_species_catalog_updated_at
 
 
 -- ============================================================================
--- SECCIÓN 2b: TABLAS gardens y garden_groups
+-- SECCIÓN 2b: MULTI-TENANT (organizations) + localización recursiva (locations)
 -- ============================================================================
 -- Deben crearse ANTES que plants porque plants las referencia con FKs.
 --
--- Jerarquía:
---   Usuario → Jardín (gardens) → Grupo (garden_groups) → Planta (plants)
+-- Jerarquía B2B:
+--   Organización → Member (owner|admin|operator|viewer)
+--                → Location (recursiva: site > zone > bench) → Planta (plants)
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS gardens (
+-- ── organizations ──────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS organizations (
     id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id     UUID        REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-
     name        TEXT        NOT NULL
-                            CHECK (char_length(name) > 0 AND char_length(name) <= 100),
-    description TEXT
-                            CHECK (description IS NULL OR char_length(description) <= 500),
-
-    -- icon y color permiten que cada jardín tenga identidad visual propia
-    icon        TEXT        NOT NULL DEFAULT 'garden'
-                            CHECK (icon IN (
-                                'garden', 'balcony', 'terrace', 'greenhouse',
-                                'indoor', 'potted', 'vegetable', 'flower',
-                                'herb', 'forest', 'other'
-                            )),
-    color       TEXT        NOT NULL DEFAULT '#4CAF50'
-                            CHECK (color ~ '^#[0-9A-Fa-f]{6}$'),
-
-    type        TEXT        NOT NULL DEFAULT 'personal'
-                            CHECK (type IN (
-                                'personal', 'balcony', 'terrace', 'greenhouse',
-                                'indoor', 'outdoor', 'allotment', 'other'
-                            )),
-
-    is_default  BOOLEAN     NOT NULL DEFAULT false,
-    sort_order  INTEGER     NOT NULL DEFAULT 0,
-
+                            CHECK (char_length(name) > 0 AND char_length(name) <= 120),
+    is_personal BOOLEAN     NOT NULL DEFAULT false,
+    created_by  UUID        REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at  TIMESTAMPTZ DEFAULT now(),
     updated_at  TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_gardens_user_id     ON gardens(user_id);
-CREATE INDEX IF NOT EXISTS idx_gardens_user_order  ON gardens(user_id, sort_order);
-CREATE INDEX IF NOT EXISTS idx_gardens_is_default  ON gardens(user_id, is_default) WHERE is_default = true;
+CREATE INDEX IF NOT EXISTS idx_organizations_created_by ON organizations(created_by);
 
-DROP TRIGGER IF EXISTS update_gardens_updated_at ON gardens;
-CREATE TRIGGER update_gardens_updated_at
-    BEFORE UPDATE ON gardens
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_organizations_updated_at ON organizations;
+CREATE TRIGGER update_organizations_updated_at
+    BEFORE UPDATE ON organizations
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-ALTER TABLE gardens ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Users can view own gardens"   ON gardens;
-CREATE POLICY "Users can view own gardens"   ON gardens FOR SELECT USING (auth.uid() = user_id);
-DROP POLICY IF EXISTS "Users can insert own gardens" ON gardens;
-CREATE POLICY "Users can insert own gardens" ON gardens FOR INSERT WITH CHECK (auth.uid() = user_id);
-DROP POLICY IF EXISTS "Users can update own gardens" ON gardens;
-CREATE POLICY "Users can update own gardens" ON gardens FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-DROP POLICY IF EXISTS "Users can delete own gardens" ON gardens;
-CREATE POLICY "Users can delete own gardens" ON gardens FOR DELETE USING (auth.uid() = user_id);
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON gardens TO authenticated;
-GRANT ALL ON gardens TO service_role;
-
-COMMENT ON TABLE  gardens            IS 'Top-level container for a user''s plants. One user can have many gardens.';
-COMMENT ON COLUMN gardens.icon       IS 'Icon key for UI: garden|balcony|terrace|greenhouse|indoor|potted|vegetable|flower|herb|forest|other';
-COMMENT ON COLUMN gardens.color      IS 'Hex color (#RRGGBB) for visual distinction';
-COMMENT ON COLUMN gardens.is_default IS 'Auto-created default garden; exactly one per user';
-
-
-CREATE TABLE IF NOT EXISTS garden_groups (
-    id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
-    garden_id   UUID        REFERENCES gardens(id)    ON DELETE CASCADE  NOT NULL,
-    user_id     UUID        REFERENCES auth.users(id) ON DELETE CASCADE  NOT NULL,
-
-    name        TEXT        NOT NULL
-                            CHECK (char_length(name) > 0 AND char_length(name) <= 100),
-    description TEXT
-                            CHECK (description IS NULL OR char_length(description) <= 500),
-
-    -- Visual opcional: hereda del jardín padre si es NULL
-    icon        TEXT,
-    color       TEXT        CHECK (color IS NULL OR color ~ '^#[0-9A-Fa-f]{6}$'),
-
-    sort_order  INTEGER     NOT NULL DEFAULT 0,
-
-    created_at  TIMESTAMPTZ DEFAULT now(),
-    updated_at  TIMESTAMPTZ DEFAULT now()
+-- ── organization_members ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS organization_members (
+    id              UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+    organization_id UUID        REFERENCES organizations(id) ON DELETE CASCADE NOT NULL,
+    user_id         UUID        REFERENCES auth.users(id)    ON DELETE CASCADE NOT NULL,
+    role            TEXT        NOT NULL DEFAULT 'owner'
+                                CHECK (role IN ('owner', 'admin', 'operator', 'viewer')),
+    created_at      TIMESTAMPTZ DEFAULT now(),
+    updated_at      TIMESTAMPTZ DEFAULT now(),
+    UNIQUE (organization_id, user_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_garden_groups_garden_id    ON garden_groups(garden_id);
-CREATE INDEX IF NOT EXISTS idx_garden_groups_user_id      ON garden_groups(user_id);
-CREATE INDEX IF NOT EXISTS idx_garden_groups_garden_order ON garden_groups(garden_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_org_members_org_id  ON organization_members(organization_id);
+CREATE INDEX IF NOT EXISTS idx_org_members_user_id ON organization_members(user_id);
 
-DROP TRIGGER IF EXISTS update_garden_groups_updated_at ON garden_groups;
-CREATE TRIGGER update_garden_groups_updated_at
-    BEFORE UPDATE ON garden_groups
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_org_members_updated_at ON organization_members;
+CREATE TRIGGER update_org_members_updated_at
+    BEFORE UPDATE ON organization_members
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-ALTER TABLE garden_groups ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Users can view own garden groups"   ON garden_groups;
-CREATE POLICY "Users can view own garden groups"   ON garden_groups FOR SELECT USING (auth.uid() = user_id);
-DROP POLICY IF EXISTS "Users can insert own garden groups" ON garden_groups;
-CREATE POLICY "Users can insert own garden groups" ON garden_groups FOR INSERT WITH CHECK (auth.uid() = user_id);
-DROP POLICY IF EXISTS "Users can update own garden groups" ON garden_groups;
-CREATE POLICY "Users can update own garden groups" ON garden_groups FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-DROP POLICY IF EXISTS "Users can delete own garden groups" ON garden_groups;
-CREATE POLICY "Users can delete own garden groups" ON garden_groups FOR DELETE USING (auth.uid() = user_id);
+-- ── Helpers de pertenencia (SECURITY DEFINER → evitan recursión RLS) ─────────
+CREATE OR REPLACE FUNCTION public.is_org_member(p_org UUID)
+RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM organization_members
+        WHERE organization_id = p_org AND user_id = auth.uid()
+    );
+$$;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON garden_groups TO authenticated;
-GRANT ALL ON garden_groups TO service_role;
+CREATE OR REPLACE FUNCTION public.has_org_role(p_org UUID, p_roles TEXT[])
+RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM organization_members
+        WHERE organization_id = p_org AND user_id = auth.uid() AND role = ANY (p_roles)
+    );
+$$;
 
-COMMENT ON TABLE  garden_groups           IS 'Optional sub-groups within a garden (e.g. Tomatoes, Succulents, Shade zone).';
-COMMENT ON COLUMN garden_groups.garden_id IS 'Parent garden; cascade-deleted with it.';
-COMMENT ON COLUMN garden_groups.icon      IS 'Optional icon override; falls back to parent garden icon.';
+GRANT EXECUTE ON FUNCTION public.is_org_member(UUID)        TO authenticated;
+GRANT EXECUTE ON FUNCTION public.has_org_role(UUID, TEXT[]) TO authenticated;
+
+-- ── RLS organizations ───────────────────────────────────────────────────────
+ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Members can view their organizations" ON organizations;
+CREATE POLICY "Members can view their organizations" ON organizations
+    FOR SELECT USING (public.is_org_member(id));
+DROP POLICY IF EXISTS "Users can create organizations" ON organizations;
+CREATE POLICY "Users can create organizations" ON organizations
+    FOR INSERT WITH CHECK (created_by = auth.uid());
+DROP POLICY IF EXISTS "Admins can update their organizations" ON organizations;
+CREATE POLICY "Admins can update their organizations" ON organizations
+    FOR UPDATE USING (public.has_org_role(id, ARRAY['owner', 'admin']))
+               WITH CHECK (public.has_org_role(id, ARRAY['owner', 'admin']));
+DROP POLICY IF EXISTS "Owners can delete their organizations" ON organizations;
+CREATE POLICY "Owners can delete their organizations" ON organizations
+    FOR DELETE USING (public.has_org_role(id, ARRAY['owner']));
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON organizations TO authenticated;
+GRANT ALL ON organizations TO service_role;
+
+-- ── RLS organization_members ─────────────────────────────────────────────────
+ALTER TABLE organization_members ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Members can view co-members" ON organization_members;
+CREATE POLICY "Members can view co-members" ON organization_members
+    FOR SELECT USING (public.is_org_member(organization_id));
+DROP POLICY IF EXISTS "Admins can add members" ON organization_members;
+CREATE POLICY "Admins can add members" ON organization_members
+    FOR INSERT WITH CHECK (
+        user_id = auth.uid()
+        OR public.has_org_role(organization_id, ARRAY['owner', 'admin'])
+    );
+DROP POLICY IF EXISTS "Admins can update members" ON organization_members;
+CREATE POLICY "Admins can update members" ON organization_members
+    FOR UPDATE USING (public.has_org_role(organization_id, ARRAY['owner', 'admin']))
+               WITH CHECK (public.has_org_role(organization_id, ARRAY['owner', 'admin']));
+DROP POLICY IF EXISTS "Admins can remove members" ON organization_members;
+CREATE POLICY "Admins can remove members" ON organization_members
+    FOR DELETE USING (
+        user_id = auth.uid()
+        OR public.has_org_role(organization_id, ARRAY['owner', 'admin'])
+    );
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON organization_members TO authenticated;
+GRANT ALL ON organization_members TO service_role;
+
+-- ── locations (recursiva — adjacency list) ───────────────────────────────────
+CREATE TABLE IF NOT EXISTS locations (
+    id              UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+    organization_id UUID        REFERENCES organizations(id) ON DELETE CASCADE NOT NULL,
+    parent_id       UUID        REFERENCES locations(id) ON DELETE CASCADE,
+    kind            TEXT        NOT NULL CHECK (kind IN ('site', 'zone', 'bench')),
+    name            TEXT        NOT NULL
+                                CHECK (char_length(name) > 0 AND char_length(name) <= 120),
+    description     TEXT        CHECK (description IS NULL OR char_length(description) <= 500),
+    icon            TEXT        NOT NULL DEFAULT 'garden',
+    color           TEXT        NOT NULL DEFAULT '#4CAF50'
+                                CHECK (color ~ '^#[0-9A-Fa-f]{6}$'),
+    metadata        JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    is_default      BOOLEAN     NOT NULL DEFAULT false,
+    sort_order      INTEGER     NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ DEFAULT now(),
+    updated_at      TIMESTAMPTZ DEFAULT now(),
+    CONSTRAINT locations_root_is_site CHECK (
+        (kind = 'site'  AND parent_id IS NULL) OR
+        (kind <> 'site' AND parent_id IS NOT NULL)
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_locations_org_id    ON locations(organization_id);
+CREATE INDEX IF NOT EXISTS idx_locations_parent_id ON locations(parent_id);
+CREATE INDEX IF NOT EXISTS idx_locations_org_order ON locations(organization_id, sort_order);
+
+DROP TRIGGER IF EXISTS update_locations_updated_at ON locations;
+CREATE TRIGGER update_locations_updated_at
+    BEFORE UPDATE ON locations
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE locations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Members can view org locations" ON locations;
+CREATE POLICY "Members can view org locations" ON locations
+    FOR SELECT USING (public.is_org_member(organization_id));
+DROP POLICY IF EXISTS "Operators can insert org locations" ON locations;
+CREATE POLICY "Operators can insert org locations" ON locations
+    FOR INSERT WITH CHECK (public.has_org_role(organization_id, ARRAY['owner', 'admin', 'operator']));
+DROP POLICY IF EXISTS "Operators can update org locations" ON locations;
+CREATE POLICY "Operators can update org locations" ON locations
+    FOR UPDATE USING (public.has_org_role(organization_id, ARRAY['owner', 'admin', 'operator']))
+               WITH CHECK (public.has_org_role(organization_id, ARRAY['owner', 'admin', 'operator']));
+DROP POLICY IF EXISTS "Admins can delete org locations" ON locations;
+CREATE POLICY "Admins can delete org locations" ON locations
+    FOR DELETE USING (public.has_org_role(organization_id, ARRAY['owner', 'admin']));
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON locations TO authenticated;
+GRANT ALL ON locations TO service_role;
+
+COMMENT ON TABLE  locations           IS 'Recursive location tree (site>zone>bench). Replaces gardens/garden_groups.';
+COMMENT ON COLUMN locations.parent_id IS 'Parent location. NULL only for kind=site (root).';
+COMMENT ON COLUMN locations.kind      IS 'site (vivero) | zone (invernadero/sector) | bench (mesa/hilera)';
+COMMENT ON COLUMN locations.metadata  IS 'Free-form per-level data: lat/lon, area_m2, timezone, greenhouse type…';
 
 
 -- ============================================================================
@@ -364,12 +420,13 @@ CREATE TABLE IF NOT EXISTS plants (
     latitude            DOUBLE PRECISION,
     longitude           DOUBLE PRECISION,
 
-    -- Jerarquía de jardines (migración 012)
-    -- Ambas columnas nullable: plantas existentes quedan sin clasificar (garden_id = NULL)
-    -- hasta que el usuario las asigne. ON DELETE SET NULL evita borrar plantas si se
-    -- elimina un jardín o grupo.
-    garden_id           UUID REFERENCES gardens(id)       ON DELETE SET NULL,
-    group_id            UUID REFERENCES garden_groups(id) ON DELETE SET NULL,
+    -- Multi-tenant + localización (migración 013)
+    -- organization_id: organización propietaria (multi-tenant).
+    -- location_id: nodo de localización más profundo asignado (site/zone/bench).
+    -- location_id es nullable: NULL = planta sin clasificar. ON DELETE SET NULL
+    -- evita borrar plantas si se elimina una localización.
+    organization_id     UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    location_id         UUID REFERENCES locations(id)     ON DELETE SET NULL,
 
     -- Fechas
     acquired_date       DATE,
@@ -384,8 +441,8 @@ CREATE INDEX IF NOT EXISTS idx_plants_custom_name      ON plants(custom_name) WH
 CREATE INDEX IF NOT EXISTS idx_plants_next_watering    ON plants(next_watering) WHERE next_watering IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_plants_user_next        ON plants(user_id, next_watering);
 CREATE INDEX IF NOT EXISTS idx_plants_species_category ON plants(species_category);
-CREATE INDEX IF NOT EXISTS idx_plants_garden_id        ON plants(garden_id) WHERE garden_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_plants_group_id         ON plants(group_id)  WHERE group_id  IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_plants_organization_id  ON plants(organization_id) WHERE organization_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_plants_location_id       ON plants(location_id)     WHERE location_id     IS NOT NULL;
 
 -- Trigger: updated_at
 DROP TRIGGER IF EXISTS update_plants_updated_at ON plants;
@@ -416,9 +473,14 @@ CREATE TRIGGER calculate_next_watering_trigger
 -- RLS
 ALTER TABLE plants ENABLE ROW LEVEL SECURITY;
 
+-- Acceso por propietario (auth.uid() = user_id) Y por pertenencia a la
+-- organización de la planta (multi-tenant, migración 013).
 DROP POLICY IF EXISTS "Users can view own plants"   ON plants;
 CREATE POLICY "Users can view own plants" ON plants
-    FOR SELECT USING (auth.uid() = user_id);
+    FOR SELECT USING (
+        auth.uid() = user_id
+        OR (organization_id IS NOT NULL AND public.is_org_member(organization_id))
+    );
 
 DROP POLICY IF EXISTS "Users can insert own plants" ON plants;
 CREATE POLICY "Users can insert own plants" ON plants
@@ -427,12 +489,21 @@ CREATE POLICY "Users can insert own plants" ON plants
 DROP POLICY IF EXISTS "Users can update own plants" ON plants;
 CREATE POLICY "Users can update own plants" ON plants
     FOR UPDATE
-    USING     (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
+    USING (
+        auth.uid() = user_id
+        OR (organization_id IS NOT NULL AND public.has_org_role(organization_id, ARRAY['owner', 'admin', 'operator']))
+    )
+    WITH CHECK (
+        auth.uid() = user_id
+        OR (organization_id IS NOT NULL AND public.has_org_role(organization_id, ARRAY['owner', 'admin', 'operator']))
+    );
 
 DROP POLICY IF EXISTS "Users can delete own plants" ON plants;
 CREATE POLICY "Users can delete own plants" ON plants
-    FOR DELETE USING (auth.uid() = user_id);
+    FOR DELETE USING (
+        auth.uid() = user_id
+        OR (organization_id IS NOT NULL AND public.has_org_role(organization_id, ARRAY['owner', 'admin']))
+    );
 
 -- Comentarios de columnas
 COMMENT ON COLUMN plants.custom_name         IS 'User-defined custom name for the plant (e.g., "My favorite tomato plant")';
@@ -442,62 +513,97 @@ COMMENT ON COLUMN plants.growth_stage        IS 'Current growth phase: germinati
 COMMENT ON COLUMN plants.pot_size            IS 'Pot size: extra_small(0.5-1.5L), small(1.5-5L), medium(5-15L), large(15-40L), extra_large(40L+)';
 COMMENT ON COLUMN plants.last_transplanted   IS 'Last time the user registered a pot transplant for this plant';
 COMMENT ON COLUMN plants.species_category    IS 'Cached category from species_catalog for fast filtering';
-COMMENT ON COLUMN plants.garden_id           IS 'Optional: jardín al que pertenece. NULL = sin clasificar.';
-COMMENT ON COLUMN plants.group_id            IS 'Optional: grupo dentro del jardín. NULL = directamente en el jardín sin grupo.';
+COMMENT ON COLUMN plants.organization_id     IS 'Organization that owns this plant (multi-tenant).';
+COMMENT ON COLUMN plants.location_id         IS 'Deepest location node assigned (site/zone/bench). NULL = unclassified.';
 
 
 -- ============================================================================
--- SECCIÓN 3b: RPCs de jardines
+-- SECCIÓN 3b: RPCs de organización
 -- ============================================================================
 
--- Devuelve (o crea) el jardín por defecto del usuario autenticado.
-DROP FUNCTION IF EXISTS public.get_or_create_default_garden() CASCADE;
-CREATE OR REPLACE FUNCTION public.get_or_create_default_garden()
+-- Devuelve (o crea) la organización personal del usuario autenticado, con
+-- una membresía owner. La app la invoca al arrancar.
+DROP FUNCTION IF EXISTS public.get_or_create_default_organization() CASCADE;
+CREATE OR REPLACE FUNCTION public.get_or_create_default_organization()
 RETURNS TABLE (
-    id UUID, user_id UUID, name TEXT, description TEXT,
-    icon TEXT, color TEXT, type TEXT, is_default BOOLEAN,
-    sort_order INTEGER, created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ
+    id UUID, name TEXT, is_personal BOOLEAN,
+    created_by UUID, created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ
 )
 LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
-    v_uid    UUID := auth.uid();
-    v_garden gardens%ROWTYPE;
+    v_uid UUID := auth.uid();
+    v_org organizations%ROWTYPE;
 BEGIN
-    SELECT * INTO v_garden FROM gardens WHERE gardens.user_id = v_uid AND is_default = true LIMIT 1;
+    SELECT o.* INTO v_org
+    FROM organizations o
+    JOIN organization_members m ON m.organization_id = o.id
+    WHERE m.user_id = v_uid AND o.is_personal = true
+    LIMIT 1;
+
     IF NOT FOUND THEN
-        INSERT INTO gardens (user_id, name, description, icon, color, type, is_default, sort_order)
-        VALUES (v_uid, 'Mi Jardín', 'Mi colección de plantas', 'garden', '#4CAF50', 'personal', true, 0)
-        RETURNING * INTO v_garden;
+        INSERT INTO organizations (name, is_personal, created_by)
+        VALUES ('Mi organización', true, v_uid)
+        RETURNING * INTO v_org;
+        INSERT INTO organization_members (organization_id, user_id, role)
+        VALUES (v_org.id, v_uid, 'owner');
     END IF;
+
     RETURN QUERY SELECT
-        v_garden.id, v_garden.user_id, v_garden.name, v_garden.description,
-        v_garden.icon, v_garden.color, v_garden.type, v_garden.is_default,
-        v_garden.sort_order, v_garden.created_at, v_garden.updated_at;
+        v_org.id, v_org.name, v_org.is_personal,
+        v_org.created_by, v_org.created_at, v_org.updated_at;
 END; $$;
 
-GRANT EXECUTE ON FUNCTION public.get_or_create_default_garden() TO authenticated;
-COMMENT ON FUNCTION public.get_or_create_default_garden() IS
-    'Returns the calling user''s default garden, auto-creating "Mi Jardín" on first call.';
+GRANT EXECUTE ON FUNCTION public.get_or_create_default_organization() TO authenticated;
+COMMENT ON FUNCTION public.get_or_create_default_organization() IS
+    'Returns the calling user''s personal organization, auto-creating it (and an owner membership) on first call.';
 
--- Asigna todas las plantas sin jardín del usuario al jardín por defecto.
-DROP FUNCTION IF EXISTS public.assign_unclassified_plants_to_default_garden() CASCADE;
-CREATE OR REPLACE FUNCTION public.assign_unclassified_plants_to_default_garden()
-RETURNS INTEGER LANGUAGE plpgsql SECURITY DEFINER AS $$
-DECLARE
-    v_uid       UUID := auth.uid();
-    v_garden_id UUID;
-    v_count     INTEGER;
-BEGIN
-    SELECT id INTO v_garden_id FROM gardens WHERE user_id = v_uid AND is_default = true LIMIT 1;
-    IF v_garden_id IS NULL THEN RETURN 0; END IF;
-    UPDATE plants SET garden_id = v_garden_id WHERE user_id = v_uid AND garden_id IS NULL;
-    GET DIAGNOSTICS v_count = ROW_COUNT;
-    RETURN v_count;
-END; $$;
 
-GRANT EXECUTE ON FUNCTION public.assign_unclassified_plants_to_default_garden() TO authenticated;
-COMMENT ON FUNCTION public.assign_unclassified_plants_to_default_garden() IS
-    'Assigns all unclassified plants (garden_id IS NULL) to the default garden. Returns count updated.';
+-- ============================================================================
+-- SECCIÓN 3c: TABLA care_logs (historial de cuidados — migración 015)
+-- ============================================================================
+-- Debe crearse DESPUÉS de plants y organizations (las referencia con FKs).
+
+CREATE TABLE IF NOT EXISTS care_logs (
+    id              UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+    plant_id        UUID        REFERENCES plants(id) ON DELETE CASCADE NOT NULL,
+    user_id         UUID        REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    organization_id UUID        REFERENCES organizations(id) ON DELETE CASCADE,
+    type            TEXT        NOT NULL
+                                CHECK (type IN ('watering', 'transplant', 'fertilize', 'prune', 'note')),
+    event_date      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    note            TEXT        CHECK (note IS NULL OR char_length(note) <= 1000),
+    metadata        JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    created_at      TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_care_logs_plant_date ON care_logs(plant_id, event_date DESC);
+CREATE INDEX IF NOT EXISTS idx_care_logs_user_id    ON care_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_care_logs_type       ON care_logs(plant_id, type, event_date DESC);
+
+ALTER TABLE care_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own care logs" ON care_logs;
+CREATE POLICY "Users can view own care logs" ON care_logs
+    FOR SELECT USING (
+        auth.uid() = user_id
+        OR (organization_id IS NOT NULL AND public.is_org_member(organization_id))
+    );
+DROP POLICY IF EXISTS "Users can insert own care logs" ON care_logs;
+CREATE POLICY "Users can insert own care logs" ON care_logs
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own care logs" ON care_logs;
+CREATE POLICY "Users can update own care logs" ON care_logs
+    FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own care logs" ON care_logs;
+CREATE POLICY "Users can delete own care logs" ON care_logs
+    FOR DELETE USING (
+        auth.uid() = user_id
+        OR (organization_id IS NOT NULL AND public.has_org_role(organization_id, ARRAY['owner', 'admin']))
+    );
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON care_logs TO authenticated;
+GRANT ALL ON care_logs TO service_role;
+
+COMMENT ON TABLE care_logs IS 'Append-only care event history per plant (watering, transplant, fertilize, prune, note).';
 
 
 -- ============================================================================

@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planticula/core/constants/app_constants.dart';
 import 'package:planticula/core/services/plant_identification_service.dart';
@@ -35,10 +34,6 @@ import 'package:planticula/features/plant_identification/domain/entities/plant_i
 import 'package:planticula/features/seed_identification/presentation/screens/seed_identification_screen.dart';
 import 'package:planticula/features/seed_identification/presentation/screens/seed_identification_result_screen.dart';
 import 'package:planticula/features/seed_identification/domain/entities/seed_identification_result.dart';
-import 'package:planticula/features/gardens/domain/entities/garden.dart' as garden_entity;
-import 'package:planticula/features/gardens/presentation/screens/gardens_screen.dart';
-import 'package:planticula/features/gardens/presentation/screens/garden_detail_screen.dart';
-import 'package:planticula/features/gardens/presentation/screens/garden_editor_screen.dart';
 
 /// Notifier that GoRouter listens to for auth state changes.
 /// When auth changes, the router re-evaluates its redirect logic
@@ -252,32 +247,8 @@ class AppRouter {
             return ListingDetailScreen(listingId: id);
           },
         ),
-        // ── Gardens ──────────────────────────────────────────────────────
-        // IMPORTANT: rutas estáticas deben declararse ANTES que las dinámicas
-        // para que GoRouter las matchee correctamente.
-        // Orden: /gardens → /gardens/editor → /gardens/:id
-        //
-        // /gardens ya NO es un tab del bottom nav: es una pantalla de gestión
-        // full-screen accesible desde la GardenFilterBar dentro de Plantas.
-        // GardenBloc y PlantsBloc ya están provistos en main.dart.
-        GoRoute(
-          path: AppConstants.routeGardens,
-          builder: (context, state) => const GardensScreen(),
-        ),
-        GoRoute(
-          path: AppConstants.routeGardenEditor,
-          builder: (context, state) {
-            final garden = state.extra as garden_entity.Garden?;
-            return GardenEditorScreen(garden: garden);
-          },
-        ),
-        GoRoute(
-          path: AppConstants.routeGardenDetail,
-          builder: (context, state) {
-            final garden = state.extra as garden_entity.Garden;
-            return GardenDetailScreen(garden: garden);
-          },
-        ),
+        // Las localizaciones (antiguos "jardines") ya no son rutas: se
+        // gestionan desde el LocationDrawer dentro de la pestaña Plantas.
       ],
     );
   }

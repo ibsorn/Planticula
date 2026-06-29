@@ -40,8 +40,8 @@ class PlantCreateRequested extends PlantsEvent {
   final String? potSize;
   final double? latitude;
   final double? longitude;
-  final String? gardenId;
-  final String? groupId;
+  final String? organizationId;
+  final String? locationId;
 
   const PlantCreateRequested({
     required this.name,
@@ -59,8 +59,8 @@ class PlantCreateRequested extends PlantsEvent {
     this.potSize,
     this.latitude,
     this.longitude,
-    this.gardenId,
-    this.groupId,
+    this.organizationId,
+    this.locationId,
   });
 
   @override
@@ -80,8 +80,8 @@ class PlantCreateRequested extends PlantsEvent {
         potSize,
         latitude,
         longitude,
-        gardenId,
-        groupId,
+        organizationId,
+        locationId,
       ];
 }
 
@@ -163,34 +163,26 @@ class PlantClearLastWateringRequested extends PlantsEvent {
   List<Object?> get props => [id];
 }
 
-/// Cargar plantas filtradas por jardín
-class PlantsFilterByGarden extends PlantsEvent {
-  final String gardenId;
-  const PlantsFilterByGarden(this.gardenId);
+/// Cargar plantas filtradas por una localización y sus descendientes.
+/// [locationIds] son el nodo seleccionado + todos sus hijos (calculados por
+/// el LocationBloc, que mantiene el árbol en memoria).
+class PlantsFilterByLocation extends PlantsEvent {
+  final List<String> locationIds;
+  const PlantsFilterByLocation(this.locationIds);
   @override
-  List<Object?> get props => [gardenId];
+  List<Object?> get props => [locationIds];
 }
 
-/// Cargar plantas filtradas por grupo
-class PlantsFilterByGroup extends PlantsEvent {
-  final String groupId;
-  const PlantsFilterByGroup(this.groupId);
-  @override
-  List<Object?> get props => [groupId];
-}
-
-/// Asignar una planta a un jardín (y opcionalmente a un grupo)
-class PlantAssignToGardenRequested extends PlantsEvent {
+/// Asigna una planta a una localización (null = sin clasificar).
+class PlantAssignToLocationRequested extends PlantsEvent {
   final String plantId;
-  final String gardenId;
-  final String? groupId;
+  final String? locationId;
 
-  const PlantAssignToGardenRequested({
+  const PlantAssignToLocationRequested({
     required this.plantId,
-    required this.gardenId,
-    this.groupId,
+    this.locationId,
   });
 
   @override
-  List<Object?> get props => [plantId, gardenId, groupId];
+  List<Object?> get props => [plantId, locationId];
 }

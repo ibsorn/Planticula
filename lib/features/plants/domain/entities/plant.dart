@@ -45,11 +45,12 @@ class Plant extends Equatable {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  /// Jardín al que pertenece esta planta (migración 012). Null = sin clasificar.
-  final String? gardenId;
+  /// Organización propietaria de la planta (multi-tenant, migración 013).
+  final String? organizationId;
 
-  /// Grupo dentro del jardín (migración 012). Null = directamente en el jardín sin grupo.
-  final String? groupId;
+  /// Nodo de localización más profundo asignado (site/zone/bench, migración 013).
+  /// Null = planta sin clasificar.
+  final String? locationId;
 
   const Plant({
     required this.id,
@@ -73,8 +74,8 @@ class Plant extends Equatable {
     this.longitude,
     this.createdAt,
     this.updatedAt,
-    this.gardenId,
-    this.groupId,
+    this.organizationId,
+    this.locationId,
   });
 
   /// Crea una copia con algunos campos modificados
@@ -100,10 +101,10 @@ class Plant extends Equatable {
     double? longitude,
     DateTime? createdAt,
     DateTime? updatedAt,
-    String? gardenId,
-    String? groupId,
-    bool clearGardenId = false,
-    bool clearGroupId  = false,
+    String? organizationId,
+    String? locationId,
+    bool clearOrganizationId = false,
+    bool clearLocationId     = false,
   }) {
     return Plant(
       id: id ?? this.id,
@@ -127,8 +128,8 @@ class Plant extends Equatable {
       longitude: longitude ?? this.longitude,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      gardenId: clearGardenId ? null : (gardenId ?? this.gardenId),
-      groupId:  clearGroupId  ? null : (groupId  ?? this.groupId),
+      organizationId: clearOrganizationId ? null : (organizationId ?? this.organizationId),
+      locationId:     clearLocationId     ? null : (locationId     ?? this.locationId),
     );
   }
 
@@ -190,7 +191,7 @@ class Plant extends Equatable {
         longitude,
         createdAt,
         updatedAt,
-        gardenId,
-        groupId,
+        organizationId,
+        locationId,
       ];
 }
