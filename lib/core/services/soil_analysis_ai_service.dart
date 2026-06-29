@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:planticula/core/ai/identification_provider.dart' as ai;
+import 'package:planticula/core/utils/logger.dart';
 import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.dart';
 
 /// Stages of the soil analysis process for UI progress feedback.
@@ -160,7 +161,8 @@ Responde SOLO con el JSON, sin texto adicional.
     try {
       return SoilType.values
           .firstWhere((e) => e.name.toLowerCase() == v.toLowerCase());
-    } catch (_) {
+    } catch (e) {
+      Logger.w('Unknown soil type "$v", defaulting to unknown: $e');
       return SoilType.unknown;
     }
   }
@@ -169,7 +171,8 @@ Responde SOLO con el JSON, sin texto adicional.
     try {
       return MoistureLevel.values
           .firstWhere((e) => e.name.toLowerCase() == v.toLowerCase());
-    } catch (_) {
+    } catch (e) {
+      Logger.w('Unknown moisture level "$v", defaulting to optimal: $e');
       return MoistureLevel.optimal;
     }
   }
@@ -178,7 +181,8 @@ Responde SOLO con el JSON, sin texto adicional.
     try {
       return DrainageQuality.values
           .firstWhere((e) => e.name.toLowerCase() == v.toLowerCase());
-    } catch (_) {
+    } catch (e) {
+      Logger.w('Unknown drainage quality "$v", defaulting to moderate: $e');
       return DrainageQuality.moderate;
     }
   }
@@ -187,7 +191,8 @@ Responde SOLO con el JSON, sin texto adicional.
     try {
       return NutrientLevel.values
           .firstWhere((e) => e.name.toLowerCase() == v.toLowerCase());
-    } catch (_) {
+    } catch (e) {
+      Logger.w('Unknown nutrient level "$v", defaulting to moderate: $e');
       return NutrientLevel.moderate;
     }
   }

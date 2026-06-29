@@ -270,8 +270,7 @@ class SoilAnalysisRemoteDataSourceImpl implements SoilAnalysisRemoteDataSource {
     } catch (e, stackTrace) {
       Logger.e('❌ Error deleting image $filePath',
           error: e, stackTrace: stackTrace);
-      // No retornamos error para no bloquear la eliminación del registro
-      return const Success(null);
+      return Failure('Error al eliminar imagen: ${e.toString()}');
     }
   }
 

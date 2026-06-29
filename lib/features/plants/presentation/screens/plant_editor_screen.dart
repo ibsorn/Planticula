@@ -11,6 +11,7 @@ import 'package:planticula/core/services/species_service.dart';
 import 'package:planticula/core/services/watering_calculator.dart';
 import 'package:planticula/core/services/weather_service.dart';
 import 'package:planticula/core/theme/app_colors.dart';
+import 'package:planticula/core/utils/logger.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
 import 'package:planticula/features/gardens/domain/entities/garden.dart';
 import 'package:planticula/features/gardens/domain/entities/garden_group.dart';
@@ -205,7 +206,9 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
           }
         }
       },
-      failure: (_, __, ___) {},
+      failure: (msg, _, __) {
+        Logger.w('Failed to load gardens in editor: $msg');
+      },
     );
   }
 
@@ -261,7 +264,9 @@ class _PlantEditorScreenState extends State<PlantEditorScreen> {
         setState(() => _weather = weather);
         _updateRecommendation();
       }
-    } catch (_) {}
+    } catch (e) {
+      Logger.w('Weather fetch failed for plant editor: $e');
+    }
   }
 
   void _updateRecommendation() {

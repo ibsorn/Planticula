@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:planticula/core/utils/logger.dart';
 
 /// Coordenadas geográficas simples.
 class GeoCoordinates {
@@ -29,8 +30,8 @@ class LocationService {
         final pos = await Geolocator.getCurrentPosition();
         return GeoCoordinates(latitude: pos.latitude, longitude: pos.longitude);
       }
-    } catch (_) {
-      // Ubicación no disponible: el llamador decide cómo continuar.
+    } catch (e) {
+      Logger.w('Location unavailable: $e');
     }
     return null;
   }

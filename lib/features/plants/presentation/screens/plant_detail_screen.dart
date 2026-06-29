@@ -11,6 +11,7 @@ import 'package:planticula/core/services/transplant_calculator.dart';
 import 'package:planticula/core/services/watering_calculator.dart';
 import 'package:planticula/core/services/weather_service.dart';
 import 'package:planticula/core/theme/app_colors.dart';
+import 'package:planticula/core/utils/logger.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
 import 'package:planticula/features/plants/presentation/bloc/plants_bloc.dart';
@@ -79,7 +80,9 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         setState(() => _weather = weather);
         _updateRecommendation();
       }
-    } catch (_) {}
+    } catch (e) {
+      Logger.w('Weather fetch failed for plant detail: $e');
+    }
   }
 
   void _updateRecommendation() {

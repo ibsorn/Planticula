@@ -145,8 +145,8 @@ class PlantIdentificationDatasourceImpl implements PlantIdentificationDatasource
       await _client.storage.from(_bucket).remove([storagePath]);
       return const Success(null);
     } catch (e) {
-      Logger.w('Could not delete plant ID image: $filePath');
-      return const Success(null);
+      Logger.w('Could not delete plant ID image: $filePath — $e');
+      return Failure('Error al eliminar imagen: $e');
     }
   }
 }

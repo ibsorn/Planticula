@@ -9,6 +9,7 @@ import 'package:planticula/features/marketplace/presentation/widgets/marketplace
 import 'package:planticula/features/marketplace/presentation/widgets/marketplace_my_listings_tab.dart';
 import 'package:planticula/features/marketplace/presentation/widgets/marketplace_nearby_tab.dart';
 import 'package:planticula/core/theme/app_colors.dart';
+import 'package:planticula/core/utils/logger.dart';
 import 'package:planticula/shared/widgets/community_switcher.dart';
 
 class MarketplaceListScreen extends StatefulWidget {
@@ -65,8 +66,8 @@ class _MarketplaceListScreenState extends State<MarketplaceListScreen>
           ));
         }
       }
-    } catch (_) {
-      // Continuar sin ubicación
+    } catch (e) {
+      Logger.w('Location fetch failed for marketplace, continuing without location: $e');
     } finally {
       // location load complete
     }

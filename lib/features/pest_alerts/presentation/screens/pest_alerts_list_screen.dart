@@ -7,6 +7,7 @@ import 'package:planticula/features/pest_alerts/presentation/widgets/pest_alert_
 import 'package:planticula/features/pest_alerts/presentation/widgets/pest_alerts_filter_sheet.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:planticula/core/theme/app_colors.dart';
+import 'package:planticula/core/utils/logger.dart';
 import 'package:planticula/shared/widgets/community_switcher.dart';
 import 'package:planticula/shared/widgets/empty_state.dart';
 
@@ -70,7 +71,7 @@ class _PestAlertsListScreenState extends State<PestAlertsListScreen>
         context.read<PestAlertsBloc>().add(PestAlertsLoadNearby());
       }
     } catch (e) {
-      // Cargar de todos modos
+      Logger.w('Location fetch failed for pest alerts, loading without location: $e');
       if (!mounted) return;
       context.read<PestAlertsBloc>().add(PestAlertsLoadNearby());
     } finally {

@@ -414,7 +414,10 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
         ));
       },
       failure: (message, code, error) {
-        // Silencioso, no mostrar error
+        emit(state.copyWith(
+          actionStatus: ActionStatus.error,
+          errorMessage: message,
+        ));
       },
     );
   }

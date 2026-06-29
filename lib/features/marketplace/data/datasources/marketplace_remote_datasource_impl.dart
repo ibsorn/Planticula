@@ -36,8 +36,8 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
             .eq('id', _userId!)
             .single();
         sellerName = profile['username'] ?? profile['full_name'];
-      } catch (_) {
-        // Si no hay perfil, usar ID
+      } catch (e) {
+        Logger.d('Profile not found for user $_userId, proceeding without name: $e');
         sellerName = null;
       }
 
@@ -363,7 +363,8 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
       await _client.storage.from(_bucket).remove(filePaths);
       return const Success(null);
     } catch (e) {
-      return const Success(null); // No bloquear
+      Logger.w('Error deleting photos: $e');
+      return Failure('Error al eliminar fotos: ${e.toString()}');
     }
   }
 
@@ -374,7 +375,8 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
       await _client.rpc('increment_listing_views', params: {'p_listing_id': listingId});
       return const Success(null);
     } catch (e) {
-      return const Success(null); // Silencioso
+      Logger.w('Error incrementing view count for $listingId: $e');
+      return Failure('Error al incrementar vistas: ${e.toString()}');
     }
   }
 
@@ -441,7 +443,8 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
         return pathSegments.sublist(bucketIndex + 1).join('/');
       }
       return null;
-    } catch (_) {
+    } catch (e) {
+      Logger.w('Could not extract path from URL: $url — $e');
       return null;
     }
   }
