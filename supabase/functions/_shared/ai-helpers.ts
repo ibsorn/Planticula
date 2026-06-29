@@ -5,16 +5,36 @@
 //           JSON extraction, image optimization hints.
 // ============================================================================
 
-export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "apikey, Authorization, Content-Type, x-client-info",
-};
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+// Allowed origins for CORS — restrict to your app's domains.
+// In production, replace "*" with your actual domain(s).
+const ALLOWED_ORIGINS = Deno.env.get("ALLOWED_ORIGINS")?.split(",") ?? ["*"];
+
+export function getCorsHeaders(origin?: string | null): Record<string, string> {
+  let allowedOrigin = ALLOWED_ORIGINS[0];
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    allowedOrigin = origin;
+  } else if (ALLOWED_ORIGINS.includes("*")) {
+    allowedOrigin = "*";
+  }
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers":
+      "apikey, Authorization, Content-Type, x-client-info",
+  };
+}
+
+// Backwards-compatible constant (defaults to wildcard when ALLOWED_ORIGINS
+// is not set, which keeps dev environments working out of the box).
+export const corsHeaders = getCorsHeaders();
 
 export function handleCors(req: Request): Response | null {
+  const origin = req.headers.get("Origin");
+  const headers = getCorsHeaders(origin);
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return new Response(null, { status: 204, headers });
   }
   return null;
 }
@@ -22,18 +42,70 @@ export function handleCors(req: Request): Response | null {
 export function jsonResponse(
   data: Record<string, unknown>,
   status = 200,
+  origin?: string | null,
 ): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
   });
 }
 
 export function errorResponse(
   message: string,
   status = 500,
+  origin?: string | null,
 ): Response {
-  return jsonResponse({ error: message }, status);
+  return jsonResponse({ error: message }, status, origin);
+}
+
+// ============================================================================
+// JWT AUTHENTICATION HELPER
+// ============================================================================
+
+/**
+ * Validates the Authorization header and returns the authenticated user.
+ * Returns an error Response if authentication fails, or the user object.
+ */
+export async function requireAuth(
+  req: Request,
+): Promise<{ user: { id: string } } | Response> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return errorResponse(
+      "Authentication required",
+      401,
+      req.headers.get("Origin"),
+    );
+  }
+
+  const jwt = authHeader.replace("Bearer ", "");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    return errorResponse("Server configuration error", 500, req.headers.get("Origin"));
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${jwt}` } },
+  });
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return errorResponse(
+      "Invalid or expired token",
+      401,
+      req.headers.get("Origin"),
+    );
+  }
+
+  return { user: { id: user.id } };
 }
 
 // ============================================================================

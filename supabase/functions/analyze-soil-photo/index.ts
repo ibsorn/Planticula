@@ -7,6 +7,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/ai-helpers.ts";
 
 // ============================================================================
 // TIPOS DE DATOS
@@ -61,11 +62,10 @@ serve(async (req) => {
   const startTime = Date.now();
 
   // CORS headers
+  const origin = req.headers.get("Origin");
   const headers = {
     "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "apikey, Authorization, Content-Type, x-client-info",
+    ...getCorsHeaders(origin),
   };
 
   // Handle CORS preflight
@@ -149,10 +149,20 @@ serve(async (req) => {
     // Construir URL final de la imagen
     let finalImageUrl: string;
     if (image_url) {
+      // Validate URL to prevent SSRF
+      if (!isAllowedImageUrl(image_url)) {
+        return createErrorResponse(
+          400,
+          "Invalid image URL: only HTTPS URLs from allowed domains are accepted",
+          headers,
+          startTime
+        );
+      }
       finalImageUrl = image_url;
     } else {
-      // Construir URL pública desde el path
-      finalImageUrl = `${SUPABASE_URL}/storage/v1/object/public/soil-images/${image_path}`;
+      // Construir URL pública desde el path — sanitize path to prevent traversal
+      const safePath = image_path!.replace(/\.\.\//g, "").replace(/^\/+/, "");
+      finalImageUrl = `${SUPABASE_URL}/storage/v1/object/public/soil-images/${safePath}`;
     }
 
     console.log(`📸 Analizando imagen: ${finalImageUrl}`);
@@ -183,7 +193,7 @@ serve(async (req) => {
     console.error("❌ Error no controlado:", error);
     return createErrorResponse(
       500,
-      `Error interno del servidor: ${error.message || "Unknown error"}`,
+      "Error interno del servidor",
       headers,
       startTime
     );
@@ -412,4 +422,42 @@ function validateDrainageProbability(prob: string): SoilAnalysisResult['drainage
 function clamp(value: number, min: number, max: number): number {
   if (typeof value !== 'number' || isNaN(value)) return min;
   return Math.max(min, Math.min(max, value));
+}
+
+/**
+ * Validates that a user-supplied image URL is safe (prevents SSRF).
+ * Only allows HTTPS URLs to known image-hosting domains.
+ */
+function isAllowedImageUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+
+    // Must be HTTPS
+    if (parsed.protocol !== "https:") return false;
+
+    // Block private/internal IPs and metadata endpoints
+    const hostname = parsed.hostname.toLowerCase();
+    if (
+      hostname === "localhost" ||
+      hostname.startsWith("127.") ||
+      hostname.startsWith("10.") ||
+      hostname.startsWith("172.") ||
+      hostname.startsWith("192.168.") ||
+      hostname === "169.254.169.254" ||
+      hostname.endsWith(".internal") ||
+      hostname.endsWith(".local")
+    ) {
+      return false;
+    }
+
+    // Allow only known domains (Supabase storage, common image CDNs)
+    const allowedDomains = [
+      ".supabase.co",
+      ".supabase.in",
+    ];
+
+    return allowedDomains.some((d) => hostname.endsWith(d));
+  } catch {
+    return false;
+  }
 }

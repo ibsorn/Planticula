@@ -15,7 +15,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import {
   handleCors, jsonResponse, errorResponse,
   callLlmVision, parseJsonResponse,
-  numOrNull, stringListOrNull,
+  numOrNull, stringListOrNull, requireAuth,
 } from "../_shared/ai-helpers.ts";
 
 serve(async (req) => {
@@ -23,10 +23,14 @@ serve(async (req) => {
   if (corsRes) return corsRes;
 
   try {
+    // Authenticate
+    const authResult = await requireAuth(req);
+    if (authResult instanceof Response) return authResult;
+
     const { image } = await req.json();
     if (!image) return errorResponse("Missing 'image' field", 400);
 
-    console.log("[identify-seed] Starting identification");
+    console.log(`[identify-seed] Starting identification (user: ${authResult.user.id})`);
 
     const content = await callLlmVision({
       prompt: SEED_ID_PROMPT,
@@ -44,7 +48,7 @@ serve(async (req) => {
     return jsonResponse({ success: true, result });
   } catch (error) {
     console.error("[identify-seed] Error:", error);
-    return errorResponse(error.message || "Internal error");
+    return errorResponse("Internal error");
   }
 });
 

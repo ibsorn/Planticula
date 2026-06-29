@@ -18,7 +18,7 @@ import {
   corsHeaders, handleCors, jsonResponse, errorResponse,
   callLlmVision, callLlmText, callPlantNet,
   parseJsonResponse, numOrNull, boolOrNull, stringListOrNull,
-  getEnvOrDefault,
+  getEnvOrDefault, requireAuth,
 } from "../_shared/ai-helpers.ts";
 
 const CONFIDENCE_THRESHOLD = 0.7;
@@ -28,6 +28,10 @@ serve(async (req) => {
   if (corsRes) return corsRes;
 
   try {
+    // Authenticate
+    const authResult = await requireAuth(req);
+    if (authResult instanceof Response) return authResult;
+
     const { image, includeVisualMeta } = await req.json();
     if (!image) return errorResponse("Missing 'image' field", 400);
 
@@ -114,7 +118,7 @@ serve(async (req) => {
     return jsonResponse({ success: true, result });
   } catch (error) {
     console.error("[identify-plant] Error:", error);
-    return errorResponse(error.message || "Internal error");
+    return errorResponse("Internal error");
   }
 });
 
