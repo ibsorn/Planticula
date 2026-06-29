@@ -13,6 +13,7 @@ import 'package:planticula/core/services/transplant_calculator.dart';
 import 'package:planticula/core/services/watering_calculator.dart';
 import 'package:planticula/core/services/weather_service.dart';
 import 'package:planticula/core/theme/app_colors.dart';
+import 'package:planticula/core/utils/logger.dart';
 import 'package:planticula/core/theme/app_dimens.dart';
 import 'package:planticula/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:planticula/features/plants/domain/entities/plant.dart';
@@ -93,7 +94,9 @@ class _TodayScreenState extends State<TodayScreen> {
         final weather = await GetIt.instance<WeatherService>()
             .getWeather(outdoorPlant.latitude!, outdoorPlant.longitude!);
         if (mounted) setState(() => _weather = weather);
-      } catch (_) {}
+      } catch (e) {
+        Logger.w('Weather fetch failed for today screen: $e');
+      }
     }
 
     // Species data (needed for transplant + water amount).

@@ -145,8 +145,8 @@ class SeedIdentificationDatasourceImpl implements SeedIdentificationDatasource {
       await _client.storage.from(_bucket).remove([storagePath]);
       return const Success(null);
     } catch (e) {
-      Logger.w('Could not delete seed ID image: $filePath');
-      return const Success(null);
+      Logger.w('Could not delete seed ID image: $filePath — $e');
+      return Failure('Error al eliminar imagen: $e');
     }
   }
 }

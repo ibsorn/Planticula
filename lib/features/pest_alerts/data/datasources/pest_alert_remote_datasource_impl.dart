@@ -322,7 +322,7 @@ class PestAlertRemoteDataSourceImpl implements PestAlertRemoteDataSource {
       return const Success(null);
     } catch (e, stackTrace) {
       Logger.e('❌ Error eliminando foto $filePath', error: e, stackTrace: stackTrace);
-      return const Success(null); // No bloquear operación principal
+      return Failure('Error al eliminar foto: ${e.toString()}');
     }
   }
 

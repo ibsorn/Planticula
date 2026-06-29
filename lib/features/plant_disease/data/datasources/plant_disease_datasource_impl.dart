@@ -149,8 +149,8 @@ class PlantDiseaseDatasourceImpl implements PlantDiseaseDatasource {
       await _client.storage.from(_bucket).remove([storagePath]);
       return const Success(null);
     } catch (e) {
-      Logger.w('Could not delete image: $filePath');
-      return const Success(null);
+      Logger.w('Could not delete disease image: $filePath — $e');
+      return Failure('Error al eliminar imagen: $e');
     }
   }
 }

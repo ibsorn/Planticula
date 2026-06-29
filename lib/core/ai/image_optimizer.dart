@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
+import 'package:planticula/core/utils/logger.dart';
 
 class ImageOptimizer {
   final int maxDimension;
@@ -38,7 +39,8 @@ class ImageOptimizer {
           : decoded;
 
       return Uint8List.fromList(img.encodeJpg(resized, quality: quality));
-    } catch (_) {
+    } catch (e) {
+      Logger.w('Image optimization failed, returning original: $e');
       return bytes;
     }
   }
