@@ -10,6 +10,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/ai-helpers.ts";
 
 // ============================================================================
 // TIPOS DE DATOS
@@ -127,11 +128,10 @@ const THRESHOLDS = {
 serve(async (req) => {
   const startTime = Date.now();
 
+  const origin = req.headers.get("Origin");
   const headers = {
     "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "apikey, Authorization, Content-Type, x-client-info",
+    ...getCorsHeaders(origin),
   };
 
   // Handle CORS preflight
@@ -237,7 +237,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("❌ Error no controlado:", error);
-    return createErrorResponse(500, `Error interno: ${error.message}`, headers, startTime);
+    return createErrorResponse(500, "Error interno del servidor", headers, startTime);
   }
 });
 

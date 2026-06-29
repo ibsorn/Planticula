@@ -12,7 +12,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   handleCors, jsonResponse, errorResponse,
-  callLlmText, parseJsonResponse,
+  callLlmText, parseJsonResponse, requireAuth,
 } from "../_shared/ai-helpers.ts";
 
 serve(async (req) => {
@@ -20,6 +20,10 @@ serve(async (req) => {
   if (corsRes) return corsRes;
 
   try {
+    // Authenticate
+    const authResult = await requireAuth(req);
+    if (authResult instanceof Response) return authResult;
+
     const { scientificName } = await req.json();
     if (!scientificName) return errorResponse("Missing 'scientificName'", 400);
 
@@ -88,6 +92,6 @@ serve(async (req) => {
     return jsonResponse({ success: true, careInfo, cached: false });
   } catch (error) {
     console.error("[generate-care-info] Error:", error);
-    return errorResponse(error.message || "Internal error");
+    return errorResponse("Internal error");
   }
 });
