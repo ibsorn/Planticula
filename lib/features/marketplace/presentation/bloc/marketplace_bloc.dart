@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:planticula/core/utils/image_picker_helper.dart';
 import 'package:planticula/features/marketplace/domain/entities/marketplace_listing.dart';
 import 'package:planticula/features/marketplace/domain/repositories/marketplace_repository.dart';
 
@@ -10,10 +11,10 @@ part 'marketplace_state.dart';
 
 class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
   final MarketplaceRepository _repository;
-  final ImagePicker _imagePicker;
+  final ImagePickerHelper _imagePickerHelper;
 
   MarketplaceBloc(this._repository)
-      : _imagePicker = ImagePicker(),
+      : _imagePickerHelper = ImagePickerHelper(),
         super(const MarketplaceState()) {
     on<MarketplaceLoadNearby>(_onLoadNearby);
     on<MarketplaceLoadMyListings>(_onLoadMyListings);
@@ -165,16 +166,9 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     try {
       emit(state.copyWith(photoStatus: PhotoStatus.picking));
 
-      final pickedFiles = await _imagePicker.pickMultiImage(
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
-      );
+      final bytes = await _imagePickerHelper.pickMultipleImages();
 
-      if (pickedFiles.isNotEmpty) {
-        final bytes = await Future.wait(
-          pickedFiles.map((f) => f.readAsBytes()),
-        );
+      if (bytes.isNotEmpty) {
         final currentPhotos = state.selectedPhotos ?? [];
         emit(state.copyWith(
           selectedPhotos: [...currentPhotos, ...bytes],
@@ -198,15 +192,11 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     try {
       emit(state.copyWith(photoStatus: PhotoStatus.picking));
 
-      final pickedFile = await _imagePicker.pickImage(
+      final bytes = await _imagePickerHelper.pickSingleImage(
         source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
       );
 
-      if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
+      if (bytes != null) {
         final currentPhotos = state.selectedPhotos ?? [];
         emit(state.copyWith(
           selectedPhotos: [...currentPhotos, bytes],

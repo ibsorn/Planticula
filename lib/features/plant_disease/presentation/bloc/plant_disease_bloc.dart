@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:planticula/core/utils/image_picker_helper.dart';
 import 'package:planticula/features/plant_disease/domain/entities/plant_disease_diagnosis.dart';
 import 'package:planticula/features/plant_disease/domain/repositories/plant_disease_repository.dart';
 
@@ -10,10 +11,10 @@ part 'plant_disease_state.dart';
 
 class PlantDiseaseBloc extends Bloc<PlantDiseaseEvent, PlantDiseaseState> {
   final PlantDiseaseRepository _repository;
-  final ImagePicker _imagePicker;
+  final ImagePickerHelper _imagePickerHelper;
 
   PlantDiseaseBloc(this._repository)
-      : _imagePicker = ImagePicker(),
+      : _imagePickerHelper = ImagePickerHelper(),
         super(const PlantDiseaseState()) {
     on<PlantDiseaseLoadRequested>(_onLoadRequested);
     on<PlantDiseaseImagePickRequested>(_onImagePickRequested);
@@ -53,18 +54,14 @@ class PlantDiseaseBloc extends Bloc<PlantDiseaseEvent, PlantDiseaseState> {
     try {
       emit(state.copyWith(imageStatus: PlantDiseaseImageStatus.picking));
 
-      final file = await _imagePicker.pickImage(
+      final result = await _imagePickerHelper.pickSingleImageWithName(
         source: ImageSource.gallery,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
       );
 
-      if (file != null) {
-        final bytes = await file.readAsBytes();
+      if (result != null) {
         emit(state.copyWith(
-          imageBytes: bytes,
-          imageName: file.name,
+          imageBytes: result.bytes,
+          imageName: result.name,
           imageStatus: PlantDiseaseImageStatus.selected,
         ));
       } else {
@@ -85,18 +82,14 @@ class PlantDiseaseBloc extends Bloc<PlantDiseaseEvent, PlantDiseaseState> {
     try {
       emit(state.copyWith(imageStatus: PlantDiseaseImageStatus.picking));
 
-      final file = await _imagePicker.pickImage(
+      final result = await _imagePickerHelper.pickSingleImageWithName(
         source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
       );
 
-      if (file != null) {
-        final bytes = await file.readAsBytes();
+      if (result != null) {
         emit(state.copyWith(
-          imageBytes: bytes,
-          imageName: file.name,
+          imageBytes: result.bytes,
+          imageName: result.name,
           imageStatus: PlantDiseaseImageStatus.selected,
         ));
       } else {

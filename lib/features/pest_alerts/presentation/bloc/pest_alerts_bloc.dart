@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:planticula/core/utils/image_picker_helper.dart';
 import 'package:planticula/features/pest_alerts/domain/entities/pest_alert.dart';
 import 'package:planticula/features/pest_alerts/domain/repositories/pest_alert_repository.dart';
 
@@ -10,10 +11,10 @@ part 'pest_alerts_state.dart';
 
 class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
   final PestAlertRepository _repository;
-  final ImagePicker _imagePicker;
+  final ImagePickerHelper _imagePickerHelper;
 
   PestAlertsBloc(this._repository)
-      : _imagePicker = ImagePicker(),
+      : _imagePickerHelper = ImagePickerHelper(),
         super(const PestAlertsState()) {
     on<PestAlertsLoadNearby>(_onLoadNearby);
     on<PestAlertsLoadMyAlerts>(_onLoadMyAlerts);
@@ -131,15 +132,11 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     try {
       emit(state.copyWith(photoSelectionStatus: PhotoSelectionStatus.picking));
 
-      final pickedFile = await _imagePicker.pickImage(
+      final bytes = await _imagePickerHelper.pickSingleImage(
         source: ImageSource.gallery,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
       );
 
-      if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
+      if (bytes != null) {
         emit(state.copyWith(
           selectedPhotoBytes: bytes,
           photoSelectionStatus: PhotoSelectionStatus.selected,
@@ -162,15 +159,11 @@ class PestAlertsBloc extends Bloc<PestAlertsEvent, PestAlertsState> {
     try {
       emit(state.copyWith(photoSelectionStatus: PhotoSelectionStatus.picking));
 
-      final pickedFile = await _imagePicker.pickImage(
+      final bytes = await _imagePickerHelper.pickSingleImage(
         source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
       );
 
-      if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
+      if (bytes != null) {
         emit(state.copyWith(
           selectedPhotoBytes: bytes,
           photoSelectionStatus: PhotoSelectionStatus.selected,
