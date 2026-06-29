@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:planticula/core/utils/image_picker_helper.dart';
 import 'package:planticula/features/soil_analysis/domain/entities/soil_analysis.dart';
 import 'package:planticula/features/soil_analysis/domain/repositories/soil_analysis_repository.dart';
 
@@ -10,9 +11,9 @@ part 'soil_analysis_state.dart';
 
 class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
   final SoilAnalysisRepository _repository;
-  final ImagePicker _imagePicker;
+  final ImagePickerHelper _imagePickerHelper;
 
-  SoilAnalysisBloc(this._repository) : _imagePicker = ImagePicker(), super(const SoilAnalysisState()) {
+  SoilAnalysisBloc(this._repository) : _imagePickerHelper = ImagePickerHelper(), super(const SoilAnalysisState()) {
     on<SoilAnalysisLoadRequested>(_onLoadRequested);
     on<SoilAnalysisLoadByPlantRequested>(_onLoadByPlantRequested);
     on<SoilAnalysisImagePickRequested>(_onImagePickRequested);
@@ -85,18 +86,14 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
         imageSelectionStatus: ImageSelectionStatus.picking,
       ));
 
-      final pickedFile = await _imagePicker.pickImage(
+      final result = await _imagePickerHelper.pickSingleImageWithName(
         source: ImageSource.gallery,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
       );
 
-      if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
+      if (result != null) {
         emit(state.copyWith(
-          selectedImageBytes: bytes,
-          selectedImageName: pickedFile.name,
+          selectedImageBytes: result.bytes,
+          selectedImageName: result.name,
           imageSelectionStatus: ImageSelectionStatus.selected,
         ));
       } else {
@@ -121,18 +118,14 @@ class SoilAnalysisBloc extends Bloc<SoilAnalysisEvent, SoilAnalysisState> {
         imageSelectionStatus: ImageSelectionStatus.picking,
       ));
 
-      final pickedFile = await _imagePicker.pickImage(
+      final result = await _imagePickerHelper.pickSingleImageWithName(
         source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
       );
 
-      if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
+      if (result != null) {
         emit(state.copyWith(
-          selectedImageBytes: bytes,
-          selectedImageName: pickedFile.name,
+          selectedImageBytes: result.bytes,
+          selectedImageName: result.name,
           imageSelectionStatus: ImageSelectionStatus.selected,
         ));
       } else {

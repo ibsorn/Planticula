@@ -1,61 +1,60 @@
 import 'dart:typed_data';
-import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
+import 'package:planticula/core/network/datasource_mixin.dart';
 import 'package:planticula/core/network/result.dart';
 import 'package:planticula/core/network/supabase_client.dart';
+import 'package:planticula/core/storage/storage_service.dart';
 import 'package:planticula/core/utils/logger.dart';
 import 'package:planticula/features/marketplace/data/datasources/marketplace_remote_datasource.dart';
 import 'package:planticula/features/marketplace/data/models/marketplace_listing_model.dart';
 
 /// Implementación de MarketplaceRemoteDataSource usando Supabase
-class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
-  final AppSupabaseClient _client;
+class MarketplaceRemoteDataSourceImpl
+    with DatasourceMixin
+    implements MarketplaceRemoteDataSource {
+  @override
+  final AppSupabaseClient client;
+  final StorageService _storage;
 
-  MarketplaceRemoteDataSourceImpl(this._client);
+  MarketplaceRemoteDataSourceImpl(this.client)
+      : _storage = StorageService(client);
 
   String get _table => 'marketplace_listings';
   String get _bucket => 'marketplace-photos';
   String get _favoritesTable => 'marketplace_favorites';
 
-  String? get _userId => _client.currentUser?.id;
-
   @override
   Future<Result<MarketplaceListingModel>> createListing(CreateListingRequest request) async {
-    try {
-      Logger.d('📤 Creando anuncio: ${request.title}');
+    return guardedCall(
+      errorPrefix: 'Error al crear anuncio',
+      operation: (uid) async {
+        Logger.d('📤 Creando anuncio: ${request.title}');
 
-      if (_userId == null) {
-        return const Failure('Usuario no autenticado');
-      }
+        // Obtener nombre del perfil del usuario
+        String? sellerName;
+        try {
+          final profile = await client
+              .from('profiles')
+              .select('username, full_name')
+              .eq('id', uid)
+              .single();
+          sellerName = profile['username'] ?? profile['full_name'];
+        } catch (_) {
+          sellerName = null;
+        }
 
-      // Obtener nombre del perfil del usuario
-      String? sellerName;
-      try {
-        final profile = await _client
-            .from('profiles')
-            .select('username, full_name')
-            .eq('id', _userId!)
+        final data = request.toJson(uid, sellerName);
+
+        final response = await client
+            .from(_table)
+            .insert(data)
+            .select()
             .single();
-        sellerName = profile['username'] ?? profile['full_name'];
-      } catch (_) {
-        // Si no hay perfil, usar ID
-        sellerName = null;
-      }
 
-      final data = request.toJson(_userId!, sellerName);
-
-      final response = await _client
-          .from(_table)
-          .insert(data)
-          .select()
-          .single();
-
-      final listing = MarketplaceListingModel.fromJson(response);
-      Logger.i('✅ Anuncio creado: ${listing.id}');
-      return Success(listing);
-    } catch (e, stackTrace) {
-      Logger.e('❌ Error creando anuncio', error: e, stackTrace: stackTrace);
-      return Failure('Error al crear anuncio: ${e.toString()}');
-    }
+        final listing = MarketplaceListingModel.fromJson(response);
+        Logger.i('✅ Anuncio creado: ${listing.id}');
+        return listing;
+      },
+    );
   }
 
   @override
@@ -63,7 +62,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
     try {
       Logger.d('📥 Obteniendo anuncio: $id');
 
-      final response = await _client
+      final response = await client
           .from(_table)
           .select('''
             *,
@@ -120,7 +119,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
         'p_include_sold': includeSold,
       };
 
-      final response = await _client.rpc('get_nearby_listings', params: params);
+      final response = await client.rpc('get_nearby_listings', params: params);
 
       final listings = (response as List)
           .map((json) => MarketplaceListingModel.fromJson(json))
@@ -133,7 +132,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
 
       // Fallback simple
       try {
-        var query = _client
+        var query = client
             .from(_table)
             .select()
             .eq('status', 'active');
@@ -167,130 +166,107 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
     int limit = 50,
     int offset = 0,
   }) async {
-    try {
-      Logger.d('📥 Obteniendo mis anuncios');
+    return guardedCall(
+      errorPrefix: 'Error al cargar mis anuncios',
+      operation: (uid) async {
+        Logger.d('📥 Obteniendo mis anuncios');
+        final response = await client
+            .from(_table)
+            .select()
+            .eq('seller_id', uid)
+            .order('created_at', ascending: false)
+            .range(offset, offset + limit - 1);
 
-      if (_userId == null) {
-        return const Failure('Usuario no autenticado');
-      }
-
-      final response = await _client
-          .from(_table)
-          .select()
-          .eq('seller_id', _userId!)
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
-
-      final listings = (response as List)
-          .map((json) => MarketplaceListingModel.fromJson(json))
-          .toList();
-
-      Logger.i('✅ Cargados ${listings.length} anuncios propios');
-      return Success(listings);
-    } catch (e, stackTrace) {
-      Logger.e('❌ Error obteniendo mis anuncios', error: e, stackTrace: stackTrace);
-      return Failure('Error al cargar mis anuncios: ${e.toString()}');
-    }
+        final listings = (response as List)
+            .map((json) => MarketplaceListingModel.fromJson(json))
+            .toList();
+        Logger.i('✅ Cargados ${listings.length} anuncios propios');
+        return listings;
+      },
+    );
   }
 
   @override
   Future<Result<List<MarketplaceListingModel>>> getFavoriteListings() async {
-    try {
-      Logger.d('📥 Obteniendo favoritos');
+    return guardedCall(
+      errorPrefix: 'Error al cargar favoritos',
+      operation: (uid) async {
+        Logger.d('📥 Obteniendo favoritos');
+        final response = await client
+            .from(_favoritesTable)
+            .select('listing:marketplace_listings(*)')
+            .eq('user_id', uid)
+            .order('created_at', ascending: false);
 
-      if (_userId == null) {
-        return const Failure('Usuario no autenticado');
-      }
-
-      final response = await _client
-          .from(_favoritesTable)
-          .select('listing:marketplace_listings(*)')
-          .eq('user_id', _userId!)
-          .order('created_at', ascending: false);
-
-      final listings = (response as List)
-          .map((json) => MarketplaceListingModel.fromJson({
-                ...json['listing'],
-                'is_favorited': true,
-              }))
-          .toList();
-
-      return Success(listings);
-    } catch (e, stackTrace) {
-      Logger.e('❌ Error obteniendo favoritos', error: e, stackTrace: stackTrace);
-      return Failure('Error al cargar favoritos: ${e.toString()}');
-    }
+        final listings = (response as List)
+            .map((json) => MarketplaceListingModel.fromJson({
+                  ...json['listing'],
+                  'is_favorited': true,
+                }))
+            .toList();
+        return listings;
+      },
+    );
   }
 
   @override
   Future<Result<MarketplaceListingModel>> updateListing(MarketplaceListingModel listing) async {
-    try {
-      Logger.d('📤 Actualizando anuncio: ${listing.id}');
+    return guardedCall(
+      errorPrefix: 'Error al actualizar anuncio',
+      operation: (uid) async {
+        Logger.d('📤 Actualizando anuncio: ${listing.id}');
+        final data = listing.toJson();
+        data.remove('id');
+        data.remove('seller_id');
+        data.remove('created_at');
+        data['updated_at'] = DateTime.now().toIso8601String();
 
-      if (_userId == null) {
-        return const Failure('Usuario no autenticado');
-      }
+        final response = await client
+            .from(_table)
+            .update(data)
+            .eq('id', listing.id)
+            .eq('seller_id', uid)
+            .select()
+            .single();
 
-      final data = listing.toJson();
-      data.remove('id');
-      data.remove('seller_id');
-      data.remove('created_at');
-      data['updated_at'] = DateTime.now().toIso8601String();
-
-      final response = await _client
-          .from(_table)
-          .update(data)
-          .eq('id', listing.id)
-          .eq('seller_id', _userId!)
-          .select()
-          .single();
-
-      final updated = MarketplaceListingModel.fromJson(response);
-      Logger.i('✅ Anuncio actualizado');
-      return Success(updated);
-    } catch (e, stackTrace) {
-      Logger.e('❌ Error actualizando anuncio', error: e, stackTrace: stackTrace);
-      return Failure('Error al actualizar anuncio: ${e.toString()}');
-    }
+        final updated = MarketplaceListingModel.fromJson(response);
+        Logger.i('✅ Anuncio actualizado');
+        return updated;
+      },
+    );
   }
 
   @override
   Future<Result<MarketplaceListingModel>> updateListingStatus(String id, String status) async {
-    try {
-      Logger.d('📤 Cambiando estado de $id a $status');
+    return guardedCall(
+      errorPrefix: 'Error al actualizar estado',
+      operation: (uid) async {
+        Logger.d('📤 Cambiando estado de $id a $status');
+        final response = await client
+            .from(_table)
+            .update({
+              'status': status,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', id)
+            .eq('seller_id', uid)
+            .select()
+            .single();
 
-      if (_userId == null) {
-        return const Failure('Usuario no autenticado');
-      }
-
-      final response = await _client
-          .from(_table)
-          .update({
-            'status': status,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', id)
-          .eq('seller_id', _userId!)
-          .select()
-          .single();
-
-      final updated = MarketplaceListingModel.fromJson(response);
-      Logger.i('✅ Estado actualizado a $status');
-      return Success(updated);
-    } catch (e, stackTrace) {
-      Logger.e('❌ Error cambiando estado', error: e, stackTrace: stackTrace);
-      return Failure('Error al actualizar estado: ${e.toString()}');
-    }
+        final updated = MarketplaceListingModel.fromJson(response);
+        Logger.i('✅ Estado actualizado a $status');
+        return updated;
+      },
+    );
   }
 
   @override
   Future<Result<void>> deleteListing(String id) async {
+    final authFailure = requireAuth<void>();
+    if (authFailure != null) return authFailure;
+
     try {
       Logger.d('🗑️ Eliminando anuncio: $id');
-
-      if (_userId == null) {
-        return const Failure('Usuario no autenticado');
-      }
 
       // Obtener fotos para eliminar después
       final listingResult = await getListingById(id);
@@ -299,17 +275,17 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
         photoUrls = listingResult.data.photoUrls;
       }
 
-      await _client
+      await client
           .from(_table)
           .delete()
           .eq('id', id)
-          .eq('seller_id', _userId!);
+          .eq('seller_id', userId!);
 
       // Eliminar fotos en background
       for (final url in photoUrls) {
-        final path = _extractPathFromUrl(url);
+        final path = StorageService.extractPathFromUrl(url, _bucket);
         if (path != null) {
-          _deletePhotoAsync(path);
+          _storage.deleteFile(bucket: _bucket, storagePath: path);
         }
       }
 
@@ -322,83 +298,44 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   }
 
   @override
-  Future<Result<List<String>>> uploadPhotos(List<Uint8List> imageBytesList) async {
-    try {
-      Logger.d('📤 Subiendo ${imageBytesList.length} fotos');
-
-      if (_userId == null) {
-        return const Failure('Usuario no autenticado');
-      }
-
-      final urls = <String>[];
-
-      for (int i = 0; i < imageBytesList.length; i++) {
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final path = '$_userId/${timestamp}_$i.jpg';
-
-        await _client.storage.from(_bucket).uploadBinary(
-              path,
-              imageBytesList[i],
-              fileOptions: const FileOptions(
-                contentType: 'image/jpeg',
-              ),
-            );
-
-        final url = _client.storage.from(_bucket).getPublicUrl(path);
-        urls.add(url);
-      }
-
-      Logger.i('✅ ${urls.length} fotos subidas');
-      return Success(urls);
-    } catch (e, stackTrace) {
-      Logger.e('❌ Error subiendo fotos', error: e, stackTrace: stackTrace);
-      return Failure('Error al subir fotos: ${e.toString()}');
-    }
+  Future<Result<List<String>>> uploadPhotos(List<Uint8List> imageBytesList) {
+    return _storage.uploadImages(
+      bucket: _bucket,
+      imageBytesList: imageBytesList,
+    );
   }
 
   @override
-  Future<Result<void>> deletePhotos(List<String> filePaths) async {
-    try {
-      Logger.d('🗑️ Eliminando ${filePaths.length} fotos');
-      await _client.storage.from(_bucket).remove(filePaths);
-      return const Success(null);
-    } catch (e) {
-      return const Success(null); // No bloquear
-    }
+  Future<Result<void>> deletePhotos(List<String> filePaths) {
+    return _storage.deleteFiles(bucket: _bucket, storagePaths: filePaths);
   }
 
   @override
   Future<Result<void>> incrementViewCount(String listingId) async {
     try {
-      // Usar RPC para evitar race conditions
-      await _client.rpc('increment_listing_views', params: {'p_listing_id': listingId});
+      await client.rpc('increment_listing_views', params: {'p_listing_id': listingId});
       return const Success(null);
     } catch (e) {
-      return const Success(null); // Silencioso
+      return const Success(null);
     }
   }
 
   @override
   Future<Result<bool>> toggleFavorite(String listingId) async {
-    try {
-      Logger.d('❤️ Toggle favorito: $listingId');
+    return guardedCall(
+      errorPrefix: 'Error toggle favorito',
+      operation: (uid) async {
+        Logger.d('❤️ Toggle favorito: $listingId');
+        final result = await client.rpc('toggle_listing_favorite', params: {
+          'p_user_id': uid,
+          'p_listing_id': listingId,
+        });
 
-      if (_userId == null) {
-        return const Failure('Usuario no autenticado');
-      }
-
-      final result = await _client.rpc('toggle_listing_favorite', params: {
-        'p_user_id': _userId,
-        'p_listing_id': listingId,
-      });
-
-      final isNowFavorited = result as bool;
-      Logger.i('✅ Favorito: $isNowFavorited');
-      return Success(isNowFavorited);
-    } catch (e, stackTrace) {
-      Logger.e('❌ Error toggle favorito', error: e, stackTrace: stackTrace);
-      return Failure('Error: ${e.toString()}');
-    }
+        final isNowFavorited = result as bool;
+        Logger.i('✅ Favorito: $isNowFavorited');
+        return isNowFavorited;
+      },
+    );
   }
 
   @override
@@ -414,7 +351,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
         'p_radius_km': radiusKm,
       };
 
-      final response = await _client.rpc('get_marketplace_statistics', params: params);
+      final response = await client.rpc('get_marketplace_statistics', params: params);
       return Success(response as Map<String, dynamic>);
     } catch (e, stackTrace) {
       Logger.e('❌ Error estadísticas', error: e, stackTrace: stackTrace);
@@ -422,27 +359,7 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
     }
   }
 
-  // Helpers privados
   void _incrementViewCountAsync(String listingId) {
-    // Fire and forget
     incrementViewCount(listingId);
-  }
-
-  void _deletePhotoAsync(String path) {
-    deletePhotos([path]);
-  }
-
-  String? _extractPathFromUrl(String url) {
-    try {
-      final uri = Uri.parse(url);
-      final pathSegments = uri.pathSegments;
-      final bucketIndex = pathSegments.indexOf(_bucket);
-      if (bucketIndex >= 0 && bucketIndex < pathSegments.length - 1) {
-        return pathSegments.sublist(bucketIndex + 1).join('/');
-      }
-      return null;
-    } catch (_) {
-      return null;
-    }
   }
 }
