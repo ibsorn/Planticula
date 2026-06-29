@@ -3,6 +3,9 @@
 .env.local
 .env.*.local
 
+# Supabase local/linked project metadata (contains project ref, pooler URL, org ID)
+supabase/.temp/
+
 # Flutter/Dart
 .dart_tool/
 .packages
